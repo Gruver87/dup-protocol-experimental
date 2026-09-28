@@ -46,10 +46,11 @@ Scripts:
 | Pack | Result |
 |------|--------|
 | Libp2p STRICT [`lp2pstrict1`](../evidence/runs/lp2pstrict1/) | **48h PASS** 2026-09-23→25 (`warn_lines=0`, tip ~57209→~68082) |
-| LR STRICT mid-run (stopped) | **NOT PASS** — fail_lines=2 at ~24h; tip plateaus; root cascade fixed 2026-09-26 (see below). Re-soak on command only. |
+| LR STRICT [`lrstrict1`](../evidence/runs/lrstrict1/) | **48h PASS** 2026-09-26→28 (`fail_lines=0` `mesh_warn=0` `warn_lines=0` mesh_ok=2849 tip ~18646→~30096) |
+| LR STRICT mid-run (historical) | stopped fail_lines=2 ~24h 2026-09-25→26 — healed then closed by `lrstrict1` |
 
 
-## Root cause (LR STRICT mid-soak 2026-09-25→26)
+## Root cause (LR STRICT mid-soak 2026-09-25→26) — CLOSED by `lrstrict1`
 
 Cascade observed at ~24h (`fail_lines=2`, tip plateaus h17150/h17253/h18549 ×30+ cycles):
 
@@ -87,7 +88,7 @@ ADR 0017 lab tasks that must stay green mid-soak without operator seed:
 
 Left intentional (lab): committee `secrets.json` RO on all lab nodes — issuance still miner-only via `mining_enabled`.
 
-Not soak evidence. Re-soak on command only.
+**STRICT evidence:** [`lrstrict1`](../evidence/runs/lrstrict1/) PASS 2026-09-26→28.
 
 ## Honesty
 

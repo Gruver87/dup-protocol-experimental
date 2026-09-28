@@ -1,0 +1,10 @@
+﻿STRICT 48h Long-Range lab mesh PASS (ADR 0017)
+window: 2026-09-26T21:23:29+02:00 -> 2026-09-28T21:23:30+02:00
+hours_elapsed: 48.0002 / 48
+passed: true | strict: true | hard_fails: 0 | mesh_warn: 0 | warn_lines: 0 | fail_lines: 0 | ready_only: 0
+mesh_ok_cycles: 2849 | interval_sec: 60 | FullHarnessEvery: 6 | heavy_probe: 1
+tip: ~18646 -> ~30096
+ports: 29080,29081,29082 (abs-lr-lab; not prod 18180)
+host_commit_at_start: edbfbcd9c14fb44c47f53eee40ea4abbd86dd965
+script: .\scripts\start_soak_long_range_lab.ps1 -Hours 48 -Strict
+honesty: STRICT bar parity with lp2pstrict1/mempool48pass1. Distinct from default lr48pass1. Digestion+Ed25519 committee lab WS; autonomous roll-forward + tip-safe adopt. Not BLS. Not prod 778888. Not public mainnet. Not Hybrid audit pin.

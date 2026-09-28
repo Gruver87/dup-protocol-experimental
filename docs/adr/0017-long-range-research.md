@@ -79,3 +79,6 @@ on prod mesh until a future Decision with native/`blst` tests.
 
 Success criteria for lab 2h: tip-import HARD REFUSE below anchor; persist survives
 restart; no prod JSON flag flip.
+
+**STRICT lab 48h evidence (2026-09-26→28):** [`docs/evidence/runs/lrstrict1/`](../evidence/runs/lrstrict1/)
+— still **not** BLS / not prod arm / not mainnet Long-Range proof.

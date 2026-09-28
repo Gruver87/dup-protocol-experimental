@@ -37,8 +37,9 @@ Detail: [`STRICT_SOAK_PARITY.md`](STRICT_SOAK_PARITY.md).
 | [`lr2hmesh`](../evidence/runs/lr2hmesh/) | 3-node mesh 2h PASS |
 | [`lr2hintensify`](../evidence/runs/lr2hintensify/) | intensify 2h PASS |
 | [`lr48fail1`](../evidence/runs/lr48fail1/) | lab 48h FAIL (historical) |
-| [`lr48pass1`](../evidence/runs/lr48pass1/) | lab 48h PASS — B2 closed |
-| LR STRICT mid (2026-09-25→26) | **stopped** fail_lines=2 ~24h — code heal landed; **re-soak on command** |
+| [`lr48pass1`](../evidence/runs/lr48pass1/) | lab 48h PASS — B2 closed (default bar) |
+| [`lrstrict1`](../evidence/runs/lrstrict1/) | **STRICT 48h PASS** 2026-09-26→28 — fail=0 mesh_warn=0 tip ~18646→~30096 |
+| LR STRICT mid (2026-09-25→26) | historical stop fail_lines=2 ~24h — closed by `lrstrict1` |
 
 ## Lab proof (no soak)
 
@@ -73,7 +74,8 @@ Ports: HTTP `29080–29082`, RPC `29545–29547`, P2P `26000–26002` — not pr
 **PASS bar (STRICT):** same as [`lp2pstrict1`](../evidence/runs/lp2pstrict1/) —
 `fail_lines=0`, `mesh_warn=0`, IntervalSec=60, FullHarnessEvery=6.
 
-**Not claimed:** BLS quorum · prod `778888` · public mainnet · Hybrid audit pin ·
-STRICT LR 48h until a new evidence pack is written.
+**Not claimed:** BLS quorum · prod `778888` · public mainnet · Hybrid audit pin.
+
+**STRICT closed:** [`lrstrict1`](../evidence/runs/lrstrict1/) (2026-09-26→28).
 
 See [EXPERIMENTAL_RD_PROFILE.md](EXPERIMENTAL_RD_PROFILE.md) · [adr/0017-long-range-research.md](../adr/0017-long-range-research.md).
