@@ -13,8 +13,11 @@ the single `ChainApplyQueue` / mempool / state-root path.
 ## Evidence
 
 - Mesh smoke: `python scripts/prod_evm_smoke.py` (mempool path on :18546–:18548)
+- Pre-STRICT / pre-48h: `python scripts/evm_pre_48h_harness.py` (labs + gate + probe + smoke)
+- STRICT starter (soak **only if ordered**): `.\scripts\start_soak_evm_mesh_48h_strict.ps1`
 - Profile freeze: `tests/unit/test_sprout_profiles.py`
 - Industrial gate requires CREATE2 + deploy salt on prod mesh JSON
+- Honesty snapshot: `GET /evm/status` ↔ [EVM_COMPAT_MATRIX.md](EVM_COMPAT_MATRIX.md) (`supported_absolute` / `partial` / `not_claimed`)
 
 ## Compatibility gaps
 

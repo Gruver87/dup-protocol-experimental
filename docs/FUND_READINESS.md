@@ -20,6 +20,7 @@ Industrial **R&D / private-testnet** hybrid L1 (Python orchestration + Rust hot 
 | Long-Range **lab** 48h (default) | [`lr48pass1`](evidence/runs/lr48pass1/) — prod JSON keeps `feature_long_range=false` |
 | Long-Range **lab STRICT** 48h | [`lrstrict1`](evidence/runs/lrstrict1/) `strict=true` fail=0 mesh_warn=0 tip ~18646→~30096 |
 | Post-EVM prep mesh 48h | [`evm48pass1`](evidence/runs/evm48pass1/) |
+| EVM STRICT prep (Phase 3b) | **READY** 2026-09-28 — live `evm_pre_48h_harness` + `prepare_48h_soak` + TipStagnant=3600; soak **not** started (no `evmstrict1` yet) |
 | Mempool+validation STRICT 48h | [`mempool48pass1`](evidence/runs/mempool48pass1/) |
 | ADR 0021 global R&D audit | [`adr0021gaudit1`](evidence/runs/adr0021gaudit1/) 13/13 |
 | Wire satoshi cutover + float-only refuse | Units + industrial waves; **mesh 48h** [`ind48pass1`](evidence/runs/ind48pass1/) |
@@ -62,6 +63,7 @@ ADRs: 0001 tip-safety · 0009 hybrid · 0016 profiles · 0017 Long-Range (lab) �
 | Tip 48h soak after industrial polish (`719deb4`) | **PASS** [`ind48pass1`](evidence/runs/ind48pass1/) |
 | Libp2p STRICT 48h (`start_soak_prod_mesh_48h_strict.ps1`) | **PASS** [`lp2pstrict1`](evidence/runs/lp2pstrict1/) |
 | Long-Range STRICT 48h (`start_soak_long_range_lab.ps1 -Hours 48 -Strict`) | **PASS** [`lrstrict1`](evidence/runs/lrstrict1/) |
+| EVM STRICT prep (`start_soak_evm_mesh_48h_strict.ps1 -PreflightOnly`) | **READY** 2026-09-28 — prepare+harness PASS; soak not started |
 | External audit / secrets rotate / validator ceremony live | Org Phase 6 |
 
 ## CI badges (must be green for diligence)

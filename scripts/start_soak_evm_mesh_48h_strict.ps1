@@ -1,5 +1,5 @@
 # STRICT 48h Experimental prod mesh AFTER EVM preflight (Phase 3 bar + mempool parity).
-# Runs evm_pre_48h_harness.py then start_soak_prod_mesh_48h_strict.ps1.
+# Runs docker → evm_pre_48h_harness → prepare_48h_soak → start_soak_prod_mesh_48h_strict.
 # Distinct evidence from default evm48pass1 (IntervalSec=300, non-Strict).
 #
 #   .\scripts\start_soak_evm_mesh_48h_strict.ps1
@@ -10,12 +10,14 @@
 param(
     [int]$Hours = 48,
     [int]$IntervalSec = 60,
+    [int]$TipStagnantFailAfterSec = 3600,
     [string]$LogFile = "logs/soak_48h_evm_strict.log",
     [string]$ReportFile = "logs/soak_report_48h_evm_strict.json",
     [switch]$SkipRebuild,
     [switch]$SkipEvmHarness,
     [switch]$SkipPreflight,
     [switch]$PreflightOnly,
+    [switch]$Force,
     [switch]$Foreground
 )
 
@@ -25,9 +27,14 @@ $Root = Split-Path -Parent $ScriptDir
 Set-Location $Root
 
 Write-Host "STRICT 48h post-EVM prod mesh soak" -ForegroundColor Cyan
-Write-Host "  hours=$Hours interval=${IntervalSec}s Strict + FullHarnessEvery=6" -ForegroundColor DarkGray
+Write-Host "  hours=$Hours interval=${IntervalSec}s Strict + FullHarnessEvery=6 tip_stagnant=${TipStagnantFailAfterSec}s" -ForegroundColor DarkGray
 Write-Host "  NOT default evm48pass1 / NOT EVM-only 48h / NOT mainnet" -ForegroundColor DarkGray
 Write-Host "  log=$LogFile report=$ReportFile" -ForegroundColor DarkGray
+
+if ($SkipEvmHarness -and $SkipPreflight -and -not $Force) {
+    Write-Host "FAIL: SkipEvmHarness+SkipPreflight requires -Force (refuse blind STRICT start)." -ForegroundColor Red
+    exit 2
+}
 
 if (-not $SkipPreflight) {
     if ($SkipRebuild) {
@@ -50,15 +57,31 @@ if (-not $SkipEvmHarness) {
     }
 }
 
+# Disk / healthy / state_root / miner harness — nested STRICT skips its own prepare
+# when SkipPreflight=$true (avoids double docker). Outer MUST run prepare here.
+if (-not $SkipPreflight) {
+    Write-Host "48h prepare (disk + healthy + miner harness)..." -ForegroundColor Cyan
+    & (Join-Path $ScriptDir "prepare_48h_soak.ps1") -Hours $Hours -IntervalSec $IntervalSec
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "FAIL: prepare_48h_soak. Do not start EVM STRICT soak." -ForegroundColor Red
+        exit $LASTEXITCODE
+    }
+}
+
+if ($PreflightOnly) {
+    Write-Host "RESULT: PASS preflight-only (EVM STRICT soak NOT started)" -ForegroundColor Green
+    exit 0
+}
+
 $strictArgs = @{
     Hours = $Hours
     IntervalSec = $IntervalSec
+    TipStagnantFailAfterSec = $TipStagnantFailAfterSec
     LogFile = $LogFile
     ReportFile = $ReportFile
-    # Mesh already rebuilt / EVM-preflighted above — skip nested rebuild.
+    # Outer already rebuilt / harnessed / prepared — never double docker in nested.
     SkipRebuild = $true
-    SkipPreflight = $SkipPreflight
-    PreflightOnly = $PreflightOnly
+    SkipPreflight = $true
     Foreground = $Foreground
 }
 

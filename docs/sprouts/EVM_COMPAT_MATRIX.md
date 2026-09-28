@@ -31,8 +31,18 @@ Scope: Absolute hybrid EVM subset on the single apply path.
 | `eth_getTransactionByBlockNumberAndIndex` | **Supported (Absolute honesty)** | Missing block or OOR index → JSON `null`. Lab + unit |
 | Blob txs (EIP-4844) | **Not claimed** | Optional / out of scope |
 | EOF | **Not claimed** | Out of scope |
+| WS `eth_subscribe` | **Not claimed** | Code present (`api/eth_ws_subscriptions.py`) — **not** industrial / **not** EVM STRICT evidence; polling filters are the claimed path |
 | Full geth JSON-RPC surface | **Not claimed** | Wave-gated methods only |
 
-Evidence: `scripts/verify_evm_depth_lab.ps1` · pack [`docs/evidence/runs/evmlab1/`](../evidence/runs/evmlab1/) · `scripts/prod_evm_smoke.py` · `scripts/evm_precompile_lab.py` · `scripts/evm_rpc_lab.py` · `scripts/evm_filters_lab.py` · `scripts/evm_nested_lab.py` · `scripts/evm_reorg_lab.py` · `scripts/evm_logs_lab.py` · unit tests under `tests/unit/test_evm_rpc_compat.py`.
+**Status vocabulary (must match `execution/evm_runtime.py` / `GET /evm/status`):**
+
+| Runtime status | Matrix wording |
+|----------------|----------------|
+| `supported` / `supported_prod` | **Supported** / **Supported (prod)** |
+| `supported_absolute` | **Supported (Absolute honesty)** |
+| `partial` | **Partial** (CALL / precompiles subset) |
+| `not_claimed` | **Not claimed** |
+
+Evidence: `scripts/verify_evm_depth_lab.ps1` · pack [`docs/evidence/runs/evmlab1/`](../evidence/runs/evmlab1/) · `scripts/prod_evm_smoke.py` · `scripts/evm_precompile_lab.py` · `scripts/evm_rpc_lab.py` · `scripts/evm_filters_lab.py` · `scripts/evm_nested_lab.py` · `scripts/evm_reorg_lab.py` · `scripts/evm_logs_lab.py` · unit tests under `tests/unit/test_evm_rpc_compat.py`. Live STRICT prep: `python scripts/evm_pre_48h_harness.py` (mesh up) then `.\scripts\start_soak_evm_mesh_48h_strict.ps1` **only when ordered**.
 
 Update this table when a wave closes a row — never mark Supported without a test.

@@ -170,7 +170,7 @@ Goal: move deterministic, CPU-bound, and consensus-critical code to **Rust/PyO3*
 - [x] Validator AWS CloudHSM proxy (`VALIDATOR_KEY_PROVIDER=aws_cloudhsm`, `AWS_CLOUDHSM_SIGNER_URL`)
 - [x] JSON-RPC `eth_getLogs` filters + `eth_sendRawTransaction` RLP
 - [x] JSON-RPC polling filters: `eth_newFilter`, `eth_getFilterChanges`, `eth_getFilterLogs`, block/pending filters
-- [x] JSON-RPC WebSocket subscriptions (`eth_subscribe` / `eth_unsubscribe`: newHeads, logs, newPendingTransactions)
+- [~] JSON-RPC WebSocket subscriptions (`eth_subscribe` / `eth_unsubscribe`) — **code present**, **not industrial-claimed**, **not** EVM STRICT evidence (matrix `not_claimed`; use polling filters)
 - [x] Pre-mainnet audit runner: `scripts/pre_mainnet_audit.py` (static gate + JSON report + external checklist)
 - [ ] External security audit before public mainnet (third-party firm; track via `scripts/external_audit_tracker.py`)
 - [x] Mainnet gap analysis doc (`docs/MAINNET_GAP_ANALYSIS.md`)

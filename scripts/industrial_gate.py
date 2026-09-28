@@ -4744,6 +4744,61 @@ def _check_fail_loud_surfaces() -> tuple[list[str], list[str]]:
             errors.append(
                 "scripts/start_soak_evm_mesh_48h_strict.ps1 missing (post-EVM STRICT)"
             )
+        else:
+            evm_strict = (
+                ROOT / "scripts" / "start_soak_evm_mesh_48h_strict.ps1"
+            ).read_text(encoding="utf-8")
+            if "IntervalSec = 60" not in evm_strict:
+                errors.append(
+                    "EVM STRICT start must default IntervalSec=60 (mempool-parity bar)"
+                )
+            if "evm_pre_48h_harness" not in evm_strict:
+                errors.append(
+                    "EVM STRICT start must run evm_pre_48h_harness before soak"
+                )
+            if "prepare_48h_soak" not in evm_strict:
+                errors.append(
+                    "EVM STRICT must run prepare_48h_soak (disk/healthy/miner) before nested SkipPreflight"
+                )
+            if "TipStagnantFailAfterSec" not in evm_strict:
+                errors.append(
+                    "EVM STRICT must arm TipStagnantFailAfterSec (tip-dead refuse)"
+                )
+            if "SkipEvmHarness+SkipPreflight requires -Force" not in evm_strict:
+                errors.append(
+                    "EVM STRICT must refuse SkipEvmHarness+SkipPreflight without -Force"
+                )
+            if "NOT EVM-only" not in evm_strict and "not EVM-only" not in evm_strict:
+                errors.append(
+                    "EVM STRICT start must refuse EVM-only / geth honesty banner"
+                )
+            if "start_soak_prod_mesh_48h_strict.ps1" not in evm_strict:
+                errors.append(
+                    "EVM STRICT must delegate to start_soak_prod_mesh_48h_strict.ps1"
+                )
+            if "EVM STRICT soak NOT started" not in evm_strict:
+                errors.append(
+                    "EVM STRICT must early-exit on -PreflightOnly (no nested soak)"
+                )
+            # Nested STRICT starter must not re-run docker (double recreate races mesh).
+            if "SkipPreflight = $true" not in evm_strict:
+                errors.append(
+                    "EVM STRICT nested call must SkipPreflight=$true (no double docker)"
+                )
+            # estimate_gas fail-closed honesty
+            adapter_py = (ROOT / "execution" / "evm_adapter.py").read_text(
+                encoding="utf-8", errors="replace"
+            )
+            est_idx = adapter_py.find("def estimate_gas")
+            est_fn = adapter_py[est_idx : est_idx + 500] if est_idx >= 0 else ""
+            if "return None" not in est_fn:
+                errors.append(
+                    "evm_adapter.estimate_gas must return None on failed dry-run (not invent gas_limit)"
+                )
+            if "gas_used * 1.2" in est_fn or "float(" in est_fn:
+                errors.append(
+                    "evm_adapter.estimate_gas must use integer buffer (no float * 1.2)"
+                )
         if not (ROOT / "docs" / "sprouts" / "STRICT_SOAK_PARITY.md").is_file():
             errors.append("docs/sprouts/STRICT_SOAK_PARITY.md missing (soft vs hard triage)")
         if "under_mesh soak WARN" not in p2p_py:

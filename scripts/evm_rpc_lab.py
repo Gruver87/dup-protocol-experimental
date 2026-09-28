@@ -299,6 +299,8 @@ def main() -> int:
     snap = evm_compat_honesty_snapshot(Config())
     if snap.get("partial_count", 0) < 1 or snap.get("not_claimed_count", 0) < 1:
         return _fail("compat snapshot must list partial + not_claimed rows")
+    if int(snap.get("supported_absolute_count", 0) or 0) < 1:
+        return _fail("compat snapshot must list supported_absolute eth_* rows")
 
     print(
         "OK: evm_rpc_lab PASS "

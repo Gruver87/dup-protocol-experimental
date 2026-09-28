@@ -9,6 +9,7 @@
 param(
     [int]$Hours = 48,
     [int]$IntervalSec = 60,
+    [int]$TipStagnantFailAfterSec = 0,
     [string]$LogFile = "logs/soak_48h_libp2p_strict.log",
     [string]$ReportFile = "logs/soak_report_48h_libp2p_strict.json",
     [switch]$SkipRebuild,
@@ -28,7 +29,7 @@ if ($logDir -and -not (Test-Path $logDir)) {
 }
 
 Write-Host "STRICT 48h Experimental prod mesh soak (libp2p)" -ForegroundColor Cyan
-Write-Host "  hours=$Hours interval=${IntervalSec}s Strict + FullHarnessEvery=6" -ForegroundColor DarkGray
+Write-Host "  hours=$Hours interval=${IntervalSec}s Strict + FullHarnessEvery=6 tip_stagnant=${TipStagnantFailAfterSec}s" -ForegroundColor DarkGray
 Write-Host "  bar: fail=0 mesh_warn=0 (soft peer_probe/harness_timeout WARN OK)" -ForegroundColor DarkGray
 Write-Host "  NOT default ind48pass1 / NOT mempool sidecar / NOT TLS-required / NOT mainnet" -ForegroundColor DarkGray
 Write-Host "  log=$LogFile report=$ReportFile" -ForegroundColor DarkGray
@@ -86,6 +87,7 @@ $activeMeta = @{
     interval_sec = $IntervalSec
     strict = $true
     full_harness_every = 6
+    tip_stagnant_fail_after_sec = $TipStagnantFailAfterSec
     started_at = (Get-Date -Format "o")
     git_tag = $gitTag
     git_sha = $gitSha
@@ -113,12 +115,19 @@ $soakArgs = @(
     "-LogFile", $LogFile,
     "-ReportFile", $ReportFile
 )
+if ($TipStagnantFailAfterSec -gt 0) {
+    $soakArgs += @("-TipStagnantFailAfterSec", $TipStagnantFailAfterSec)
+}
 
 if ($Foreground) {
     & $soakScript @soakArgs
     exit $LASTEXITCODE
 }
 
+$tipArg = ""
+if ($TipStagnantFailAfterSec -gt 0) {
+    $tipArg = " -TipStagnantFailAfterSec $TipStagnantFailAfterSec"
+}
 $cmdLine = @(
     "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden",
     "-File `"$soakScript`"",
@@ -126,7 +135,7 @@ $cmdLine = @(
     "-IntervalSec $IntervalSec",
     "-ProdMesh -Strict",
     "-LogFile `"$LogFile`"",
-    "-ReportFile `"$ReportFile`""
+    "-ReportFile `"$ReportFile`"$tipArg"
 ) -join " "
 $created = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{
     CommandLine      = $cmdLine

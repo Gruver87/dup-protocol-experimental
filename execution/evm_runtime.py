@@ -27,97 +27,118 @@ _COMPAT_ROWS: List[Dict[str, str]] = [
         "notes": "execution/evm_precompiles.py on call + apply paths",
     },
     {"area": "eth_call", "status": "supported", "notes": "Hex ABI word encoding + precompile bytes"},
-    {"area": "eth_estimateGas", "status": "partial", "notes": "Missing adapter → JSON null"},
-    {"area": "eth_getTransactionReceipt", "status": "partial", "notes": "Null-honesty; no 21000 stub"},
-    {"area": "eth_getLogs", "status": "partial", "notes": "Log index; missing fields → null"},
-    {"area": "eth_getBlockByNumber", "status": "partial", "notes": "Absolute merkle roots; not Ethereum MPT"},
-    {"area": "eth_feeHistory", "status": "partial", "notes": "baseFeePerGas/reward null (not EIP-1559)"},
+    {
+        "area": "eth_estimateGas",
+        "status": "supported_absolute",
+        "notes": "Missing adapter → JSON null; Absolute honesty — not geth gas",
+    },
+    {
+        "area": "eth_getTransactionReceipt",
+        "status": "supported_absolute",
+        "notes": "Null-honesty; no 21000 stub",
+    },
+    {"area": "eth_getLogs", "status": "supported_absolute", "notes": "Log index; missing fields → null"},
+    {
+        "area": "eth_getBlockByNumber",
+        "status": "supported_absolute",
+        "notes": "Absolute merkle roots; not Ethereum MPT",
+    },
+    {
+        "area": "eth_feeHistory",
+        "status": "supported_absolute",
+        "notes": "baseFeePerGas/reward null (not EIP-1559)",
+    },
     {
         "area": "eth_maxPriorityFeePerGas",
-        "status": "partial",
+        "status": "supported_absolute",
         "notes": "Unset/0 → JSON null (not EIP-1559 tip market)",
     },
     {
         "area": "eth_coinbase_mining_hashrate",
-        "status": "partial",
+        "status": "supported_absolute",
         "notes": "Empty coinbase null; mining mesh-honest; hashrate 0x0 (not ethash)",
     },
     {
         "area": "eth_getCode_balance_storage",
-        "status": "partial",
+        "status": "supported_absolute",
         "notes": "Missing account: code 0x, balance/storage 0x0",
     },
     {
         "area": "eth_protocolVersion",
-        "status": "partial",
+        "status": "supported_absolute",
         "notes": "Compat constant 0x41 — not eth/65 wire claim",
     },
     {
         "area": "eth_chainId_net_clientVersion",
-        "status": "partial",
+        "status": "supported_absolute",
         "notes": "Config chain_id + Absolute/{node_version}/python client string",
     },
     {
         "area": "eth_syncing_net_peerCount",
-        "status": "partial",
+        "status": "supported_absolute",
         "notes": "No adapter → false/0x0; mesh-bound when P2P wired",
     },
     {
         "area": "eth_gasPrice",
-        "status": "partial",
-        "notes": "JSON null by default; config floor only when advertise_config_gas_price=true (not a live tip market)",
+        "status": "supported_absolute",
+        "notes": "JSON null by default; config floor only when advertise_config_gas_price=true",
     },
     {
         "area": "eth_getTransactionCount",
-        "status": "partial",
+        "status": "supported_absolute",
         "notes": "Observed nonce; missing account 0x0",
     },
     {
         "area": "eth_getTransactionByHash",
-        "status": "partial",
+        "status": "supported_absolute",
         "notes": "Missing tx null; format_tx null-honesty",
     },
     {
         "area": "eth_getBlockTransactionCount",
-        "status": "partial",
+        "status": "supported_absolute",
         "notes": "Missing block null; observed count hex",
     },
     {
         "area": "eth_blockNumber_accounts_mempoolSize",
-        "status": "partial",
+        "status": "supported_absolute",
         "notes": "Tip hex; accounts empty when unset; mempool 0x0 empty",
     },
     {
         "area": "eth_getTransactionByBlockNumberAndIndex",
-        "status": "partial",
+        "status": "supported_absolute",
         "notes": "Missing block/index null",
     },
     {
         "area": "eth_getTransactionReceipt_rpc",
-        "status": "partial",
+        "status": "supported_absolute",
         "notes": "Missing tx null; format_receipt null-honesty",
     },
     {
         "area": "eth_getLogs_rpc",
-        "status": "partial",
+        "status": "supported_absolute",
         "notes": "Sparse fields null; empty filter []",
     },
     {
         "area": "eth_getBlockByNumber_rpc",
-        "status": "partial",
+        "status": "supported_absolute",
         "notes": "Missing block null; sparse header null-honesty",
     },
     {
         "area": "eth_newFilter_polling",
-        "status": "partial",
-        "notes": "HTTP polling filters; unknown id []",
+        "status": "supported_absolute",
+        "notes": "HTTP polling filters; unknown id []; not WS eth_subscribe",
+    },
+    {
+        "area": "eth_subscribe_ws",
+        "status": "not_claimed",
+        "notes": "Code present (api/eth_ws_subscriptions.py) — not industrial / not EVM STRICT evidence",
     },
     {"area": "eip_4844_blobs", "status": "not_claimed", "notes": "Out of scope"},
     {"area": "eof", "status": "not_claimed", "notes": "Out of scope"},
     {"area": "full_geth_json_rpc", "status": "not_claimed", "notes": "Wave-gated methods only"},
 ]
 
-_NOT_CLAIMED = ("eip_4844_blobs", "eof", "full_geth_json_rpc")
+_NOT_CLAIMED = ("eth_subscribe_ws", "eip_4844_blobs", "eof", "full_geth_json_rpc")
 
 
 def compat_matrix_rows() -> List[Dict[str, str]]:
@@ -134,9 +155,14 @@ def evm_compat_honesty_snapshot(config: Any | None = None) -> Dict[str, Any]:
     gas_limit = int(getattr(config, "evm_gas_limit", 8_000_000) or 8_000_000) if config else 8_000_000
     prod_hardened = mode in ("prod", "production", "staging") and create2 and deploy_salt
 
-    supported_n = sum(1 for r in _COMPAT_ROWS if r["status"] in ("supported", "supported_prod"))
+    supported_n = sum(
+        1
+        for r in _COMPAT_ROWS
+        if r["status"] in ("supported", "supported_prod", "supported_absolute")
+    )
     partial_n = sum(1 for r in _COMPAT_ROWS if r["status"] == "partial")
     not_claimed_n = sum(1 for r in _COMPAT_ROWS if r["status"] == "not_claimed")
+    absolute_n = sum(1 for r in _COMPAT_ROWS if r["status"] == "supported_absolute")
 
     if not enabled:
         detail = "evm_disabled: execution VM off (unexpected on Profile A)"
@@ -150,7 +176,7 @@ def evm_compat_honesty_snapshot(config: Any | None = None) -> Dict[str, Any]:
     else:
         detail = (
             f"evm_dev_profile: gas_limit={gas_limit}; "
-            "lab waves 8–10 (precompile/rpc/nested); mesh smoke separate"
+            "lab waves 8–11 (precompile/rpc/nested/reorg/logs/filters); mesh smoke separate"
         )
 
     return {
@@ -162,6 +188,7 @@ def evm_compat_honesty_snapshot(config: Any | None = None) -> Dict[str, Any]:
         "prod_hardened": bool(prod_hardened),
         "compat_matrix": compat_matrix_rows(),
         "supported_count": supported_n,
+        "supported_absolute_count": absolute_n,
         "partial_count": partial_n,
         "not_claimed_count": not_claimed_n,
         "not_claimed": list(_NOT_CLAIMED),
@@ -171,11 +198,16 @@ def evm_compat_honesty_snapshot(config: Any | None = None) -> Dict[str, Any]:
             "scripts/evm_nested_lab.py",
             "scripts/evm_reorg_lab.py",
             "scripts/evm_logs_lab.py",
+            "scripts/evm_filters_lab.py",
         ],
         "mesh_evidence_script": "scripts/prod_evm_smoke.py",
         "mesh_evidence_note": (
             "Live prod mesh deploy + eth_getStorageAt; requires Docker mesh — "
             "not a substitute for lab scripts"
+        ),
+        "strict_prep_note": (
+            "EVM STRICT = start_soak_evm_mesh_48h_strict.ps1 after live evm_pre_48h_harness; "
+            "not started from /evm/status; not EVM-only 48h"
         ),
         "detail": detail,
     }

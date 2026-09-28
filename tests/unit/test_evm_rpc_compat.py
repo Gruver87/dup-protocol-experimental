@@ -1027,6 +1027,24 @@ def test_eth_estimate_gas_null_without_adapter() -> None:
     assert resp2.get("result") is None
 
 
+def test_evm_adapter_estimate_gas_failed_returns_none() -> None:
+    """Failed dry-run must return None (RPC → JSON null), never invent gas_limit."""
+    from execution.evm_adapter import EVMAdapter
+
+    class _Cfg:
+        evm_gas_limit = 8_000_000
+        evm_create2_eip1014 = False
+        evm_require_deploy_salt = False
+
+    class _Db:
+        def get_account(self, _addr):
+            return None
+
+    adapter = EVMAdapter(db=_Db(), config=_Cfg())  # type: ignore[arg-type]
+    # static_call on missing contract fails → None
+    assert adapter.estimate_gas("0x" + "ab" * 20, "0xdead") is None
+
+
 def test_eth_max_priority_fee_null_without_eip1559() -> None:
     """Unset / zero priority_fee_wei → JSON null (not 0x0 tip market)."""
     client = FakeRpcClient()

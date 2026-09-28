@@ -45,6 +45,7 @@ Full map: [ARCHITECTURE § R&D execution chain](ARCHITECTURE.md#rd-execution-cha
 | Add/remove/expire match canonical charge key | NTFS replace = POSIX inode-atomic |
 | Long-Range WS lab + mesh 2h [`lr2hmesh`](evidence/runs/lr2hmesh/) + **lab 48h** [`lr48pass1`](evidence/runs/lr48pass1/) + **STRICT 48h** [`lrstrict1`](evidence/runs/lrstrict1/) | Long-Range **prod arm** / BLS / `feature_long_range` on `778888` |
 | Phase 3 post-EVM-prep mesh 48h [`evm48pass1`](evidence/runs/evm48pass1/) + `evm_pre_48h_harness.py` | Full geth parity / EIP-4844 / **EVM-only** 48h claim |
+| EVM STRICT prep Phase 3b **READY** (prepare + TipStagnant + estimate_gas null-honesty) — soak not started | EVM STRICT 48h pack (`evmstrict1`) until ordered |
 | EVM depth lab (waves 8–11 + RPC honesty; `GET /evm/status`) | Oracles/sharding on prod mesh 778888 |
 | Oracle quorum + shard 2/3 labs (`oracle_lab`, `cross_shard_lab`; prod flags off) | Council 48h soak / on-chain signed gov / mainnet treasury |
 | Gruver87 council ADR 0022 (Profile C `:19080`, 87 genesis mint) | Merging Dependabot major bumps |

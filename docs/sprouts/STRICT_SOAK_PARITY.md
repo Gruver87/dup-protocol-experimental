@@ -97,3 +97,6 @@ Left intentional (lab): committee `secrets.json` RO on all lab nodes — issuanc
 - Long-Range STRICT stays on lab ports **29080–29082**, never prod 18180.
 - EVM STRICT = `start_soak_evm_mesh_48h_strict.ps1` (same Strict bar after EVM prep).
   Not EVM-only 48h / not geth / distinct from default [`evm48pass1`](../evidence/runs/evm48pass1/).
+  **Prep READY 2026-09-28** (live harness + `prepare_48h_soak` wiring + TipStagnant=3600 + estimate_gas null-honesty).
+  Soak **not** started; no `evmstrict1` pack yet.
+  Historical `evm48pass1` soft: under_mesh×8 / ready_flap×3 / peer_probe — soft WARN only; tip-race `inconsistent` superseded by `tip_skew`.
