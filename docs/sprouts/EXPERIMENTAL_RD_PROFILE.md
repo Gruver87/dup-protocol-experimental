@@ -12,8 +12,8 @@ Lab-only profile for Long-Range. libp2p on Experimental `778888` mesh is
 
 - **Experimental industrial mesh:** rust-libp2p Noise/Yamux + ADR 0008 `/abs/wire` (ADR 0020).
 - **Hybrid audit-pin:** native TCP + TLS/mTLS (unchanged).
-- **Long-Range:** stays off on prod mesh JSON. Lab arm: `feature_long_range=true` (dev) or `FEATURE_LONG_RANGE` env + `ABS_WS_CHECKPOINT_PATH`.
-- **Execution order:** [EXECUTION_ORDER.md](../EXECUTION_ORDER.md) — B1/B2/Phase 3 **closed** (`3c801b87`, `lr48pass1`, `evm48pass1`); Phase 4 ADR 0021 **closed** (`adr0021gaudit1`); Phase 5 labs **closed** (`oraclelab1`/`shardlab1`/`bridgeoff1`); Waves A–G honesty DX landed. Mempool soak **only if ordered**. Preflight: `scripts/evm_pre_48h_harness.py` · `scripts/verify_pre_soak.ps1` · `scripts/verify_wave_g.ps1`.
+- **Long-Range:** stays off on prod mesh JSON **and staging**. Lab arm: `feature_long_range=true` + `deployment_mode=dev` + `ABS_WS_CHECKPOINT_PATH`. Mid-soak autonomy: miner `roll_forward` (`ABS_WS_ROLL_GAP` / `ABS_WS_ROLL_CONFIRM`) + tip-safe gossip adopt.
+- **Execution order:** [EXECUTION_ORDER.md](../EXECUTION_ORDER.md) — B1/B2/Phase 3 **closed** (`3c801b87`, `lr48pass1` + STRICT [`lrstrict1`](../evidence/runs/lrstrict1/), `evm48pass1`); Phase 4 ADR 0021 **closed** (`adr0021gaudit1`); Phase 5 labs **closed** (`oraclelab1`/`shardlab1`/`bridgeoff1`); Waves A–G honesty DX landed. STRICT triage: [STRICT_SOAK_PARITY.md](STRICT_SOAK_PARITY.md). Preflight: `scripts/evm_pre_48h_harness.py` · `scripts/verify_pre_soak.ps1` · `scripts/verify_wave_g.ps1`.
 
 ## EVM depth
 
@@ -38,11 +38,12 @@ Compatibility gaps: [EVM_COMPAT_MATRIX.md](EVM_COMPAT_MATRIX.md).
 - `cargo test` for `abs_native` must link CPython (`scripts/cargo_test_abs_native.py`);
   crate default `extension-module` is wheel-only and does **not** link libpython.
 - Unified Hybrid+Experimental operator view: `scripts/verify_absolute_unified.ps1`.
-- Long-Range tip gate (when `FEATURE_LONG_RANGE=true`): persist
-  `ABS_WS_CHECKPOINT_PATH` (height+hash JSON) across restart. Optional
-  `ABS_WS_ANCHOR_HEIGHT` + `ABS_WS_ANCHOR_HASH` seed an empty store once and
-  are written to that path. Armed without an anchor is **HARD REFUSE**
-  (`ws_no_anchor`). Candidate history below the anchor is **HARD REFUSE**.
-  Not a live finality quorum. Industrial JSON keeps the flag **false**.
+- Long-Range tip gate (when `FEATURE_LONG_RANGE=true` / lab JSON): persist
+  `ABS_WS_CHECKPOINT_PATH` (height+hash JSON + optional Ed25519 committee) across restart.
+  Optional `ABS_WS_ANCHOR_HEIGHT` + `ABS_WS_ANCHOR_HASH` seed an empty store once.
+  Armed without an anchor is **HARD REFUSE** (`ws_no_anchor`). History below the
+  anchor is **HARD REFUSE**. Miner may roll the floor forward mid-soak; peers
+  defer adopt above local tip. Not a live finality quorum. Industrial JSON keeps
+  the flag **false**. STRICT 48h evidence: [`lrstrict1`](../evidence/runs/lrstrict1/).
 
-See [EXPERIMENTAL_SANDBOX.md](../../EXPERIMENTAL_SANDBOX.md).
+See [EXPERIMENTAL_SANDBOX.md](../../EXPERIMENTAL_SANDBOX.md) · [LONG_RANGE_LAB_PROFILE.md](LONG_RANGE_LAB_PROFILE.md).

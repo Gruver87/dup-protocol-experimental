@@ -12,8 +12,10 @@ Historical modules grow as **profiles**, not as a kitchen-sink on `778888` Rocks
 | **D — L2 sandbox** | Plasma / Lightning / WASM aux | [L2_SANDBOX_PROFILE.md](L2_SANDBOX_PROFILE.md) |
 | **E — Shard lab** | Separate mesh + DB | [SHARD_LAB_PROFILE.md](SHARD_LAB_PROFILE.md) |
 | **F — Experimental R&D** | libp2p / Long-Range lab flags | [EXPERIMENTAL_RD_PROFILE.md](EXPERIMENTAL_RD_PROFILE.md) |
+| **F′ — Long-Range lab** | ADR 0017 WS (lab-only) | [LONG_RANGE_LAB_PROFILE.md](LONG_RANGE_LAB_PROFILE.md) · evidence [`lrstrict1`](../evidence/runs/lrstrict1/) |
 
-Ops on the core: [CEREMONY_AND_SECRETS.md](CEREMONY_AND_SECRETS.md).
+Ops on the core: [CEREMONY_AND_SECRETS.md](CEREMONY_AND_SECRETS.md).  
+STRICT soak triage: [STRICT_SOAK_PARITY.md](STRICT_SOAK_PARITY.md).  
 **EVM depth** stays on Profile A (inside apply): [EVM_DEPTH.md](EVM_DEPTH.md) · gaps: [EVM_COMPAT_MATRIX.md](EVM_COMPAT_MATRIX.md).
 
 **Never on forge / L1 trust path:** AI validator/agents, educational ZK/PQ as

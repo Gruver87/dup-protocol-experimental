@@ -66,7 +66,9 @@ Explorer (solo): http://localhost:8080
 | 48h soak on this tree (TCP+TLS) | **PASS** | 2026-08-20→22 [`0a7932c4`](docs/evidence/runs/0a7932c4/) — not libp2p; not Hybrid `375d14f` |
 | ADR 0017 Long-Range lab mesh 2h | **PASS** | [`lr2hmesh`](docs/evidence/runs/lr2hmesh/) · Ed25519 committee · tip growth · solo prior [`lr2h9f3a`](docs/evidence/runs/lr2h9f3a/) |
 | Long-Range lab 48h (B2) | **PASS** | 2026-09-09→11 [`lr48pass1`](docs/evidence/runs/lr48pass1/) · `hard_fails=0` · `mesh_warn=0` · prior FAIL [`lr48fail1`](docs/evidence/runs/lr48fail1/) · intensify [`lr2hintensify`](docs/evidence/runs/lr2hintensify/) |
-| Long-Range prod arm / BLS | **Not claimed** | `feature_long_range=false` on prod `778888` |
+| Long-Range lab STRICT 48h | **PASS** | 2026-09-26→28 [`lrstrict1`](docs/evidence/runs/lrstrict1/) · `strict=true` · fail=0 · mesh_warn=0 · tip ~18646→~30096 · autonomous WS roll-forward |
+| Long-Range prod arm / BLS | **Not claimed** | `feature_long_range=false` on prod `778888` (+ staging hard-off) |
+| Libp2p STRICT 48h | **PASS** | [`lp2pstrict1`](docs/evidence/runs/lp2pstrict1/) · IntervalSec=60 · warn_lines=0 |
 | Phase 3 post-EVM-prep mesh 48h | **PASS** | 2026-09-11→13 [`evm48pass1`](docs/evidence/runs/evm48pass1/) · tip ~10125→~19197 · **not** EVM-only 48h |
 | Mempool + validation STRICT 48h | **PASS** | [`mempool48pass1`](docs/evidence/runs/mempool48pass1/) · ADR 0021 path · **not** mainnet |
 | Wire fee/amount satoshi cutover | **Landed** | `verify_adr0021_wire_satoshi.ps1` · dual-write + mismatch refuse |
@@ -92,6 +94,7 @@ What is closed vs open on **this** tree. Columns = execution order ([EXECUTION_O
 | **2a** | Long-Range lab solo 2h | **DONE** | [`lr2h9f3a`](docs/evidence/runs/lr2h9f3a/) |
 | **2b** | Long-Range lab 3-node mesh 2h + Ed25519 committee | **DONE** | [`lr2hmesh`](docs/evidence/runs/lr2hmesh/) |
 | **2c** | Long-Range lab 48h | **DONE** (B2 closed) | [`lr48pass1`](docs/evidence/runs/lr48pass1/) · prior FAIL [`lr48fail1`](docs/evidence/runs/lr48fail1/) · intensify [`lr2hintensify`](docs/evidence/runs/lr2hintensify/) |
+| **2d** | Long-Range lab STRICT 48h | **DONE** | [`lrstrict1`](docs/evidence/runs/lrstrict1/) · [STRICT_SOAK_PARITY](docs/sprouts/STRICT_SOAK_PARITY.md) |
 | **3** | EVM mesh regression + post-prep 48h | **DONE** | [`evm48pass1`](docs/evidence/runs/evm48pass1/) · preflight `evm_pre_48h_harness.py` |
 | **4** | Mempool / validation → Rust | **DONE** (phases 0–3 + mesh bake + global audit + STRICT 48h) | [`adr0021gaudit1`](docs/evidence/runs/adr0021gaudit1/) · [`mempool48pass1`](docs/evidence/runs/mempool48pass1/) · [ADR 0021](docs/adr/0021-mempool-validation-rust-phases.md) |
 | **5** | Industrial polish (wire satoshi · persist · native f64 · HIGH · MED · verify restore · tip 48h) | **DONE** | [INDUSTRIAL_MAX_SCAN](docs/INDUSTRIAL_MAX_SCAN_2026-09-20.md) · [`ind48pass1`](docs/evidence/runs/ind48pass1/) · [FUND_READINESS](docs/FUND_READINESS.md) |
@@ -105,9 +108,10 @@ flowchart LR
   P2a["Phase2a LR solo 2h\nPASS lr2h9f3a"]
   P2b["Phase2b LR mesh 2h\nPASS lr2hmesh"]
   P2c["Phase2c LR lab 48h\nPASS lr48pass1"]
+  P2d["Phase2d LR STRICT 48h\nPASS lrstrict1"]
   P3["Phase3 mesh 48h\nPASS evm48pass1"]
   P4["Phase4 Mempool Rust\nPASS adr0021gaudit1"]
-  P1 --> P2a --> P2b --> P2c --> P3 --> P4
+  P1 --> P2a --> P2b --> P2c --> P2d --> P3 --> P4
 ```
 
 Full layer map: [ARCHITECTURE](docs/ARCHITECTURE.md#rd-execution-chain).
@@ -120,7 +124,7 @@ Full layer map: [ARCHITECTURE](docs/ARCHITECTURE.md#rd-execution-chain).
 |-------|--------|-------|
 | **ADR 0019 rust-libp2p** | Slices **A–DB** (phase 105) behind Cargo `libp2p` | [ADR 0019](docs/adr/0019-rust-libp2p-industrial.md) |
 | **ADR 0020 Experimental mesh** | libp2p on `778888` · **B1 CLOSED** 48h PASS | [`3c801b87`](docs/evidence/runs/3c801b87/) · [EXECUTION_ORDER](docs/EXECUTION_ORDER.md) |
-| **ADR 0017 Long-Range** | Lab mesh 2h + **lab 48h PASS** · B2 closed · not BLS/prod | [`lr48pass1`](docs/evidence/runs/lr48pass1/) · [LONG_RANGE_LAB_PROFILE](docs/sprouts/LONG_RANGE_LAB_PROFILE.md) |
+| **ADR 0017 Long-Range** | Lab mesh 2h + lab 48h + **STRICT 48h PASS** · B2 closed · not BLS/prod | [`lrstrict1`](docs/evidence/runs/lrstrict1/) · [`lr48pass1`](docs/evidence/runs/lr48pass1/) · [LONG_RANGE_LAB_PROFILE](docs/sprouts/LONG_RANGE_LAB_PROFILE.md) |
 | **EVM depth / RPC honesty** | Waves 8–11 + Phase 3 mesh 48h PASS | [`evm48pass1`](docs/evidence/runs/evm48pass1/) · [EVM_COMPAT_MATRIX](docs/sprouts/EVM_COMPAT_MATRIX.md) |
 | **ADR 0021 mempool Rust** | Phases 0–3 + mesh bake + global audit + **STRICT 48h** + wire satoshi cutover | [`mempool48pass1`](docs/evidence/runs/mempool48pass1/) · [`adr0021gaudit1`](docs/evidence/runs/adr0021gaudit1/) · [ADR 0021](docs/adr/0021-mempool-validation-rust-phases.md) |
 
@@ -184,7 +188,7 @@ Default Hybrid CI / prod mesh builds **without** the `libp2p` feature.
 
 - Green lab / hard verify ≠ tip existence proof ≠ firm audit PDF.
 - Experimental prod mesh JSON (`778888`) is **libp2p** (ADR 0020) with **48h PASS** [`3c801b87`](docs/evidence/runs/3c801b87/). Hybrid audit-pin JSON stays `feature_libp2p=false`. TCP+TLS soak `0a7932c4` is a separate historical PASS — not libp2p.
-- Long-Range is **lab-only** (`feature_long_range=false` on prod JSON). Lab mesh 2h [`lr2hmesh`](docs/evidence/runs/lr2hmesh/) + lab 48h PASS [`lr48pass1`](docs/evidence/runs/lr48pass1/) ≠ BLS ≠ prod arm ≠ mainnet.
+- Long-Range is **lab-only** (`feature_long_range=false` on prod JSON + staging hard-off). Lab mesh 2h [`lr2hmesh`](docs/evidence/runs/lr2hmesh/) + lab 48h [`lr48pass1`](docs/evidence/runs/lr48pass1/) + STRICT 48h [`lrstrict1`](docs/evidence/runs/lrstrict1/) ≠ BLS ≠ prod arm ≠ mainnet.
 - Phase 3 post-EVM-prep mesh 48h PASS [`evm48pass1`](docs/evidence/runs/evm48pass1/) ≠ EVM-only 48h ≠ full geth.
 - Phase 4 ADR 0021 global audit PASS [`adr0021gaudit1`](docs/evidence/runs/adr0021gaudit1/) ≠ mainnet. STRICT mempool+validation 48h is separate PASS [`mempool48pass1`](docs/evidence/runs/mempool48pass1/).
 - Wire satoshi / PersistError / native f64 hygiene = operator verify scripts ≠ new 48h soak ≠ mainnet.

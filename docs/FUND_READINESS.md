@@ -1,7 +1,7 @@
 # Fund / diligence readiness — Experimental (honest)
 
 **Audience:** grant officers, technical diligence, advisors.  
-**Date:** 2026-09-23 · Repo: [`Gruver87/experimental`](https://github.com/Gruver87/experimental) · branch `main`  
+**Date:** 2026-09-28 · Repo: [`Gruver87/experimental`](https://github.com/Gruver87/experimental) · branch `main`  
 **Not:** public audited mainnet · not Hybrid audit-freeze pin · not listed ABS.
 
 One-screen status: [AT_A_GLANCE.md](AT_A_GLANCE.md) · Evidence ledger: [EVIDENCE_MATRIX.md](EVIDENCE_MATRIX.md) · Gaps: [MAINNET_GAP_ANALYSIS.md](MAINNET_GAP_ANALYSIS.md) · Vision (Hybrid): [VISION](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/VISION.md).
@@ -17,7 +17,8 @@ Industrial **R&D / private-testnet** hybrid L1 (Python orchestration + Rust hot 
 | Claim | Evidence |
 |-------|----------|
 | libp2p industrial mesh 48h | [`3c801b87`](evidence/runs/3c801b87/) `hard_fails=0` |
-| Long-Range **lab** 48h | [`lr48pass1`](evidence/runs/lr48pass1/) — prod JSON keeps `feature_long_range=false` |
+| Long-Range **lab** 48h (default) | [`lr48pass1`](evidence/runs/lr48pass1/) — prod JSON keeps `feature_long_range=false` |
+| Long-Range **lab STRICT** 48h | [`lrstrict1`](evidence/runs/lrstrict1/) `strict=true` fail=0 mesh_warn=0 tip ~18646→~30096 |
 | Post-EVM prep mesh 48h | [`evm48pass1`](evidence/runs/evm48pass1/) |
 | Mempool+validation STRICT 48h | [`mempool48pass1`](evidence/runs/mempool48pass1/) |
 | ADR 0021 global R&D audit | [`adr0021gaudit1`](evidence/runs/adr0021gaudit1/) 13/13 |
@@ -60,6 +61,7 @@ ADRs: 0001 tip-safety · 0009 hybrid · 0016 profiles · 0017 Long-Range (lab) �
 | CI badges green (Security / Tests / Experimental R&D) | Tip `719deb4` — all four workflows green |
 | Tip 48h soak after industrial polish (`719deb4`) | **PASS** [`ind48pass1`](evidence/runs/ind48pass1/) |
 | Libp2p STRICT 48h (`start_soak_prod_mesh_48h_strict.ps1`) | **PASS** [`lp2pstrict1`](evidence/runs/lp2pstrict1/) |
+| Long-Range STRICT 48h (`start_soak_long_range_lab.ps1 -Hours 48 -Strict`) | **PASS** [`lrstrict1`](evidence/runs/lrstrict1/) |
 | External audit / secrets rotate / validator ceremony live | Org Phase 6 |
 
 ## CI badges (must be green for diligence)

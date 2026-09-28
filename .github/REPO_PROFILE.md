@@ -67,7 +67,7 @@ noise-protocol
 | **Tag** | `rd-1.0.0` — first R&D GitHub Release; `main` through Slice DB phase 105 |
 | **ADR stack** | Hybrid 0001–0016 inherited · **0017–0021** Experimental |
 | **Hard gate** | 117 steps with `--rebuild` |
-| **Closed** | B1 [`3c801b87`](../docs/evidence/runs/3c801b87/) · B2 [`lr48pass1`](../docs/evidence/runs/lr48pass1/) · Phase 3 [`evm48pass1`](../docs/evidence/runs/evm48pass1/) · Phase 4 [`adr0021gaudit1`](../docs/evidence/runs/adr0021gaudit1/) + STRICT [`mempool48pass1`](../docs/evidence/runs/mempool48pass1/) · Phase 5 industrial tip [`ind48pass1`](../docs/evidence/runs/ind48pass1/) |
+| **Closed** | B1 [`3c801b87`](../docs/evidence/runs/3c801b87/) · B2 [`lr48pass1`](../docs/evidence/runs/lr48pass1/) + STRICT [`lrstrict1`](../docs/evidence/runs/lrstrict1/) · Phase 3 [`evm48pass1`](../docs/evidence/runs/evm48pass1/) · Phase 4 [`adr0021gaudit1`](../docs/evidence/runs/adr0021gaudit1/) + STRICT [`mempool48pass1`](../docs/evidence/runs/mempool48pass1/) · Phase 5 industrial tip [`ind48pass1`](../docs/evidence/runs/ind48pass1/) · libp2p STRICT [`lp2pstrict1`](../docs/evidence/runs/lp2pstrict1/) |
 | **Open / next** | Phase 6 org — [FUND_READINESS](../docs/FUND_READINESS.md) · [INDUSTRIAL_MAX_SCAN](../docs/INDUSTRIAL_MAX_SCAN_2026-09-20.md) |
 | **Notes** | [CHANGELOG](../CHANGELOG.md) · [RELEASING](../docs/RELEASING.md) |
 | **Industrial sibling** | [`Absolute_Blockchain_Ultimate_Hybrid`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid) — **not** this freeze |
@@ -85,8 +85,8 @@ noise-protocol
 
 ## Honest positioning (release / About)
 
-- **Is:** R&D sandbox; rust-libp2p industrial mesh **48h PASS**; Long-Range **lab** 48h PASS; Phase 3 post-EVM mesh **48h PASS**; mempool+validation STRICT **48h PASS**; industrial polish tip **48h PASS** (`ind48pass1`, ADR 0021 wire on mesh); fund diligence card
+- **Is:** R&D sandbox; rust-libp2p industrial mesh **48h PASS** + STRICT [`lp2pstrict1`](../docs/evidence/runs/lp2pstrict1/); Long-Range **lab** 48h PASS + STRICT [`lrstrict1`](../docs/evidence/runs/lrstrict1/); Phase 3 post-EVM mesh **48h PASS**; mempool+validation STRICT **48h PASS**; industrial polish tip **48h PASS** (`ind48pass1`, ADR 0021 wire on mesh); fund diligence card
 - **Is not:** Hybrid audit pin; live public mainnet; Long-Range production / BLS; EVM-only 48h
 - **Banner:** evergreen `docs/assets/repo-banner.svg` (no Hybrid version chip)
 - **Profile README source:** [PROFILE_README.md](PROFILE_README.md) → publish as `Gruver87/Gruver87`
-- **Surface date:** 2026-09-23
+- **Surface date:** 2026-09-28

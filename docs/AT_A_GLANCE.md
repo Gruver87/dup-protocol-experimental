@@ -20,16 +20,16 @@ The audit-freeze pin · public audited mainnet · listed ABS · Hybrid `v1.3.*-i
 | Hard gate | **117** steps with `--rebuild` (operator-local, 2026-08-15) |
 | Default transport | **libp2p (ADR 0020)** on Experimental prod mesh JSON — Hybrid pin stays TCP+TLS |
 | Industrial pin | [Hybrid `v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/releases/tag/v1.3.1339-tip-v2-industrial) |
-| 48h soaks here | TCP+TLS **PASS** (`0a7932c4`) · **libp2p** [`3c801b87`](evidence/runs/3c801b87/) · **libp2p STRICT** [`lp2pstrict1`](evidence/runs/lp2pstrict1/) · **LR lab** [`lr48pass1`](evidence/runs/lr48pass1/) · **Phase 3 post-EVM** [`evm48pass1`](evidence/runs/evm48pass1/) · **mempool+validation STRICT** [`mempool48pass1`](evidence/runs/mempool48pass1/) · **industrial polish tip** [`ind48pass1`](evidence/runs/ind48pass1/). Not BLS / not mainnet / not EVM-only. |
+| 48h soaks here | TCP+TLS **PASS** (`0a7932c4`) · **libp2p** [`3c801b87`](evidence/runs/3c801b87/) · **libp2p STRICT** [`lp2pstrict1`](evidence/runs/lp2pstrict1/) · **LR lab** [`lr48pass1`](evidence/runs/lr48pass1/) · **LR STRICT** [`lrstrict1`](evidence/runs/lrstrict1/) · **Phase 3 post-EVM** [`evm48pass1`](evidence/runs/evm48pass1/) · **mempool+validation STRICT** [`mempool48pass1`](evidence/runs/mempool48pass1/) · **industrial polish tip** [`ind48pass1`](evidence/runs/ind48pass1/). Not BLS / not mainnet / not EVM-only. |
 | Self-check | `.\scripts\verify_global_rd_audit.ps1` (FullLaunch/Live) · `.\scripts\verify_pre_soak.ps1` · `.\scripts\start_pre48h_maxload_2h.ps1` (2h STRICT max-load pre-48h) · `.\scripts\start_mempool_validation_soak.ps1` (mempool+validation STRICT; operator-ordered) · `.\scripts\verify_adr0021_wire_satoshi.ps1` (wire fee/amount satoshi cutover) · `.\scripts\verify_persist_fail_closed.ps1` (hot persist PersistError) · `.\scripts\verify_native_f64_hygiene.ps1` (amount/writeback typed refuse) · `.\scripts\verify_industrial_high_honesty.ps1` (HIGH #18/#19–20/#22/#24) · `.\scripts\verify_wave_e.ps1` · `.\scripts\verify_wave_f.ps1` · `.\scripts\verify_wave_g.ps1` · `.\scripts\verify_wave_h.ps1` · `.\scripts\verify_wave_i.ps1` · `.\scripts\verify_wave_j.ps1` · `.\scripts\verify_wave_k.ps1` · `.\scripts\verify_wave_l.ps1` · `.\scripts\verify_wave_m.ps1` · `.\scripts\verify_wave_n.ps1` · `.\scripts\verify_wave_o.ps1` · `.\scripts\verify_wave_p.ps1` · `.\scripts\verify_wave_q.ps1` · `.\scripts\verify_wave_r.ps1` · `.\scripts\verify_evm_depth_lab.ps1` · `.\scripts\verify_long_range_lab.ps1` · `.\scripts\verify_council_lab.ps1` · `.\scripts\verify_hard_all.ps1` · `python scripts/verify_experimental_rd.py` |
 | Web UI | **Ops Console** `/` (`web/console/`) · legacy explorer `/explorer` · Grafana `deploy/grafana/dashboard.json` |
 | Open UI | `.\scripts\open_ops_console.ps1` (solo + **one** main tab `/`) · `-AllTabs` for multi-tab tour · reopen `.\scripts\open_ops_console.ps1 -OpenOnly` |
 
 ## Pipeline (columns)
 
-| 1 libp2p 48h | 2a LR solo 2h | 2b LR mesh 2h | 2c LR lab 48h | 3 EVM mesh 48h | 4 Mempool Rust |
-|:------------:|:-------------:|:-------------:|:-------------:|:--------------:|:--------------:|
-| **PASS** [`3c801b87`](evidence/runs/3c801b87/) | **PASS** [`lr2h9f3a`](evidence/runs/lr2h9f3a/) | **PASS** [`lr2hmesh`](evidence/runs/lr2hmesh/) | **PASS** [`lr48pass1`](evidence/runs/lr48pass1/) | **PASS** [`evm48pass1`](evidence/runs/evm48pass1/) | **PASS** [`mempool48pass1`](evidence/runs/mempool48pass1/) + audit [`adr0021gaudit1`](evidence/runs/adr0021gaudit1/) |
+| 1 libp2p 48h | 2a LR solo 2h | 2b LR mesh 2h | 2c LR lab 48h | 2d LR STRICT 48h | 3 EVM mesh 48h | 4 Mempool Rust |
+|:------------:|:-------------:|:-------------:|:-------------:|:---------------:|:--------------:|:--------------:|
+| **PASS** [`3c801b87`](evidence/runs/3c801b87/) | **PASS** [`lr2h9f3a`](evidence/runs/lr2h9f3a/) | **PASS** [`lr2hmesh`](evidence/runs/lr2hmesh/) | **PASS** [`lr48pass1`](evidence/runs/lr48pass1/) | **PASS** [`lrstrict1`](evidence/runs/lrstrict1/) | **PASS** [`evm48pass1`](evidence/runs/evm48pass1/) | **PASS** [`mempool48pass1`](evidence/runs/mempool48pass1/) + audit [`adr0021gaudit1`](evidence/runs/adr0021gaudit1/) |
 
 Full map: [ARCHITECTURE § R&D execution chain](ARCHITECTURE.md#rd-execution-chain) · [EXECUTION_ORDER](EXECUTION_ORDER.md).
 
@@ -43,7 +43,7 @@ Full map: [ARCHITECTURE § R&D execution chain](ARCHITECTURE.md#rd-execution-cha
 | AutoNAT/UPnP confirm admit-canonical-or-omit | Tip proof / public mainnet |
 | Identify observed confirm charges canonical key | Firm audit PDF |
 | Add/remove/expire match canonical charge key | NTFS replace = POSIX inode-atomic |
-| Long-Range WS lab + mesh 2h [`lr2hmesh`](evidence/runs/lr2hmesh/) + **lab 48h PASS** [`lr48pass1`](evidence/runs/lr48pass1/) | Long-Range **prod arm** / BLS / `feature_long_range` on `778888` |
+| Long-Range WS lab + mesh 2h [`lr2hmesh`](evidence/runs/lr2hmesh/) + **lab 48h** [`lr48pass1`](evidence/runs/lr48pass1/) + **STRICT 48h** [`lrstrict1`](evidence/runs/lrstrict1/) | Long-Range **prod arm** / BLS / `feature_long_range` on `778888` |
 | Phase 3 post-EVM-prep mesh 48h [`evm48pass1`](evidence/runs/evm48pass1/) + `evm_pre_48h_harness.py` | Full geth parity / EIP-4844 / **EVM-only** 48h claim |
 | EVM depth lab (waves 8–11 + RPC honesty; `GET /evm/status`) | Oracles/sharding on prod mesh 778888 |
 | Oracle quorum + shard 2/3 labs (`oracle_lab`, `cross_shard_lab`; prod flags off) | Council 48h soak / on-chain signed gov / mainnet treasury |
@@ -65,7 +65,7 @@ Full map: [ARCHITECTURE § R&D execution chain](ARCHITECTURE.md#rd-execution-cha
 
 ## Next click
 
-- **Next click** → [FUND_READINESS.md](FUND_READINESS.md) for grant/diligence; [EXECUTION_ORDER.md](EXECUTION_ORDER.md) — Phases 1–5 closed incl. tip 48h [`ind48pass1`](evidence/runs/ind48pass1/) (ADR 0021 wire on mesh); next Phase 6 org ([INDUSTRIAL_MAX_SCAN_2026-09-20.md](INDUSTRIAL_MAX_SCAN_2026-09-20.md))
+- **Next click** → [FUND_READINESS.md](FUND_READINESS.md) for grant/diligence; [EXECUTION_ORDER.md](EXECUTION_ORDER.md) — Phases 1–5 closed incl. LR STRICT [`lrstrict1`](evidence/runs/lrstrict1/) + tip 48h [`ind48pass1`](evidence/runs/ind48pass1/); next Phase 6 org ([INDUSTRIAL_MAX_SCAN_2026-09-20.md](INDUSTRIAL_MAX_SCAN_2026-09-20.md))
 - Hybrid pin (do not break): [Ultimate Hybrid](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid)
 - Contribute: [CONTRIBUTING](../CONTRIBUTING.md)
 - GitHub About: [REPO_PROFILE](../.github/REPO_PROFILE.md)
