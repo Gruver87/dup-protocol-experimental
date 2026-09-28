@@ -26,7 +26,7 @@ Canonical docs language is **English**. If GitHub shows a translation, open **Vi
 | Audience | Start here |
 |----------|------------|
 | **Architects / principals** | [AT_A_GLANCE](docs/AT_A_GLANCE.md) → [ARCHITECTURE](docs/ARCHITECTURE.md) → ADR [0017](docs/adr/0017-long-range-research.md) / [0019](docs/adr/0019-rust-libp2p-industrial.md) / [0020](docs/adr/0020-libp2p-industrial-mesh.md) |
-| **Grant officers / diligence** | [FUND_READINESS](docs/FUND_READINESS.md) · Hybrid [VISION](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/VISION.md) · [EVIDENCE_MATRIX](docs/EVIDENCE_MATRIX.md) · [EXECUTION_ORDER](docs/EXECUTION_ORDER.md) (Phases 1–5 + tip 48h [`ind48pass1`](docs/evidence/runs/ind48pass1/); next Phase 6 org) |
+| **Grant officers / diligence** | [FUND_READINESS](docs/FUND_READINESS.md) · Hybrid [VISION](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/VISION.md) · [EVIDENCE_MATRIX](docs/EVIDENCE_MATRIX.md) · [EXECUTION_ORDER](docs/EXECUTION_ORDER.md) (Phases 1–5 + LR STRICT [`lrstrict1`](docs/evidence/runs/lrstrict1/) + libp2p STRICT [`lp2pstrict1`](docs/evidence/runs/lp2pstrict1/) + tip [`ind48pass1`](docs/evidence/runs/ind48pass1/); next Phase 6 org) |
 | **Operators** | [Start in 60 seconds](#start-in-60-seconds) · `python scripts/verify_experimental_rd.py` · optional `python scripts/verify_parallel_rd_batch.py` |
 | **Auditors (this tree)** | R&D sandbox only — firm engagement package lives on the [Hybrid pin](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/AUDIT_ENGAGEMENT_BRIEF.md) |
 
@@ -233,4 +233,4 @@ MIT — [LICENSE](LICENSE)
 ---
 
 *Author: ULADZIMIR DABRANSKI (D.U.P.) · Owner: [Gruver87](https://github.com/Gruver87) · Default branch: `main`*  
-*Last surface update: **2026-09-23** — B1–B4 closed · industrial P0/HIGH/MED · tip 48h PASS [`ind48pass1`](docs/evidence/runs/ind48pass1/) (ADR 0021 wire on mesh) · tip `719deb4`. Not BLS / not public mainnet / not Hybrid pin.*
+*Last surface update: **2026-09-28** — B1–B5 + Phase 2d LR STRICT [`lrstrict1`](docs/evidence/runs/lrstrict1/) · libp2p STRICT [`lp2pstrict1`](docs/evidence/runs/lp2pstrict1/) · tip [`ind48pass1`](docs/evidence/runs/ind48pass1/). Not BLS / not public mainnet / not Hybrid pin.*

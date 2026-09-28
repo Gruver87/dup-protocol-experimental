@@ -3,13 +3,13 @@
 Apply with:
 
 ```powershell
-gh repo edit Gruver87/experimental --description "Absolute Blockchain Experimental — R&D (B1–B5 + mempool48pass1 + ind48pass1 tip 48h; ADR 0021 wire on mesh). Next: Phase 6 org. Not the audit pin."
+gh repo edit Gruver87/experimental --description "Absolute Blockchain Experimental — R&D (B1–B5 + lrstrict1 STRICT + lp2pstrict1 + mempool48pass1 + ind48pass1 tip 48h; ADR 0021 wire on mesh). Next: Phase 6 org. Not the audit pin."
 gh repo edit Gruver87/experimental --homepage "https://github.com/Gruver87/experimental/blob/main/docs/FUND_READINESS.md"
 gh repo edit Gruver87/experimental --enable-wiki=false
 @(
-  "absolute-blockchain","blockchain","blockchain-node","layer1","python","rust","pyo3",
-  "p2p","libp2p","evm","experimental","research","devnet","cryptography","web3",
-  "json-rpc","rest-api","rocksdb","hybrid-blockchain","noise-protocol"
+    "absolute-blockchain","blockchain","blockchain-node","layer1","python","rust","pyo3",
+    "p2p","libp2p","evm","experimental","research","devnet","cryptography","web3",
+    "json-rpc","rest-api","rocksdb","hybrid-blockchain","noise-protocol"
 ) | ForEach-Object { gh repo edit Gruver87/experimental --add-topic $_ }
 ```
 
@@ -17,7 +17,7 @@ Or paste into **Settings → General → About**.
 
 | Field | Value |
 |-------|-------|
-| **Description** | Absolute Blockchain Experimental — R&D (B1–B5 + mempool48pass1 + ind48pass1 tip 48h; ADR 0021 wire on mesh). Next: Phase 6 org. Not the audit pin. |
+| **Description** | Absolute Blockchain Experimental — R&D (B1–B5 + lrstrict1 STRICT + lp2pstrict1 + mempool48pass1 + ind48pass1 tip 48h; ADR 0021 wire on mesh). Next: Phase 6 org. Not the audit pin. |
 | **Website** | https://github.com/Gruver87/experimental/blob/main/docs/FUND_READINESS.md |
 | **Social preview** | Upload evergreen `docs/assets/repo-banner.svg` (export PNG 1280×640) in **Settings → General · Social preview** |
 | **Skimmer card** | [docs/AT_A_GLANCE.md](../docs/AT_A_GLANCE.md) |

@@ -13,7 +13,7 @@ Weak-subjectivity / Long-Range research. **Not** prod mesh `778888`.
    `ABS_WS_ROLL_CONFIRM=16` / `ABS_WS_ROLL_INTERVAL_SEC=120`) and peers
    republish/adopt via gossip — no operator re-seed for tip growth.
 4. Lab node: `tip_safety_enforce=true` + `TIP_SAFETY_ENFORCE=true` so WS tip gate attaches.
-5. Timed lab 2h / 48h only after libp2p 48h PASS ([EXECUTION_ORDER.md](../EXECUTION_ORDER.md) Phase 2). **Lab 48h PASS on disk:** [`lr48pass1`](../evidence/runs/lr48pass1/) (B2 closed). Prod JSON stays `feature_long_range=false`.
+5. Timed lab 2h / 48h only after libp2p 48h PASS ([EXECUTION_ORDER.md](../EXECUTION_ORDER.md) Phase 2). **Lab 48h PASS:** [`lr48pass1`](../evidence/runs/lr48pass1/) (B2). **STRICT 48h PASS:** [`lrstrict1`](../evidence/runs/lrstrict1/). Prod JSON stays `feature_long_range=false`.
 6. BLS aggregate remains **design-only**. Lab-industrial certs use **Ed25519 committee 2/3**.
 
 ## Protocol tasks (lab mesh must self-heal)

@@ -12,6 +12,7 @@ Related: [EXECUTION_ORDER.md](../EXECUTION_ORDER.md) · [EVIDENCE_MATRIX.md](../
 | Run | Result | Notes |
 |-----|--------|-------|
 | [`3c801b87`](../evidence/runs/3c801b87/) | **48h PASS** | 2026-09-01→03 · `passed=true` · `hard_fails=0` · `mesh_warn=0` · `status_slow=0` · height_end=8902 |
+| [`lp2pstrict1`](../evidence/runs/lp2pstrict1/) | **STRICT 48h PASS** | 2026-09-23→25 · IntervalSec=60 · warn_lines=0 · tip ~57209→~68082 — distinct from default B1 / `ind48pass1` |
 | [`35104db0`](../evidence/runs/35104db0/) | **FAIL** | `health_watch_exit=1`, ready 503 on :18181 |
 | [`87f51b3e`](../evidence/runs/87f51b3e/) | **FAIL** | `hard_fails=0`, **`mesh_warn=46`** (one gap=4) |
 | [`mesh-fix-smoke-2h-pre48h3`](../evidence/runs/mesh-fix-smoke-2h-pre48h3/) | **2h PASS** | Pre-flight only |

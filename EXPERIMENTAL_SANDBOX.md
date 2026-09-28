@@ -17,9 +17,9 @@ This folder / [Gruver87/experimental](https://github.com/Gruver87/experimental) 
 
 ## Transport default
 
-- **Experimental prod mesh (`778888`):** **libp2p Noise** (ADR 0020) — 48h PASS [`3c801b87`](docs/evidence/runs/3c801b87/).
+- **Experimental prod mesh (`778888`):** **libp2p Noise** (ADR 0020) — 48h PASS [`3c801b87`](docs/evidence/runs/3c801b87/) · STRICT [`lp2pstrict1`](docs/evidence/runs/lp2pstrict1/).
 - **Hybrid audit pin:** native **TCP + TLS/mTLS** (`feature_libp2p=false`).
-- **Long-Range:** lab only (`FEATURE_LONG_RANGE` / lab compose). Lab 48h PASS [`lr48pass1`](docs/evidence/runs/lr48pass1/); prod JSON `feature_long_range=false`.
+- **Long-Range:** lab only (`FEATURE_LONG_RANGE` / lab compose). Lab 48h PASS [`lr48pass1`](docs/evidence/runs/lr48pass1/) · STRICT [`lrstrict1`](docs/evidence/runs/lrstrict1/); prod JSON + staging keep `feature_long_range=false`.
 - **Phase 3:** post-EVM-prep mesh 48h PASS [`evm48pass1`](docs/evidence/runs/evm48pass1/) — not EVM-only.
 
 Profile F: [docs/sprouts/EXPERIMENTAL_RD_PROFILE.md](docs/sprouts/EXPERIMENTAL_RD_PROFILE.md)

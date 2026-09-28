@@ -223,15 +223,15 @@ flowchart LR
 | [0017](adr/0017-long-range-research.md) | Long-Range | Lab WS + Ed25519 · mesh 2h + lab 48h + **STRICT 48h** [`lrstrict1`](evidence/runs/lrstrict1/) · **not** BLS/prod |
 | [0018](adr/0018-libp2p-transport.md) | Dual-stack stubs | Python labs (superseded for Experimental mesh by 0020) |
 | [0019](adr/0019-rust-libp2p-industrial.md) | rust-libp2p | Slices **A–DB** (phase 105) behind Cargo `libp2p` |
-| [0020](adr/0020-libp2p-industrial-mesh.md) | Experimental mesh | libp2p default on `778888` · **48h PASS** `3c801b87` |
-| [0021](adr/0021-mempool-validation-rust-phases.md) | Mempool Rust | Phase 0 landed · 1–3 unblocked after B1 |
+| [0020](adr/0020-libp2p-industrial-mesh.md) | Experimental mesh | libp2p default on `778888` · **48h PASS** `3c801b87` · STRICT [`lp2pstrict1`](evidence/runs/lp2pstrict1/) |
+| [0021](adr/0021-mempool-validation-rust-phases.md) | Mempool Rust | Phases 0–3 + mesh bake + STRICT [`mempool48pass1`](evidence/runs/mempool48pass1/) + tip wire [`ind48pass1`](evidence/runs/ind48pass1/) |
 
 
 ---
 
-## Experimental dual-stack (ADR 0019)
+## Experimental dual-stack (ADR 0019 / 0020)
 
-TCP+TLS is still the **default** mesh. rust-libp2p is **opt-in** (`FEATURE_LIBP2P` / Cargo feature `libp2p`). Lab PASS ≠ prod cutover ≠ Hybrid pin.
+**Experimental industrial mesh (`778888`) default = rust-libp2p Noise** (ADR 0020) with 48h PASS [`3c801b87`](evidence/runs/3c801b87/) + STRICT [`lp2pstrict1`](evidence/runs/lp2pstrict1/). Hybrid audit-pin stays TCP+TLS. ADR 0019 slices remain the Cargo `libp2p` lab gate. Lab PASS ≠ Hybrid cutover ≠ public mainnet.
 
 ```mermaid
 flowchart LR
