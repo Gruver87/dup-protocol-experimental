@@ -11,7 +11,7 @@ from bridge.ports import (
     L1RpcPort,
     ValidationResult,
 )
-from runtime.amount import money_abs
+from runtime.amount import money_abs, to_satoshi
 
 
 def compute_replay_key(from_chain: str, event_tx_hash: str, log_index: int = 0) -> str:
@@ -38,7 +38,17 @@ class InboundMessageValidator:
         to_addr = str(envelope.to_addr or "").strip()
         tx_hash = str(envelope.event_tx_hash or "").strip()
         try:
-            amount = money_abs(envelope.amount, field="amount")
+            if envelope.amount_satoshi is not None:
+                sats = int(envelope.amount_satoshi)
+                if sats <= 0:
+                    return ValidationResult(ok=False, reason="invalid_amount_satoshi")
+                amount = money_abs(envelope.amount, field="amount") if envelope.amount else 0.0
+                # When both present, refuse disagreement (fail-closed).
+                if envelope.amount and int(to_satoshi(amount)) != sats:
+                    return ValidationResult(ok=False, reason="amount_satoshi_mismatch")
+            else:
+                amount = money_abs(envelope.amount, field="amount")
+                sats = int(to_satoshi(amount))
         except (TypeError, ValueError):
             return ValidationResult(ok=False, reason="invalid_amount")
 
@@ -48,7 +58,7 @@ class InboundMessageValidator:
             return ValidationResult(ok=False, reason="missing_recipient")
         if not chain:
             return ValidationResult(ok=False, reason="missing_from_chain")
-        if amount <= 0:
+        if sats <= 0:
             return ValidationResult(ok=False, reason="invalid_amount")
 
         replay_key = compute_replay_key(chain, tx_hash, int(envelope.log_index or 0))
@@ -127,7 +137,10 @@ class PassthroughInboundValidator:
         if not tx_hash:
             return ValidationResult(ok=False, reason="empty_event_tx_hash")
         try:
-            if money_abs(envelope.amount, field="amount") <= 0:
+            if envelope.amount_satoshi is not None:
+                if int(envelope.amount_satoshi) <= 0:
+                    return ValidationResult(ok=False, reason="invalid_amount_satoshi")
+            elif money_abs(envelope.amount, field="amount") <= 0:
                 return ValidationResult(ok=False, reason="invalid_amount")
         except (TypeError, ValueError):
             return ValidationResult(ok=False, reason="invalid_amount")

@@ -2020,60 +2020,64 @@ class RESTHandler(BaseHTTPRequestHandler):
                             ready_sprout_init[name] = False
                 else:
                     ready_sprout_init = {}
-                if is_prod and p2p is not None:
-                    # Listener must exist — bind failure clears _running (fail-closed).
-                    checks["p2p_running"] = bool(getattr(p2p, "_running", False)) and (
-                        _p2p_listener_bound(p2p)
-                    )
-                    # v1.3.125: prod native transport must expose semantic message-loop shell.
-                    if (
-                        bool(getattr(getattr(p2p, "config", None), "p2p_native_transport", False))
-                        and getattr(p2p, "_native_listener", None) is not None
-                    ):
-                        checks["p2p_native_message_loop_shell"] = bool(
-                            getattr(p2p, "_native_message_loop_shell", False)
+                if is_prod:
+                    if p2p is None:
+                        # Fail-closed: prod without a P2P object is not ready (Phase D).
+                        checks["p2p_running"] = False
+                    else:
+                        # Listener must exist — bind failure clears _running (fail-closed).
+                        checks["p2p_running"] = bool(getattr(p2p, "_running", False)) and (
+                            _p2p_listener_bound(p2p)
                         )
-                    # With peers, ready requires state consistency (solo may stay ready).
-                    # peer_count() probe failure must not skip the consistency gate.
-                    peer_count = 0
-                    peer_count_probe_ok = True
-                    if hasattr(p2p, "peer_count"):
-                        try:
-                            peer_count = int(p2p.peer_count() or 0)
-                        except Exception as exc:
-                            peer_count_probe_ok = False
-                            peer_count = 0
-                            logger.warning(
-                                "/health/ready peer_count probe failed: %s", exc
+                        # v1.3.125: prod native transport must expose semantic message-loop shell.
+                        if (
+                            bool(getattr(getattr(p2p, "config", None), "p2p_native_transport", False))
+                            and getattr(p2p, "_native_listener", None) is not None
+                        ):
+                            checks["p2p_native_message_loop_shell"] = bool(
+                                getattr(p2p, "_native_message_loop_shell", False)
                             )
-                    if not peer_count_probe_ok:
-                        checks["peer_count_probe"] = False
-                        checks["state_consistent"] = bool(
-                            getattr(p2p, "_state_consistent", False)
-                        )
-                    elif peer_count > 0:
-                        checks["state_consistent"] = bool(
-                            getattr(p2p, "_state_consistent", False)
-                        )
-                        # Match eth_syncing: peers without a completed wire probe → not ready.
-                        se = getattr(self.__class__, "sync_engine", None) or getattr(
-                            p2p, "sync_engine", None
-                        )
-                        if se is not None and hasattr(se, "get_status"):
+                        # With peers, ready requires state consistency (solo may stay ready).
+                        # peer_count() probe failure must not skip the consistency gate.
+                        peer_count = 0
+                        peer_count_probe_ok = True
+                        if hasattr(p2p, "peer_count"):
                             try:
-                                st = se.get_status() or {}
+                                peer_count = int(p2p.peer_count() or 0)
                             except Exception as exc:
+                                peer_count_probe_ok = False
+                                peer_count = 0
                                 logger.warning(
-                                    "/health/ready sync_engine status failed: %s", exc
+                                    "/health/ready peer_count probe failed: %s", exc
                                 )
-                                st = {}
-                            checks["wire_probe_probed"] = bool(
-                                st.get("wire_probe_probed")
+                        if not peer_count_probe_ok:
+                            checks["peer_count_probe"] = False
+                            checks["state_consistent"] = bool(
+                                getattr(p2p, "_state_consistent", False)
                             )
-                            checks["wire_probe_ok"] = bool(st.get("wire_probe_ok"))
-                        else:
-                            checks["wire_probe_probed"] = False
-                            checks["wire_probe_ok"] = False
+                        elif peer_count > 0:
+                            checks["state_consistent"] = bool(
+                                getattr(p2p, "_state_consistent", False)
+                            )
+                            # Match eth_syncing: peers without a completed wire probe → not ready.
+                            se = getattr(self.__class__, "sync_engine", None) or getattr(
+                                p2p, "sync_engine", None
+                            )
+                            if se is not None and hasattr(se, "get_status"):
+                                try:
+                                    st = se.get_status() or {}
+                                except Exception as exc:
+                                    logger.warning(
+                                        "/health/ready sync_engine status failed: %s", exc
+                                    )
+                                    st = {}
+                                checks["wire_probe_probed"] = bool(
+                                    st.get("wire_probe_probed")
+                                )
+                                checks["wire_probe_ok"] = bool(st.get("wire_probe_ok"))
+                            else:
+                                checks["wire_probe_probed"] = False
+                                checks["wire_probe_ok"] = False
 
                 # ADR 0014 deep healthcheck — mesh readiness for K8s probes.
                 local_h = int(bc.get_height() if bc else 0)

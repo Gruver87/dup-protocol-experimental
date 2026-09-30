@@ -29,7 +29,9 @@
 | A2 | ZK range hash theater → `NotImplementedError` | Done |
 | A3 | Units + industrial_gate needles | Done |
 
-## Phase B — Trust UX ✅ in progress / landed this wave
+---
+
+## Phase B — Trust UX ✅ DONE (2026-10-01)
 
 | Step | Action | Status |
 |------|--------|--------|
@@ -37,54 +39,50 @@
 | B2 | Admin JWT mint requires `ABS_ALLOW_DEV_ADMIN_JWT=1` | Done |
 | B3 | Banner uses `jwt_enforce_admin` honesty | Done |
 
-**Next:** Phase C (satoshi ports) — surgical, additive.
+---
+
+## Phase C — Money surface ✅ DONE (2026-10-01)
+
+| Step | Action | Status |
+|------|--------|--------|
+| C2 | Cross-shard migration: `balance_satoshi` wire; refuse float-only credit | Done |
+| C3 | `InboundEnvelope.amount_satoshi` + mismatch refuse | Done |
+| C4 | P2P `validator_register` requires `stake_satoshi` | Done |
+| C1 | Broader StoragePort float display wrappers | Deferred (ports already have `get_balance_satoshi`; callers remain) |
 
 ---
 
-## Phase C — Money surface (structural, surgical)
+## Phase D — Harden ✅ DONE (2026-10-01)
 
-| Step | Action | Break risk |
-|------|--------|------------|
-| C1 | Additive `*_satoshi` on `StoragePort` / adapters; keep float getters as display wrappers | Medium — needs broad unit pass |
-| C2 | Quarantine `cross_shard_coordinator` float debit (refuse if sharding armed) | Low (flag OFF) |
-| C3 | Bridge envelope satoshi types while `bridge_enabled=false` | Low |
-| C4 | Validator stake register: satoshi-only on non-prod path too | Low–medium |
-
-Mesh probe after C1–C4; soak only if operator orders.
-
----
-
-## Phase D — Harden (still no feature unlock)
-
-| Step | Action |
-|------|--------|
-| D1 | EVM native writeback: refuse Python fallback under `require_native` / prod |
-| D2 | Deprecate parallel Casper/Beacon construction (unified only) |
-| D3 | Rename legacy `network/p2p/` + `network/sync/fast_sync` → `legacy_test_*` |
-| D4 | CREATE2 host salt honesty in matrix (EIP-1014 claim downgrade or fix) |
-| D5 | `/health/ready`: if `p2p is None` in prod → not ready |
-| D6 | Kill `print()` on consensus/sync hot paths |
+| Step | Action | Status |
+|------|--------|--------|
+| D1 | EVM native writeback: refuse Python fallback under `require_native` / prod | Done |
+| D2 | `consensus_mode=auto` → unified; parallel lab-only; prod/staging coerce | Done |
+| D3 | Legacy `network/p2p/*` + sync managers → `legacy_test_*` (+ shims) | Done — [LEGACY_NETWORK_QUARANTINE.md](LEGACY_NETWORK_QUARANTINE.md) |
+| D4 | CREATE2 host salt honesty in matrix / `evm_runtime` | Done — partial Absolute honesty |
+| D5 | `/health/ready`: `p2p is None` in prod → not ready | Done |
+| D6 | `print()` → logging on consensus/sync hot paths | Done |
 
 ---
 
-## Phase E — Org / show (parallel, non-code)
+## Phase E — Org / show ✅ DONE (2026-10-01)
 
-| Step | Action |
-|------|--------|
-| E1 | Demo runbook (3-node + console + STRICT pack) |
-| E2 | Ceremony dry-run pack |
-| E3 | Investor / ПВТ deck from DILIGENCE_BRIEF |
-| E4 | Optional one tip soak before meetings |
+| Step | Action | Status |
+|------|--------|--------|
+| E1 | Demo runbook (3-node + console + STRICT pack) | Done — [DEMO_RUNBOOK.md](DEMO_RUNBOOK.md) |
+| E2 | Ceremony dry-run pack | Done — [CEREMONY_DRY_RUN.md](CEREMONY_DRY_RUN.md) |
+| E3 | Investor / ПВТ deck from DILIGENCE_BRIEF | Done — [INVESTOR_DECK_SKELETON.md](INVESTOR_DECK_SKELETON.md) |
+| E4 | Optional one tip soak before meetings | Shelf — operator-ordered only |
 
 ---
 
-## Phase F — Optional later (breaking / big)
+## Phase F — Optional later
 
-| Step | Action |
-|------|--------|
-| F1 | ADR: Absolute-VM forever **or** Yellow Paper + revm migration |
-| F2 | Real ZK circuits or strip module from explorer entirely |
-| F3 | External firm audit engagement |
+| Step | Action | Status |
+|------|--------|--------|
+| F1 | ADR: Absolute-VM forever **or** Yellow Paper + revm | Done decision — **Absolute-VM kept** ([ADR 0023](adr/0023-absolute-vm-opcode-map.md)); YP+revm remains future optional |
+| F2 | Real ZK circuits or strip module from explorer entirely | Later |
+| F3 | External firm audit engagement | Later (org Phase 6) |
 
 ---
 
@@ -95,4 +93,4 @@ Mesh probe after C1–C4; soak only if operator orders.
 - Docs honesty matches code  
 - No claim of soak unless pack exists  
 
-**Current focus:** Phase A → then B.
+**Current focus:** Phases A–F1 closed for this audit wave. Next = operator-ordered org (E4 soak / F2–F3) or residual C1 call-site sweep.

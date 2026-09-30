@@ -199,9 +199,40 @@ def _check_p2p_hardening() -> tuple[list[str], list[str]]:
     evm_rt = (ROOT / "execution" / "evm_runtime.py").read_text(encoding="utf-8")
     if "opcode_map_honesty" not in evm_rt or "yellow_paper_compatible" not in evm_rt:
         errors.append("evm_runtime must disclose Absolute opcode map ≠ Yellow Paper")
+    if '"area": "create_create2_deploy_salt"' in evm_rt:
+        create_blob = evm_rt.split('"area": "create_create2_deploy_salt"', 1)[1][:500]
+        if '"status": "partial"' not in create_blob:
+            errors.append(
+                "create_create2_deploy_salt must be partial (host salt Absolute honesty)"
+            )
+    if not (ROOT / "docs" / "adr" / "0023-absolute-vm-opcode-map.md").is_file():
+        errors.append("ADR 0023 Absolute-VM opcode map missing")
+    if not (ROOT / "network" / "legacy_test_p2p").is_dir():
+        errors.append("legacy_test_p2p quarantine package missing (Phase D3)")
+    if not (ROOT / "network" / "sync" / "legacy_test_fast_sync.py").is_file():
+        errors.append("legacy_test_fast_sync missing (Phase D3)")
+    cfg_py = (ROOT / "runtime" / "config.py").read_text(encoding="utf-8")
+    if "def resolved_consensus_mode" not in cfg_py or 'return "unified"' not in cfg_py:
+        errors.append("resolved_consensus_mode must resolve auto→unified (Phase D2)")
+    http_ready = (ROOT / "api" / "http.py").read_text(encoding="utf-8")
+    if "prod without a P2P object is not ready" not in http_ready:
+        errors.append("/health/ready must fail-closed when p2p is None in prod (Phase D5)")
     zk_src = (ROOT / "features" / "zk.py").read_text(encoding="utf-8")
     if "zk_range_proof_not_implemented" not in zk_src:
         errors.append("features/zk.py must refuse educational range hash theater")
+    xshard = (ROOT / "consensus" / "cross_shard_coordinator.py").read_text(encoding="utf-8")
+    if "balance_satoshi_required" not in xshard or "get_balance_satoshi_required" not in xshard:
+        errors.append("cross_shard migration must require balance_satoshi (Phase C)")
+    if "stake_satoshi_required" not in (ROOT / "network" / "p2p_node.py").read_text(encoding="utf-8"):
+        errors.append("p2p validator_register must require stake_satoshi")
+    if "amount_satoshi" not in (ROOT / "bridge" / "ports.py").read_text(encoding="utf-8"):
+        errors.append("InboundEnvelope must carry amount_satoshi")
+    if not (ROOT / "docs" / "DEMO_RUNBOOK.md").is_file():
+        errors.append("DEMO_RUNBOOK.md missing (Phase E1)")
+    if not (ROOT / "docs" / "CEREMONY_DRY_RUN.md").is_file():
+        errors.append("CEREMONY_DRY_RUN.md missing (Phase E2)")
+    if not (ROOT / "docs" / "INVESTOR_DECK_SKELETON.md").is_file():
+        errors.append("INVESTOR_DECK_SKELETON.md missing (Phase E3)")
     if not (ROOT / "api" / "market_feed.py").is_file():
         errors.append("api/market_feed.py missing (ops market snapshot)")
     else:
@@ -1446,7 +1477,9 @@ def _check_fail_loud_surfaces() -> tuple[list[str], list[str]]:
             errors.append("WebSocket _broadcast must count/log send failures")
         if "Fail-closed: bind/runtime failure must not leave a live flag" not in ws_py:
             errors.append("WebSocket start must clear _running on bind/runtime failure")
-        mh_py = (ROOT / "network" / "p2p" / "message_handler.py").read_text(encoding="utf-8")
+        mh_py = (ROOT / "network" / "legacy_test_p2p" / "message_handler.py").read_text(
+            encoding="utf-8"
+        )
         if "_send_failures" not in mh_py or "_send_unbound" not in mh_py:
             errors.append("legacy MessageHandler._send must count unbound/send failures")
         clone_py = (ROOT / "storage" / "chain_clone.py").read_text(encoding="utf-8")
@@ -4704,7 +4737,7 @@ def _check_fail_loud_surfaces() -> tuple[list[str], list[str]]:
         if "coalesced wire probe task failed" not in p2p_py:
             errors.append("completed wire probe must log task failures")
         if "%s failed peer=" not in (
-            ROOT / "network" / "p2p" / "message_handler.py"
+            ROOT / "network" / "legacy_test_p2p" / "message_handler.py"
         ).read_text(encoding="utf-8"):
             errors.append("legacy MessageHandler must log send failures")
         if "set_accepting_requests failed at boot" not in (

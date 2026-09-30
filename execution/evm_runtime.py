@@ -22,8 +22,12 @@ _COMPAT_ROWS: List[Dict[str, str]] = [
     {"area": "transfer_fee_burn", "status": "supported", "notes": "Native apply + satoshi domain"},
     {
         "area": "create_create2_deploy_salt",
-        "status": "supported_prod",
-        "notes": "evm_create2_eip1014 + evm_require_deploy_salt on prod JSON",
+        "status": "partial",
+        "notes": (
+            "Inline CREATE2 EIP-1014 when armed; host deploy_contract string salt "
+            "is keccak→word (Absolute), not raw EIP-1014 salt bytes. "
+            "evm_require_deploy_salt on prod JSON"
+        ),
     },
     {
         "area": "call_staticcall_host",

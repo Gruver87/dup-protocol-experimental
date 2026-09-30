@@ -208,6 +208,19 @@ class RustBridgeAdapter:
         meta = dict(kwargs.get("oracle_meta") or {})
         if l1_tx:
             meta.setdefault("l1_tx_hash", l1_tx)
+        amount_satoshi = kwargs.get("amount_satoshi")
+        if amount_satoshi is None and amount:
+            try:
+                from runtime.amount import to_satoshi
+
+                amount_satoshi = int(to_satoshi(amount))
+            except (TypeError, ValueError):
+                amount_satoshi = None
+        else:
+            try:
+                amount_satoshi = int(amount_satoshi) if amount_satoshi is not None else None
+            except (TypeError, ValueError):
+                amount_satoshi = None
         return InboundEnvelope(
             from_chain=from_chain,
             to_addr=recipient,
@@ -218,6 +231,7 @@ class RustBridgeAdapter:
             zk_proof=kwargs.get("zk_proof"),
             oracle_meta=meta,
             abs_tx_hash=tx_hash if l1_tx and l1_tx != tx_hash else "",
+            amount_satoshi=amount_satoshi,
         )
 
     @staticmethod

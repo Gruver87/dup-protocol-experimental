@@ -319,14 +319,18 @@ class Config:
         return 1_704_067_200 + int(getattr(self, "chain_id", 77777))
 
     def resolved_consensus_mode(self) -> str:
-        """Single canonical fork-choice path in prod/staging (LMD-GHOST + FinalityEngine)."""
+        """Canonical fork-choice path: unified (LMD-GHOST + FinalityEngine).
+
+        ``auto`` always resolves to ``unified`` (Phase D). Explicit
+        ``consensus_mode=parallel`` remains lab-only; prod/staging coerce away
+        parallel in ``apply_env`` / ``validate``.
+        """
         mode = str(getattr(self, "consensus_mode", "auto") or "auto").strip().lower()
         if mode == "auto":
-            dep = str(getattr(self, "deployment_mode", "dev") or "dev").lower()
-            return "unified" if dep in ("prod", "staging") else "parallel"
+            return "unified"
         if mode in ("parallel", "unified"):
             return mode
-        return "parallel"
+        return "unified"
 
     @property
     def is_production(self) -> bool:

@@ -48,7 +48,7 @@ def test_l1_proof_meta_roundtrip(tmp_path):
 
 
 def test_sync_with_peer_equal_height_divergent_head_schedules_reconcile():
-    from network.sync.sync_manager import SyncManager
+    from network.sync.legacy_test_sync_manager import SyncManager
 
     class _Storage:
         def get_latest_block_number(self):

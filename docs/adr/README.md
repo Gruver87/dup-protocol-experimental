@@ -28,5 +28,6 @@ Boundary ADRs for Absolute Blockchain Ultimate Hybrid.
 | [0020](0020-libp2p-industrial-mesh.md) | Experimental industrial libp2p mesh | Accepted (experimental) |
 | [0021](0021-mempool-validation-rust-phases.md) | Mempool / validation Rust phases (plan) | Accepted (plan only) |
 | [0022](0022-gruver87-genesis-council-governance.md) | Gruver87 Genesis Council (87 NFT governance) | Accepted (design + lab path) |
+| [0023](0023-absolute-vm-opcode-map.md) | Absolute-VM opcode map (no silent YP remap) | Accepted |
 
 System map: [ARCHITECTURE.md](../ARCHITECTURE.md) · sprouts: [sprouts/](../sprouts/) · **execution order:** [EXECUTION_ORDER.md](../EXECUTION_ORDER.md)

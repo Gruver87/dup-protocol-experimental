@@ -17,7 +17,7 @@ def test_mega_audit_no_removed_legacy_files():
 
 
 def test_sync_manager_uses_real_blocks_not_placeholders():
-    from network.sync.sync_manager import SyncManager
+    from network.sync.legacy_test_sync_manager import SyncManager
 
     class _Storage:
         def get_latest_block_number(self):

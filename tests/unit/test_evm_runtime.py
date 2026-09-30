@@ -23,6 +23,7 @@ def test_compat_matrix_has_partial_and_not_claimed() -> None:
     assert "supported_absolute" in statuses
     by_area = {r["area"]: r["status"] for r in rows}
     assert by_area["call_staticcall_host"] == "partial"
+    assert by_area["create_create2_deploy_salt"] == "partial"
     assert by_area["eth_estimateGas"] == "supported_absolute"
     assert by_area["eth_subscribe_ws"] == "not_claimed"
 

@@ -9,7 +9,7 @@ from blockchain.immutable_state import ImmutableStateManager
 from sync.sync_engine import SyncEngine
 
 
-def test_sync_state_logs_wire_probe_failure(capsys):
+def test_sync_state_logs_wire_probe_failure(caplog):
     peer = SimpleNamespace(peer_id="peer1", height=1)
     node = SimpleNamespace(
         blockchain=SimpleNamespace(
@@ -23,9 +23,9 @@ def test_sync_state_logs_wire_probe_failure(capsys):
     # SyncEngine expects node with peers collector
     eng = SyncEngine(node)
     eng._collect_p2p_peers = lambda: [peer]  # type: ignore
-    ok = eng.sync_state()
-    captured = capsys.readouterr()
-    assert "wire probe failed" in captured.out
+    with caplog.at_level(logging.INFO, logger="Sync.Engine"):
+        ok = eng.sync_state()
+    assert "wire probe failed" in caplog.text
     assert eng.get_status().get("wire_probe_ok") is False
     assert eng.get_status().get("wire_probe_probed") is True
     assert ok is False
@@ -78,7 +78,7 @@ def test_sync_state_solo_keeps_never_probed():
     assert st.get("wire_probe_ok") is False
 
 
-def test_sync_state_peers_behind_no_same_height_match_fail_closed(capsys):
+def test_sync_state_peers_behind_no_same_height_match_fail_closed(caplog):
     """Peers all behind (or empty same-height roots) must not paint green."""
     peer = SimpleNamespace(peer_id="peer1", height=0)
     node = SimpleNamespace(
@@ -94,14 +94,14 @@ def test_sync_state_peers_behind_no_same_height_match_fail_closed(capsys):
     )
     eng = SyncEngine(node)
     eng._collect_p2p_peers = lambda: [peer]  # type: ignore
-    ok = eng.sync_state()
-    captured = capsys.readouterr()
+    with caplog.at_level(logging.INFO, logger="Sync.Engine"):
+        ok = eng.sync_state()
     assert ok is False
-    assert "same-height" in captured.out.lower()
+    assert "same-height" in caplog.text.lower()
     assert node.p2p._state_consistent is False
 
 
-def test_sync_state_empty_probe_with_peers_fail_closed(capsys):
+def test_sync_state_empty_probe_with_peers_fail_closed(caplog):
     peer = SimpleNamespace(peer_id="peer1", height=1)
     node = SimpleNamespace(
         blockchain=SimpleNamespace(
@@ -114,22 +114,22 @@ def test_sync_state_empty_probe_with_peers_fail_closed(capsys):
     )
     eng = SyncEngine(node)
     eng._collect_p2p_peers = lambda: [peer]  # type: ignore
-    ok = eng.sync_state()
-    captured = capsys.readouterr()
-    assert "empty" in captured.out.lower()
+    with caplog.at_level(logging.INFO, logger="Sync.Engine"):
+        ok = eng.sync_state()
+    assert "empty" in caplog.text.lower()
     assert ok is False
     assert eng.get_status().get("wire_probe_ok") is False
     assert node.p2p._state_consistent is False
     # Second tick must not storm another RTT (live miner HOL / prune).
     node.request_peer_state_roots_sync.reset_mock()
-    ok2 = eng.sync_state()
-    captured2 = capsys.readouterr()
+    with caplog.at_level(logging.INFO, logger="Sync.Engine"):
+        ok2 = eng.sync_state()
     assert ok2 is False
-    assert "backoff" in captured2.out.lower()
+    assert "backoff" in caplog.text.lower()
     node.request_peer_state_roots_sync.assert_not_called()
 
 
-def test_empty_probe_sticky_green_expires(capsys):
+def test_empty_probe_sticky_green_expires(caplog):
     """Persistent empty wire must not stay green after consecutive empties."""
     root = "aa" * 32
     peer = SimpleNamespace(peer_id="p1", height=1, head=root, dial_target="")
@@ -153,9 +153,9 @@ def test_empty_probe_sticky_green_expires(capsys):
     node.request_peer_state_roots_sync = MagicMock(return_value=[])
     assert eng.sync_state() is True
     assert eng.sync_state() is True
-    assert eng.sync_state() is False
-    captured = capsys.readouterr()
-    assert "sticky green expired" in captured.out
+    with caplog.at_level(logging.INFO, logger="Sync.Engine"):
+        assert eng.sync_state() is False
+    assert "sticky green expired" in caplog.text
     assert node._state_consistent is False
 
 
@@ -185,17 +185,17 @@ def test_sync_status_unknown_probe_is_fail_closed():
     assert st.get("wire_probe_probed") is False
 
 
-def test_sync_state_missing_get_state_root_fail_closed(capsys):
+def test_sync_state_missing_get_state_root_fail_closed(caplog):
     node = SimpleNamespace(
         blockchain=SimpleNamespace(get_height=lambda: 1),
         p2p=SimpleNamespace(_state_consistent=True),
     )
     eng = SyncEngine(node)
     eng._collect_p2p_peers = lambda: []  # type: ignore
-    ok = eng.sync_state()
-    captured = capsys.readouterr()
+    with caplog.at_level(logging.INFO, logger="Sync.Engine"):
+        ok = eng.sync_state()
     assert ok is False
-    assert "missing get_state_root" in captured.out
+    assert "missing get_state_root" in caplog.text
     assert node.p2p._state_consistent is False
     assert eng.get_status().get("wire_probe_ok") is False
 
@@ -461,7 +461,7 @@ def test_silent_except_wave_needles():
     assert "coalesced wire probe task failed" in p2p
     assert "P2PLineFramer construct failed" in p2p
     assert "native capability probe failed: %s" in p2p
-    handler = Path("network/p2p/message_handler.py").read_text(encoding="utf-8")
+    handler = Path("network/legacy_test_p2p/message_handler.py").read_text(encoding="utf-8")
     assert "send_message failed" in handler or "%s failed peer=" in handler
     main = Path("main.py").read_text(encoding="utf-8")
     assert "set_accepting_requests failed at boot" in main
@@ -576,7 +576,7 @@ def test_format_tx_uses_satoshi_not_ieee_float():
 
 
 def test_message_handler_import_refuses_truthy_non_bool():
-    from network.p2p.message_handler import MessageHandler
+    from network.legacy_test_p2p.message_handler import MessageHandler
 
     class _Chain:
         def add_block(self, _block):

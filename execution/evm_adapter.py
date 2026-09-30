@@ -805,6 +805,21 @@ class EVMAdapter:
             except Exception as exc:
                 if "insufficient_writeback_value" in str(exc):
                     raise
+                refuse_fallback = bool(
+                    getattr(self.config, "require_native_crypto", False)
+                )
+                mode = str(
+                    getattr(self.config, "deployment_mode", "") or ""
+                ).strip().lower()
+                if refuse_fallback or mode in ("prod", "production", "staging"):
+                    logger.error(
+                        "native writeback apply failed; Python fallback refused "
+                        "(require_native/prod): %s",
+                        exc,
+                    )
+                    raise RuntimeError(
+                        f"evm_native_writeback_required: {exc}"
+                    ) from exc
                 logger.warning(
                     "native writeback apply failed; Python fallback: %s", exc
                 )

@@ -3,8 +3,8 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from network.sync.fast_sync import FastSyncManager
-from network.sync.sync_manager import SyncManager
+from network.sync.legacy_test_fast_sync import FastSyncManager
+from network.sync.legacy_test_sync_manager import SyncManager
 
 
 class _Storage:

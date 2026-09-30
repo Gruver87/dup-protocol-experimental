@@ -49,7 +49,7 @@ def test_ws_broadcast_counts_send_failures():
 
 
 def test_message_handler_send_fail_closed():
-    from network.p2p.message_handler import MessageHandler
+    from network.legacy_test_p2p.message_handler import MessageHandler
 
     h = MessageHandler(None, None, None, None, None)
     assert h._send("peer", {"type": "ping"}) is False

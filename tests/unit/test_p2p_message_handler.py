@@ -6,9 +6,9 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from network.p2p.message_handler import MessageHandler
-from network.p2p.messages import InventoryMessage, Message, MessageType
-from network.p2p.peer_manager import PeerManager
+from network.legacy_test_p2p.message_handler import MessageHandler
+from network.legacy_test_p2p.messages import InventoryMessage, Message, MessageType
+from network.legacy_test_p2p.peer_manager import PeerManager
 
 
 class _Server:

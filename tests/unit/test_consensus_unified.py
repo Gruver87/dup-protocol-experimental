@@ -32,8 +32,17 @@ def test_prod_auto_resolves_unified():
     assert adapter.beacon_engine is None
 
 
-def test_dev_auto_keeps_parallel_engines():
+def test_dev_auto_resolves_unified():
+    """Phase D: ``auto`` → unified in all deployment modes (parallel is explicit lab)."""
     adapter, cfg = _adapter(deployment="dev")
+    assert cfg.resolved_consensus_mode() == "unified"
+    assert adapter._unified_consensus is True
+    assert adapter.casper_engine is None
+    assert adapter.beacon_engine is None
+
+
+def test_dev_explicit_parallel_keeps_engines():
+    adapter, cfg = _adapter(mode="parallel", deployment="dev")
     assert cfg.resolved_consensus_mode() == "parallel"
     assert adapter._unified_consensus is False
 
