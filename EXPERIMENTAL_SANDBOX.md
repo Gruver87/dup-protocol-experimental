@@ -1,6 +1,6 @@
 # Experimental sandbox (NOT the audit pin)
 
-This folder / [Gruver87/experimental](https://github.com/Gruver87/experimental) is an **R&D copy** of Absolute Blockchain Ultimate Hybrid.
+This folder / [Gruver87/experimental](https://github.com/Gruver87/experimental) is an **R&D copy** of the DUP Protocol industrial pin (GitHub repo still named Absolute Blockchain Ultimate Hybrid — URL unchanged).
 
 | Path | Role |
 |------|------|

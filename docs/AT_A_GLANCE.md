@@ -1,14 +1,14 @@
-# At a glance — Experimental
+# At a glance — DUP Protocol Experimental (DUP Labs)
 
-One-screen card. Full detail: [README](../README.md) · sandbox rules: [EXPERIMENTAL_SANDBOX](../EXPERIMENTAL_SANDBOX.md).
+One-screen card. Brand: [BRAND](BRAND.md) · Full detail: [README](../README.md) · sandbox rules: [EXPERIMENTAL_SANDBOX](../EXPERIMENTAL_SANDBOX.md).
 
 ## What this is
 
-R&D sandbox for Absolute Blockchain: rust-libp2p (ADR 0019), Long-Range (ADR 0017), EVM depth. Hybrid Python + Rust L1 **fork** of the industrial tree.
+R&D sandbox for **DUP Protocol** (DUP Labs): rust-libp2p (ADR 0019), Long-Range (ADR 0017), EVM depth. Hybrid Python + Rust L1 **fork** of the industrial pin. Former name: Absolute Blockchain Experimental.
 
 ## What it is not
 
-The audit-freeze pin · public audited mainnet · listed ABS · Hybrid `v1.3.*-industrial` tags.
+The audit-freeze pin · public audited mainnet · listed token · Hybrid `v1.3.*-industrial` tags (repo URL still `Absolute_Blockchain_Ultimate_Hybrid`).
 
 ## Status
 

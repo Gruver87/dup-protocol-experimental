@@ -1,19 +1,21 @@
-# Fund / diligence readiness — Experimental (honest)
+# Fund / diligence readiness — DUP Protocol Experimental (honest)
 
 **Audience:** grant officers, investors, HTP / ПВТ reviewers, technical advisors.  
-**Date:** 2026-09-30 · Repo: [`Gruver87/experimental`](https://github.com/Gruver87/experimental) · branch `main`  
-**Not:** public audited mainnet · not Hybrid audit-freeze pin · not listed ABS.
+**Date:** 2026-10-01 · Repo: [`Gruver87/experimental`](https://github.com/Gruver87/experimental) · branch `main`  
+**Brand:** [BRAND.md](BRAND.md) — **DUP Labs** · **DUP Protocol** · Uladzimir Dabranski (D.U.P.)  
+**Not:** public audited mainnet · not the industrial audit-freeze pin · not listed token.  
+**Former name:** Absolute Blockchain Experimental (same codebase; GitHub URLs unchanged).
 
 **15-minute brief (start here):** [DILIGENCE_BRIEF.md](DILIGENCE_BRIEF.md)  
-One-screen status: [AT_A_GLANCE.md](AT_A_GLANCE.md) · Evidence ledger: [EVIDENCE_MATRIX.md](EVIDENCE_MATRIX.md) · Gaps: [MAINNET_GAP_ANALYSIS.md](MAINNET_GAP_ANALYSIS.md) · Vision (Hybrid): [VISION](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/VISION.md).
+One-screen status: [AT_A_GLANCE.md](AT_A_GLANCE.md) · Evidence ledger: [EVIDENCE_MATRIX.md](EVIDENCE_MATRIX.md) · Gaps: [MAINNET_GAP_ANALYSIS.md](MAINNET_GAP_ANALYSIS.md) · Vision (industrial pin): [VISION](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/VISION.md).
 
 ---
 
 ## What this is
 
-Industrial **R&D / private-testnet** hybrid L1 (Python orchestration + Rust hot path). Experimental mesh default transport: **rust-libp2p Noise/Yamux (ADR 0020)**. Hybrid pin remains TCP+TLS.
+Industrial **R&D / private-testnet** hybrid L1 — product **DUP Protocol**, org face **DUP Labs** (Python orchestration + Rust hot path). Experimental mesh default transport: **rust-libp2p Noise/Yamux (ADR 0020)**. Industrial pin remains TCP+TLS.
 
-**Why two repos:** Hybrid is the freeze-safe industrial pin for firm audit engagement. Experimental is where libp2p, Long-Range (lab), EVM depth, and mempool-Rust risk land — each closed phase leaves a packaged evidence directory under [`docs/evidence/runs/`](evidence/runs/).
+**Why two repos:** the Hybrid-named GitHub tree is the freeze-safe industrial pin for firm audit engagement. Experimental is where libp2p, Long-Range (lab), EVM depth, and mempool-Rust risk land — each closed phase leaves a packaged evidence directory under [`docs/evidence/runs/`](evidence/runs/).
 
 ---
 

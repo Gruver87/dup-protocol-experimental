@@ -3,7 +3,7 @@
 **Purpose:** separate **automation that exists** from **operational evidence** collected on a live prod mesh.  
 This doc reflects honest status after local prod mesh runs and monitoring — not marketing claims.
 
-**Funds / ПВТ entry:** [DILIGENCE_BRIEF.md](DILIGENCE_BRIEF.md) · [FUND_READINESS.md](FUND_READINESS.md)
+**Funds / ПВТ entry:** [DILIGENCE_BRIEF.md](DILIGENCE_BRIEF.md) · [FUND_READINESS.md](FUND_READINESS.md) · brand [BRAND.md](BRAND.md) (**DUP Labs** / **DUP Protocol**; formerly Absolute Blockchain).
 
 ---
 

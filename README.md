@@ -1,8 +1,10 @@
-# Absolute Blockchain — Experimental sandbox
+# DUP Protocol — Experimental (DUP Labs)
 
-![Absolute Blockchain Experimental — R&D sandbox](docs/assets/repo-banner.svg)
+![DUP Protocol Experimental — DUP Labs R&D sandbox](docs/assets/repo-banner.svg)
 
-**R&D only.** rust-libp2p · Long-Range · EVM depth. **Not** the audit-freeze tree.
+**Brand:** [DUP Labs](docs/BRAND.md) · product **DUP Protocol** · author Uladzimir Dabranski (D.U.P.).  
+**R&D only.** rust-libp2p · Long-Range · EVM depth. **Not** the audit-freeze tree.  
+Former name: Absolute Blockchain Experimental (same codebase; URLs unchanged).
 
 Canonical docs language is **English**. If GitHub shows a translation, open **View original**.
 
@@ -13,11 +15,11 @@ Canonical docs language is **English**. If GitHub shows a translation, open **Vi
 [![Security checks](https://github.com/Gruver87/experimental/actions/workflows/security-audit.yml/badge.svg?branch=main)](https://github.com/Gruver87/experimental/actions/workflows/security-audit.yml)
 [![Community health](https://img.shields.io/badge/community%20health-100%25-brightgreen)](https://github.com/Gruver87/experimental#docs-map)
 
-> **Industrial pin lives next door:** [`Absolute_Blockchain_Ultimate_Hybrid`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid) · tag [`v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/releases/tag/v1.3.1339-tip-v2-industrial)  
-> **This repo:** Profile F labs. Do not port these kernels onto the Hybrid pin.
+> **Industrial pin lives next door:** [`Absolute_Blockchain_Ultimate_Hybrid`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid) (display: **DUP Protocol — industrial pin**) · tag [`v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/releases/tag/v1.3.1339-tip-v2-industrial)  
+> **This repo:** Profile F labs. Do not port these kernels onto the industrial pin.
 
-**Skimmer (60s):** [AT_A_GLANCE](docs/AT_A_GLANCE.md) · **Funds / ПВТ (15 min):** [DILIGENCE_BRIEF](docs/DILIGENCE_BRIEF.md) · **Fund card:** [FUND_READINESS](docs/FUND_READINESS.md) · **What runs when:** [EXECUTION_ORDER](docs/EXECUTION_ORDER.md) · **Evidence:** [EVIDENCE_MATRIX](docs/EVIDENCE_MATRIX.md)  
-**Project vision (Hybrid pin, honest scope):** [VISION](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/VISION.md)
+**Skimmer (60s):** [AT_A_GLANCE](docs/AT_A_GLANCE.md) · **Funds / ПВТ (15 min):** [DILIGENCE_BRIEF](docs/DILIGENCE_BRIEF.md) · **Fund card:** [FUND_READINESS](docs/FUND_READINESS.md) · **Brand:** [BRAND](docs/BRAND.md) · **What runs when:** [EXECUTION_ORDER](docs/EXECUTION_ORDER.md) · **Evidence:** [EVIDENCE_MATRIX](docs/EVIDENCE_MATRIX.md)  
+**Project vision (industrial pin, honest scope):** [VISION](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/VISION.md)
 
 ---
 
@@ -207,6 +209,7 @@ Default Hybrid CI / prod mesh builds **without** the `libp2p` feature.
 |------|------|
 | Vision (Hybrid pin) | [VISION](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/VISION.md) |
 | One-screen card | [AT_A_GLANCE](docs/AT_A_GLANCE.md) |
+| Brand (DUP Labs / DUP Protocol) | [BRAND](docs/BRAND.md) |
 | Diligence brief (funds / ПВТ, 15 min) | [DILIGENCE_BRIEF](docs/DILIGENCE_BRIEF.md) |
 | Funds / diligence (honest) | [FUND_READINESS](docs/FUND_READINESS.md) |
 | Execution order (blockers) | [EXECUTION_ORDER](docs/EXECUTION_ORDER.md) |
@@ -237,4 +240,4 @@ MIT — [LICENSE](LICENSE)
 ---
 
 *Author: ULADZIMIR DABRANSKI (D.U.P.) · Owner: [Gruver87](https://github.com/Gruver87) · Default branch: `main`*  
-*Last surface update: **2026-09-30** — diligence brief for funds/ПВТ · Phases 1–5 + STRICT packs [`lp2pstrict1`](docs/evidence/runs/lp2pstrict1/) · [`lrstrict1`](docs/evidence/runs/lrstrict1/) · [`evmstrict1`](docs/evidence/runs/evmstrict1/) · [`mempool48pass1`](docs/evidence/runs/mempool48pass1/) · tip [`ind48pass1`](docs/evidence/runs/ind48pass1/). Not BLS / not public mainnet / not Hybrid pin.*
+*Last surface update: **2026-10-01** — surface brand **DUP Labs / DUP Protocol** ([BRAND](docs/BRAND.md); no crate/chain/repo rename) · diligence · Phases 1–5 + STRICT packs. Not BLS / not public mainnet / not industrial pin freeze.*

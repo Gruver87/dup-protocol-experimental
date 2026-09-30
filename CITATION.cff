@@ -1,17 +1,19 @@
 cff-version: 1.2.0
-title: "Absolute Blockchain Experimental"
+title: "DUP Protocol (Experimental)"
 message: "If you use this software in research or diligence, please cite it using these metadata."
 type: software
 authors:
   - family-names: Dabranski
     given-names: Uladzimir
     alias: Gruver87
+    website: "https://github.com/Gruver87"
 repository-code: "https://github.com/Gruver87/experimental"
 url: "https://github.com/Gruver87/experimental"
 abstract: >-
-  Evidence-first R&D sandbox for Absolute Blockchain (Python + Rust hybrid L1):
+  Evidence-first R&D sandbox for DUP Protocol (DUP Labs) — hybrid Python + Rust L1:
   rust-libp2p (ADR 0019), Long-Range / weak-subjectivity labs (ADR 0017), and EVM depth.
-  Not the industrial audit-freeze pin; not a launched public mainnet.
+  Formerly Absolute Blockchain Experimental. Not the industrial audit-freeze pin;
+  not a launched public mainnet.
 keywords:
   - blockchain
   - layer1
@@ -20,6 +22,8 @@ keywords:
   - python
   - evm
   - research
+  - dup-protocol
+  - dup-labs
 license: MIT
 version: "rd-1.0.0"
 date-released: "2026-08-15"

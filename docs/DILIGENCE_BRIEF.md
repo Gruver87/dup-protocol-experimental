@@ -1,8 +1,10 @@
-# Diligence brief — Absolute Blockchain (honest)
+# Diligence brief — DUP Protocol / DUP Labs (honest)
 
 **Audience:** grant officers, investors, HTP / ПВТ reviewers, technical advisors.  
-**Date:** 2026-09-30 · Language: English (canonical)  
-**Repos:** [`Gruver87/experimental`](https://github.com/Gruver87/experimental) (R&D) · [`Absolute_Blockchain_Ultimate_Hybrid`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid) (industrial pin)
+**Date:** 2026-10-01 · Language: English (canonical)  
+**Brand:** [BRAND.md](BRAND.md) — **DUP Labs** (org) · **DUP Protocol** (product) · Uladzimir Dabranski (D.U.P.)  
+**Repos:** [`Gruver87/experimental`](https://github.com/Gruver87/experimental) (R&D) · [`Absolute_Blockchain_Ultimate_Hybrid`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid) (industrial pin; URL unchanged)  
+**Former name:** Absolute Blockchain (same trees / evidence).
 
 This page is the **15-minute path**. Claims below map to **on-disk evidence packs** under [`docs/evidence/runs/`](evidence/runs/). Soft marketing language is refused.
 
@@ -10,7 +12,7 @@ This page is the **15-minute path**. Claims below map to **on-disk evidence pack
 
 ## One sentence
 
-Absolute is an **industrial hybrid L1** (Python orchestration + Rust/PyO3 hot path) with a **fail-closed** private prod-profile mesh, evidence-backed 48h soaks, and an explicit split between an **audit-freeze pin** and an **R&D sandbox**.
+**DUP Protocol** (by **DUP Labs**) is an **industrial hybrid L1** (Python orchestration + Rust/PyO3 hot path) with a **fail-closed** private prod-profile mesh, evidence-backed 48h soaks, and an explicit split between an **audit-freeze pin** and an **R&D sandbox**.
 
 ---
 
@@ -18,8 +20,8 @@ Absolute is an **industrial hybrid L1** (Python orchestration + Rust/PyO3 hot pa
 
 | Tree | Role | What you can claim today |
 |------|------|--------------------------|
-| **Ultimate Hybrid** | Industrial **audit-freeze pin** · tag [`v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/releases/tag/v1.3.1339-tip-v2-industrial) | Tip-v2 48h soak PASS · Phase 4 binder READY for **firm** engagement · **not** public mainnet |
-| **experimental** (this repo) | R&D sandbox · libp2p / Long-Range / EVM depth / mempool Rust | Phases **1–5 closed** with packaged 48h evidence · next = **Phase 6 org** (external audit, ceremony live, secrets rotate) |
+| **Industrial pin** ([`Absolute_Blockchain_Ultimate_Hybrid`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid)) | DUP Protocol audit-freeze · tag [`v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/releases/tag/v1.3.1339-tip-v2-industrial) | Tip-v2 48h soak PASS · Phase 4 binder READY for **firm** engagement · **not** public mainnet |
+| **experimental** (this repo) | DUP Protocol R&D sandbox · libp2p / Long-Range / EVM depth / mempool Rust | Phases **1–5 closed** with packaged 48h evidence · next = **Phase 6 org** (external audit, ceremony live, secrets rotate) |
 
 Hybrid stays freeze-safe. Experimental absorbs transport / Long-Range / EVM-depth risk. Do **not** conflate the two.
 
@@ -146,6 +148,7 @@ Optional workstation: `.\scripts\verify_pre_soak.ps1 -SkipPrepare` with a live m
 
 ## Author / contact
 
-**Uladzimir Dabranski (D.U.P.)** · GitHub: [Gruver87](https://github.com/Gruver87)
+**Uladzimir Dabranski (D.U.P.)** — Dabranski · Uladzimir · Petrovich · GitHub: [Gruver87](https://github.com/Gruver87)  
+**Org / product:** DUP Labs · DUP Protocol · [BRAND.md](BRAND.md)
 
 Profile card source: [`.github/PROFILE_README.md`](../.github/PROFILE_README.md)
