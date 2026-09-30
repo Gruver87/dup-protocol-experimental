@@ -1,6 +1,6 @@
 # Architecture (honest overview)
 
-**Updated:** 2026-09-28  
+**Updated:** 2026-09-30  
 **Scope:** [Gruver87/experimental](https://github.com/Gruver87/experimental) — R&D sandbox. Domain ports match Hybrid (ADR **0001–0016**); this tree also carries **0017–0021** labs.  
 **Not** a launched public mainnet. **Not** the audit-freeze pin.  
 **Industrial pin (sibling):** [`Absolute_Blockchain_Ultimate_Hybrid`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid) tag [`v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/releases/tag/v1.3.1339-tip-v2-industrial).
@@ -11,7 +11,7 @@
 
 **Python** owns orchestration (API, consensus policy, secrets, metrics export). **Domain services** (`sync/`, `storage/`, `core/components/`) own catch-up, fork reconcile, state apply, and persistence behind ports. **Rust/PyO3** (`abs_native`) accelerates crypto, satoshi-integer state roots, RocksDB, EVM kernels, and **rust-libp2p** (ADR 0019/0020). **Experimental prod mesh** (`778888`) transport = **libp2p Noise** (`feature_libp2p=true`) with **48h PASS** [`3c801b87`](evidence/runs/3c801b87/). Hybrid pin stays TCP+TLS.
 
-**Honesty:** Long-Range is lab-only (`feature_long_range=false` on prod JSON + staging). Lab mesh 2h [`lr2hmesh`](evidence/runs/lr2hmesh/) + lab 48h [`lr48pass1`](evidence/runs/lr48pass1/) + **STRICT 48h** [`lrstrict1`](evidence/runs/lrstrict1/) ≠ BLS ≠ mainnet. Phase 3 post-EVM mesh 48h PASS [`evm48pass1`](evidence/runs/evm48pass1/) ≠ EVM-only 48h. Phase 4 ADR 0021 **closed** [`adr0021gaudit1`](evidence/runs/adr0021gaudit1/). Waves A–G honesty DX on main.
+**Honesty:** Long-Range is lab-only (`feature_long_range=false` on prod JSON + staging). Lab mesh 2h [`lr2hmesh`](evidence/runs/lr2hmesh/) + lab 48h [`lr48pass1`](evidence/runs/lr48pass1/) + **STRICT 48h** [`lrstrict1`](evidence/runs/lrstrict1/) ≠ BLS ≠ mainnet. Phase 3 post-EVM mesh 48h PASS [`evm48pass1`](evidence/runs/evm48pass1/) + **EVM STRICT** [`evmstrict1`](evidence/runs/evmstrict1/) ≠ EVM-only 48h. Phase 4 ADR 0021 **closed** [`adr0021gaudit1`](evidence/runs/adr0021gaudit1/). Waves A–G honesty DX on main.
 
 ---
 
@@ -19,12 +19,12 @@
 
 Honest progress columns for this sandbox (not Hybrid). Detail: [EXECUTION_ORDER](EXECUTION_ORDER.md) · [EVIDENCE_MATRIX](EVIDENCE_MATRIX.md).
 
-| | Phase 1 | Phase 2a | Phase 2b | Phase 2c | Phase 2d | Phase 3 | Phase 4 |
-|--|:-------:|:--------:|:--------:|:--------:|:--------:|:-------:|:-------:|
-| **Track** | libp2p mesh 48h | LR solo 2h | LR 3-node mesh 2h | LR lab 48h | LR STRICT 48h | post-EVM mesh 48h | Mempool Rust |
-| **ADR** | 0020 | 0017 | 0017 + Ed25519 | 0017 | 0017 | — | 0021 |
-| **Status** | **PASS** | **PASS** | **PASS** | **PASS** (B2) | **PASS** | **PASS** | **PASS** |
-| **Pack** | [`3c801b87`](evidence/runs/3c801b87/) | [`lr2h9f3a`](evidence/runs/lr2h9f3a/) | [`lr2hmesh`](evidence/runs/lr2hmesh/) | [`lr48pass1`](evidence/runs/lr48pass1/) | [`lrstrict1`](evidence/runs/lrstrict1/) | [`evm48pass1`](evidence/runs/evm48pass1/) | [`mempool48pass1`](evidence/runs/mempool48pass1/) |
+| | Phase 1 | Phase 2a | Phase 2b | Phase 2c | Phase 2d | Phase 3 | Phase 3b | Phase 4 |
+|--|:-------:|:--------:|:--------:|:--------:|:--------:|:-------:|:--------:|:-------:|
+| **Track** | libp2p mesh 48h | LR solo 2h | LR 3-node mesh 2h | LR lab 48h | LR STRICT 48h | post-EVM mesh 48h | EVM STRICT 48h | Mempool Rust |
+| **ADR** | 0020 | 0017 | 0017 + Ed25519 | 0017 | 0017 | — | — | 0021 |
+| **Status** | **PASS** | **PASS** | **PASS** | **PASS** (B2) | **PASS** | **PASS** | **PASS** | **PASS** |
+| **Pack** | [`3c801b87`](evidence/runs/3c801b87/) | [`lr2h9f3a`](evidence/runs/lr2h9f3a/) | [`lr2hmesh`](evidence/runs/lr2hmesh/) | [`lr48pass1`](evidence/runs/lr48pass1/) | [`lrstrict1`](evidence/runs/lrstrict1/) | [`evm48pass1`](evidence/runs/evm48pass1/) | [`evmstrict1`](evidence/runs/evmstrict1/) | [`mempool48pass1`](evidence/runs/mempool48pass1/) |
 
 ```mermaid
 flowchart TB
@@ -35,6 +35,7 @@ flowchart TB
     L2c["LR lab 48h\nlr48pass1"]
     L2d["LR STRICT 48h\nlrstrict1"]
     EVM["Phase3 mesh 48h\nevm48pass1"]
+    EVMs["Phase3b EVM STRICT\nevmstrict1"]
     MP["Mempool Rust\nadr0021gaudit1"]
   end
   subgraph neverHere ["Never claimed here"]
@@ -42,7 +43,7 @@ flowchart TB
     MN["Public mainnet"]
     BLS["BLS quorum"]
   end
-  L1 --> L2a --> L2b --> L2c --> L2d --> EVM --> MP
+  L1 --> L2a --> L2b --> L2c --> L2d --> EVM --> EVMs --> MP
   L2d -.->|not| BLS
   MP -.->|separate cutover| HY
   HY -.-> MN

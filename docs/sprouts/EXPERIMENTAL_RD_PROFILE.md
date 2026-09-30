@@ -13,7 +13,7 @@ Lab-only profile for Long-Range. libp2p on Experimental `778888` mesh is
 - **Experimental industrial mesh:** rust-libp2p Noise/Yamux + ADR 0008 `/abs/wire` (ADR 0020).
 - **Hybrid audit-pin:** native TCP + TLS/mTLS (unchanged).
 - **Long-Range:** stays off on prod mesh JSON **and staging**. Lab arm: `feature_long_range=true` + `deployment_mode=dev` + `ABS_WS_CHECKPOINT_PATH`. Mid-soak autonomy: miner `roll_forward` (`ABS_WS_ROLL_GAP` / `ABS_WS_ROLL_CONFIRM`) + tip-safe gossip adopt.
-- **Execution order:** [EXECUTION_ORDER.md](../EXECUTION_ORDER.md) — B1/B2/Phase 3 **closed** (`3c801b87`, `lr48pass1` + STRICT [`lrstrict1`](../evidence/runs/lrstrict1/), `evm48pass1`); Phase 4 ADR 0021 **closed** (`adr0021gaudit1`); Phase 5 labs **closed** (`oraclelab1`/`shardlab1`/`bridgeoff1`); Waves A–G honesty DX landed. STRICT triage: [STRICT_SOAK_PARITY.md](STRICT_SOAK_PARITY.md). Preflight: `scripts/evm_pre_48h_harness.py` · `scripts/verify_pre_soak.ps1` · `scripts/verify_wave_g.ps1`.
+- **Execution order:** [EXECUTION_ORDER.md](../EXECUTION_ORDER.md) — B1/B2/Phase 3 **closed** (`3c801b87`, `lr48pass1` + STRICT [`lrstrict1`](../evidence/runs/lrstrict1/), `evm48pass1` + STRICT [`evmstrict1`](../evidence/runs/evmstrict1/)); Phase 4 ADR 0021 **closed** (`adr0021gaudit1`); Phase 5 labs **closed** (`oraclelab1`/`shardlab1`/`bridgeoff1`); Waves A–G honesty DX landed. STRICT triage: [STRICT_SOAK_PARITY.md](STRICT_SOAK_PARITY.md). Preflight: `scripts/evm_pre_48h_harness.py` · `scripts/verify_pre_soak.ps1` · `scripts/verify_wave_g.ps1`.
 
 ## EVM depth
 

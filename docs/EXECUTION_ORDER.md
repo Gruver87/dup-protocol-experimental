@@ -16,7 +16,7 @@ Last updated: 2026-09-28.
 | ~~B3~~ | **Mempool/validation Rust** phases 0–3 + mesh bake + global audit + STRICT dual-report 48h | ADR 0021 · [`adr0021gaudit1`](evidence/runs/adr0021gaudit1/) · **48h PASS** [`mempool48pass1`](evidence/runs/mempool48pass1/) (2026-09-17→19) | **Closed.** |
 | — | **Phase 5 labs** oracles / cross-shard / bridge OFF | [`oraclelab1`](evidence/runs/oraclelab1/) · [`shardlab1`](evidence/runs/shardlab1/) · [`bridgeoff1`](evidence/runs/bridgeoff1/) | Re-verify host labs; prod flags stay false; docker shard mesh optional |
 
-**Not blockers:** EVM depth lab waves 8–10 (done for now); TCP+TLS 48h PASS (`0a7932c4`); **libp2p 48h PASS (`3c801b87`)**; **libp2p STRICT 48h PASS (`lp2pstrict1`)**; **Long-Range lab 48h PASS (`lr48pass1`)**; **Long-Range STRICT 48h PASS (`lrstrict1`)**; **Phase 3 post-EVM-prep mesh 48h PASS (`evm48pass1`)**; **mempool+validation STRICT 48h PASS (`mempool48pass1`)**.
+**Not blockers:** EVM depth lab waves 8–10 (done for now); TCP+TLS 48h PASS (`0a7932c4`); **libp2p 48h PASS (`3c801b87`)**; **libp2p STRICT 48h PASS (`lp2pstrict1`)**; **Long-Range lab 48h PASS (`lr48pass1`)**; **Long-Range STRICT 48h PASS (`lrstrict1`)**; **Phase 3 post-EVM-prep mesh 48h PASS (`evm48pass1`)**; **EVM STRICT 48h PASS (`evmstrict1`)**; **mempool+validation STRICT 48h PASS (`mempool48pass1`)**.
 
 ---
 
@@ -102,20 +102,11 @@ Phase 6   External audit / mainnet gap (out of repo scope until scheduled)
 
 **Honesty:** Experimental libp2p prod-profile mesh soak after EVM prep — **not** EVM-only 48h · not full geth · not EIP-4844 · not Long-Range · not BLS · not public mainnet. Distinct from [`3c801b87`](evidence/runs/3c801b87/) (different window/tip).
 
-### Phase 3b — EVM STRICT prep (**READY** — soak not started)
+### Phase 3b — EVM STRICT re-soak (**DONE** 2026-09-28→30)
 
 **Why:** same mempool-parity STRICT bar as LR/libp2p (`IntervalSec=60`, `fail=0` `mesh_warn=0` `warn_lines=0`). Default [`evm48pass1`](evidence/runs/evm48pass1/) used IntervalSec=300 + soft under_mesh WARNs (pre-reconnect harden).
 
-**Prep evidence (2026-09-28, this tree):**
-
-1. Host: `python scripts/evm_pre_48h_harness.py --skip-mesh` PASS (labs + units + gate)
-2. Live mesh: `docker_prod_3node -SkipBuild -KeepVolumes` + full `evm_pre_48h_harness.py` PASS (probe OK + `prod_evm_smoke` deploy/storage on 3/3) tip ~84990
-3. Load: `evm_mempool_load_harness.py` PASS; opcode parity PASS; 282 EVM-focused units PASS
-4. Soft residual from `evm48pass1` (under_mesh×8, ready_flap×3, peer_probe soft, historical `p2p=inconsistent` tip-race → now `tip_skew` OK-only): reconnect harden proven on STRICT bar by [`lp2pstrict1`](evidence/runs/lp2pstrict1/) (`warn_lines=0`)
-5. Honesty: `supported_absolute` labels; WS subscribe `not_claimed`; `estimate_gas` fail → JSON null (no invent gas_limit / no float×1.2)
-6. Wrapper harden: `prepare_48h_soak` after harness; nested `SkipPreflight=$true` (no double docker); `-Force` required for blind skip; default `TipStagnantFailAfterSec=3600` (tip-dead refuse)
-
-**Start (only when ordered):** `.\scripts\start_soak_evm_mesh_48h_strict.ps1` (full rebuild preferred) → evidence pack id TBD (`evmstrict1`).
+**PASS evidence:** [`docs/evidence/runs/evmstrict1/`](evidence/runs/evmstrict1/) — `passed=true` strict=true hard_fails=0 mesh_warn=0 warn_lines=0 fail_lines=0 ready_only=0 mesh_ok=2801 tip ~85200→~96089 IntervalSec=60 FullHarnessEvery=6 TipStagnant=3600 git `0c36904`.
 
 **Honesty:** STRICT mesh after EVM prep ≠ EVM-only 48h ≠ geth ≠ EIP-4844 ≠ mainnet. Distinct from default [`evm48pass1`](evidence/runs/evm48pass1/).
 
@@ -184,7 +175,7 @@ Other optional depth:
 |------|-------------------|----------|
 | libp2p transport | Slices A–DB, 2h smoke, **48h PASS `3c801b87`** | Post-soak WARN hardening (optional) |
 | Long-Range | Waves 1–14 labs + 2h/intensify + **lab 48h PASS** [`lr48pass1`](evidence/runs/lr48pass1/) + **STRICT 48h PASS** [`lrstrict1`](evidence/runs/lrstrict1/); host pack [`lrlab1`](evidence/runs/lrlab1/) | Prod arm / BLS / mainnet Long-Range |
-| EVM | Waves 8–11 + preflight harness; **Phase 3 mesh 48h PASS** [`evm48pass1`](evidence/runs/evm48pass1/); host depth pack [`evmlab1`](evidence/runs/evmlab1/); **STRICT prep READY** 2026-09-28 (live harness PASS; soak not started) | Further COMPAT_MATRIX Partial→Supported chase; EVM-only 48h still optional/not claimed; STRICT pack after operator start |
+| EVM | Waves 8–11 + preflight harness; **Phase 3 mesh 48h PASS** [`evm48pass1`](evidence/runs/evm48pass1/); **STRICT 48h PASS** [`evmstrict1`](evidence/runs/evmstrict1/); host depth pack [`evmlab1`](evidence/runs/evmlab1/) | Further COMPAT_MATRIX Partial→Supported chase; EVM-only 48h still optional/not claimed |
 | Mempool Rust | **Phases 0–3 + mesh bake** (ADR 0021) + **STRICT dual-report 48h PASS** [`mempool48pass1`](evidence/runs/mempool48pass1/) + **wire satoshi cutover** + **require_wire_satoshi** + **host verify_hard_all green** 2026-09-21 + **industrial tip 48h PASS** [`ind48pass1`](evidence/runs/ind48pass1/) (2026-09-21→23) | Prod arm of unrelated features stays off |
 | Oracles / shard / bridge OFF | Lab verify packs [`oraclelab1`](evidence/runs/oraclelab1/) · [`shardlab1`](evidence/runs/shardlab1/) · [`bridgeoff1`](evidence/runs/bridgeoff1/); **host re-verify PASS** 2026-09-20 [`phase5reverify1`](evidence/runs/phase5reverify1/) | Prod arm / L1 bridge cutover / docker shard mesh (optional) |
 | Council ADR 0022 | Lab + live staging 778889 genesis 87/87 (2026-08-28) | On-chain signed gov, mainnet, 48h council soak |

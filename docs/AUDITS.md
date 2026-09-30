@@ -15,7 +15,7 @@ This sandbox ships rust-libp2p / Long-Range / EVM-depth labs. Lab PASS ≠ firm 
 | Security workflow (`security-audit.yml`) | Active | pip-audit + cargo-audit (scoped ignores) |
 | Independent external audit report | **Pending — Hybrid pin** | Do not claim “audited” from this repo |
 | Bug bounty | **Not configured** | Disclose via [SECURITY.md](../SECURITY.md) |
-| Parallel R&D after libp2p 48h PASS | **Phases 1–5 closed** | B1 [`3c801b87`](evidence/runs/3c801b87/) · B2 [`lr48pass1`](evidence/runs/lr48pass1/) + STRICT [`lrstrict1`](evidence/runs/lrstrict1/) · Phase 3 [`evm48pass1`](evidence/runs/evm48pass1/) · Phase 4 [`adr0021gaudit1`](evidence/runs/adr0021gaudit1/) + [`mempool48pass1`](evidence/runs/mempool48pass1/) · tip [`ind48pass1`](evidence/runs/ind48pass1/) · libp2p STRICT [`lp2pstrict1`](evidence/runs/lp2pstrict1/); next = Phase 6 org |
+| Parallel R&D after libp2p 48h PASS | **Phases 1–5 closed** | B1 [`3c801b87`](evidence/runs/3c801b87/) · B2 [`lr48pass1`](evidence/runs/lr48pass1/) + STRICT [`lrstrict1`](evidence/runs/lrstrict1/) · Phase 3 [`evm48pass1`](evidence/runs/evm48pass1/) + STRICT [`evmstrict1`](evidence/runs/evmstrict1/) · Phase 4 [`adr0021gaudit1`](evidence/runs/adr0021gaudit1/) + [`mempool48pass1`](evidence/runs/mempool48pass1/) · tip [`ind48pass1`](evidence/runs/ind48pass1/) · libp2p STRICT [`lp2pstrict1`](evidence/runs/lp2pstrict1/); next = Phase 6 org |
 
 **Operator note (2026-09-28):** B1/B2/Phase 2d STRICT/Phase 3–5 **PASS** on disk. Prod JSON keeps
 `feature_long_range=false` / `feature_oracles=false` / `feature_sharding=false` on `778888` (+ staging LR hard-off).

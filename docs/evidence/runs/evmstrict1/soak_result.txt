@@ -1,0 +1,11 @@
+﻿STRICT 48h Experimental prod mesh PASS (post-EVM prep / Phase 3b)
+window: 2026-09-28T22:55:26+02:00 -> 2026-09-30T22:55:27+02:00
+hours_elapsed: 48.0004 / 48
+passed: true | strict: true | hard_fails: 0 | mesh_warn: 0 | warn_lines: 0 | fail_lines: 0 | ready_only: 0
+mesh_ok_cycles: 2801 | interval_sec: 60 | FullHarnessEvery: 6 | tip_stagnant_fail_after: 3600
+tip: ~85200 -> ~96089
+ports: 18180,18181,18182 (Experimental prod mesh 778888)
+host_commit_at_start: 0c369045af492a8010e89b03998e9de843e3edf6
+image: sha256:0861666a4b2ec59bb0a3edb11b47eb004908b97385140922f48f3d46b4eaaaf3
+script: .\scripts\start_soak_evm_mesh_48h_strict.ps1
+honesty: STRICT bar parity with lp2pstrict1/mempool48pass1 after EVM prep. Distinct from default evm48pass1. Not EVM-only 48h. Not geth. Not EIP-4844. Not Long-Range. Not BLS. Not public mainnet. Not Hybrid.

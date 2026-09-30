@@ -22,6 +22,7 @@
 - libp2p 48h — **PASS** [`evidence/runs/3c801b87/`](evidence/runs/3c801b87/) (B1) · STRICT [`lp2pstrict1`](evidence/runs/lp2pstrict1/)
 - Long-Range lab 48h — **PASS** [`evidence/runs/lr48pass1/`](evidence/runs/lr48pass1/) (B2) · STRICT [`lrstrict1`](evidence/runs/lrstrict1/) (not BLS/prod)
 - Phase 3 mesh 48h — **PASS** [`evidence/runs/evm48pass1/`](evidence/runs/evm48pass1/) (not EVM-only)
+- EVM STRICT 48h — **PASS** [`evidence/runs/evmstrict1/`](evidence/runs/evmstrict1/) (not EVM-only / not geth)
 - Phase 4 ADR 0021 — **closed** [`adr0021gaudit1`](evidence/runs/adr0021gaudit1/); Phase 5 tip [`ind48pass1`](evidence/runs/ind48pass1/); Waves A–G honesty DX on main
 - Next: soak **only if ordered** — [`EVIDENCE_MATRIX.md`](EVIDENCE_MATRIX.md) · [`EXECUTION_ORDER.md`](EXECUTION_ORDER.md)
 - Self-check: `.\scripts\verify_wave_g.ps1` · `.\scripts\verify_pre_soak.ps1`

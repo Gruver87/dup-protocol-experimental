@@ -26,7 +26,7 @@ Canonical docs language is **English**. If GitHub shows a translation, open **Vi
 | Audience | Start here |
 |----------|------------|
 | **Architects / principals** | [AT_A_GLANCE](docs/AT_A_GLANCE.md) → [ARCHITECTURE](docs/ARCHITECTURE.md) → ADR [0017](docs/adr/0017-long-range-research.md) / [0019](docs/adr/0019-rust-libp2p-industrial.md) / [0020](docs/adr/0020-libp2p-industrial-mesh.md) |
-| **Grant officers / diligence** | [FUND_READINESS](docs/FUND_READINESS.md) · Hybrid [VISION](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/VISION.md) · [EVIDENCE_MATRIX](docs/EVIDENCE_MATRIX.md) · [EXECUTION_ORDER](docs/EXECUTION_ORDER.md) (Phases 1–5 + LR STRICT [`lrstrict1`](docs/evidence/runs/lrstrict1/) + libp2p STRICT [`lp2pstrict1`](docs/evidence/runs/lp2pstrict1/) + tip [`ind48pass1`](docs/evidence/runs/ind48pass1/); next Phase 6 org) |
+| **Grant officers / diligence** | [FUND_READINESS](docs/FUND_READINESS.md) · Hybrid [VISION](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/VISION.md) · [EVIDENCE_MATRIX](docs/EVIDENCE_MATRIX.md) · [EXECUTION_ORDER](docs/EXECUTION_ORDER.md) (Phases 1–5 + LR STRICT [`lrstrict1`](docs/evidence/runs/lrstrict1/) + EVM STRICT [`evmstrict1`](docs/evidence/runs/evmstrict1/) + libp2p STRICT [`lp2pstrict1`](docs/evidence/runs/lp2pstrict1/) + tip [`ind48pass1`](docs/evidence/runs/ind48pass1/); next Phase 6 org) |
 | **Operators** | [Start in 60 seconds](#start-in-60-seconds) · `python scripts/verify_experimental_rd.py` · optional `python scripts/verify_parallel_rd_batch.py` |
 | **Auditors (this tree)** | R&D sandbox only — firm engagement package lives on the [Hybrid pin](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/AUDIT_ENGAGEMENT_BRIEF.md) |
 
@@ -70,6 +70,7 @@ Explorer (solo): http://localhost:8080
 | Long-Range prod arm / BLS | **Not claimed** | `feature_long_range=false` on prod `778888` (+ staging hard-off) |
 | Libp2p STRICT 48h | **PASS** | [`lp2pstrict1`](docs/evidence/runs/lp2pstrict1/) · IntervalSec=60 · warn_lines=0 |
 | Phase 3 post-EVM-prep mesh 48h | **PASS** | 2026-09-11→13 [`evm48pass1`](docs/evidence/runs/evm48pass1/) · tip ~10125→~19197 · **not** EVM-only 48h |
+| EVM STRICT 48h | **PASS** | 2026-09-28→30 [`evmstrict1`](docs/evidence/runs/evmstrict1/) · IntervalSec=60 · fail=0 · mesh_warn=0 · tip ~85200→~96089 · **not** EVM-only / not geth |
 | Mempool + validation STRICT 48h | **PASS** | [`mempool48pass1`](docs/evidence/runs/mempool48pass1/) · ADR 0021 path · **not** mainnet |
 | Wire fee/amount satoshi cutover | **Landed** | `verify_adr0021_wire_satoshi.ps1` · dual-write + mismatch refuse |
 | Float-only wire refuse (MED) | **Landed** | `p2p_mempool_require_wire_satoshi=true` · lab escape hatch |
@@ -95,7 +96,7 @@ What is closed vs open on **this** tree. Columns = execution order ([EXECUTION_O
 | **2b** | Long-Range lab 3-node mesh 2h + Ed25519 committee | **DONE** | [`lr2hmesh`](docs/evidence/runs/lr2hmesh/) |
 | **2c** | Long-Range lab 48h | **DONE** (B2 closed) | [`lr48pass1`](docs/evidence/runs/lr48pass1/) · prior FAIL [`lr48fail1`](docs/evidence/runs/lr48fail1/) · intensify [`lr2hintensify`](docs/evidence/runs/lr2hintensify/) |
 | **2d** | Long-Range lab STRICT 48h | **DONE** | [`lrstrict1`](docs/evidence/runs/lrstrict1/) · [STRICT_SOAK_PARITY](docs/sprouts/STRICT_SOAK_PARITY.md) |
-| **3** | EVM mesh regression + post-prep 48h | **DONE** | [`evm48pass1`](docs/evidence/runs/evm48pass1/) · preflight `evm_pre_48h_harness.py` |
+| **3** | EVM mesh regression + post-prep 48h | **DONE** | [`evm48pass1`](docs/evidence/runs/evm48pass1/) · STRICT [`evmstrict1`](docs/evidence/runs/evmstrict1/) · preflight `evm_pre_48h_harness.py` |
 | **4** | Mempool / validation → Rust | **DONE** (phases 0–3 + mesh bake + global audit + STRICT 48h) | [`adr0021gaudit1`](docs/evidence/runs/adr0021gaudit1/) · [`mempool48pass1`](docs/evidence/runs/mempool48pass1/) · [ADR 0021](docs/adr/0021-mempool-validation-rust-phases.md) |
 | **5** | Industrial polish (wire satoshi · persist · native f64 · HIGH · MED · verify restore · tip 48h) | **DONE** | [INDUSTRIAL_MAX_SCAN](docs/INDUSTRIAL_MAX_SCAN_2026-09-20.md) · [`ind48pass1`](docs/evidence/runs/ind48pass1/) · [FUND_READINESS](docs/FUND_READINESS.md) |
 | **6** | External audit / ceremony live | **Org** | [MAINNET_GAP_ANALYSIS](docs/MAINNET_GAP_ANALYSIS.md) |
@@ -110,8 +111,9 @@ flowchart LR
   P2c["Phase2c LR lab 48h\nPASS lr48pass1"]
   P2d["Phase2d LR STRICT 48h\nPASS lrstrict1"]
   P3["Phase3 mesh 48h\nPASS evm48pass1"]
+  P3b["Phase3b EVM STRICT\nPASS evmstrict1"]
   P4["Phase4 Mempool Rust\nPASS adr0021gaudit1"]
-  P1 --> P2a --> P2b --> P2c --> P2d --> P3 --> P4
+  P1 --> P2a --> P2b --> P2c --> P2d --> P3 --> P3b --> P4
 ```
 
 Full layer map: [ARCHITECTURE](docs/ARCHITECTURE.md#rd-execution-chain).
@@ -125,7 +127,7 @@ Full layer map: [ARCHITECTURE](docs/ARCHITECTURE.md#rd-execution-chain).
 | **ADR 0019 rust-libp2p** | Slices **A–DB** (phase 105) behind Cargo `libp2p` | [ADR 0019](docs/adr/0019-rust-libp2p-industrial.md) |
 | **ADR 0020 Experimental mesh** | libp2p on `778888` · **B1 CLOSED** 48h PASS | [`3c801b87`](docs/evidence/runs/3c801b87/) · [EXECUTION_ORDER](docs/EXECUTION_ORDER.md) |
 | **ADR 0017 Long-Range** | Lab mesh 2h + lab 48h + **STRICT 48h PASS** · B2 closed · not BLS/prod | [`lrstrict1`](docs/evidence/runs/lrstrict1/) · [`lr48pass1`](docs/evidence/runs/lr48pass1/) · [LONG_RANGE_LAB_PROFILE](docs/sprouts/LONG_RANGE_LAB_PROFILE.md) |
-| **EVM depth / RPC honesty** | Waves 8–11 + Phase 3 mesh 48h PASS | [`evm48pass1`](docs/evidence/runs/evm48pass1/) · [EVM_COMPAT_MATRIX](docs/sprouts/EVM_COMPAT_MATRIX.md) |
+| **EVM depth / RPC honesty** | Waves 8–11 + Phase 3 mesh 48h + **STRICT 48h PASS** | [`evmstrict1`](docs/evidence/runs/evmstrict1/) · [`evm48pass1`](docs/evidence/runs/evm48pass1/) · [EVM_COMPAT_MATRIX](docs/sprouts/EVM_COMPAT_MATRIX.md) |
 | **ADR 0021 mempool Rust** | Phases 0–3 + mesh bake + global audit + **STRICT 48h** + wire satoshi cutover | [`mempool48pass1`](docs/evidence/runs/mempool48pass1/) · [`adr0021gaudit1`](docs/evidence/runs/adr0021gaudit1/) · [ADR 0021](docs/adr/0021-mempool-validation-rust-phases.md) |
 
 Latest ADR 0019 work lands on `main`. Historical slice PRs: [#16](https://github.com/Gruver87/experimental/pull/16).
@@ -190,6 +192,7 @@ Default Hybrid CI / prod mesh builds **without** the `libp2p` feature.
 - Experimental prod mesh JSON (`778888`) is **libp2p** (ADR 0020) with **48h PASS** [`3c801b87`](docs/evidence/runs/3c801b87/). Hybrid audit-pin JSON stays `feature_libp2p=false`. TCP+TLS soak `0a7932c4` is a separate historical PASS — not libp2p.
 - Long-Range is **lab-only** (`feature_long_range=false` on prod JSON + staging hard-off). Lab mesh 2h [`lr2hmesh`](docs/evidence/runs/lr2hmesh/) + lab 48h [`lr48pass1`](docs/evidence/runs/lr48pass1/) + STRICT 48h [`lrstrict1`](docs/evidence/runs/lrstrict1/) ≠ BLS ≠ prod arm ≠ mainnet.
 - Phase 3 post-EVM-prep mesh 48h PASS [`evm48pass1`](docs/evidence/runs/evm48pass1/) ≠ EVM-only 48h ≠ full geth.
+- EVM STRICT 48h PASS [`evmstrict1`](docs/evidence/runs/evmstrict1/) ≠ EVM-only 48h ≠ geth ≠ EIP-4844 ≠ mainnet.
 - Phase 4 ADR 0021 global audit PASS [`adr0021gaudit1`](docs/evidence/runs/adr0021gaudit1/) ≠ mainnet. STRICT mempool+validation 48h is separate PASS [`mempool48pass1`](docs/evidence/runs/mempool48pass1/).
 - Wire satoshi / PersistError / native f64 hygiene = operator verify scripts ≠ new 48h soak ≠ mainnet.
 - Do **not** push R&D into the audit-freeze Hybrid repo.
@@ -233,4 +236,4 @@ MIT — [LICENSE](LICENSE)
 ---
 
 *Author: ULADZIMIR DABRANSKI (D.U.P.) · Owner: [Gruver87](https://github.com/Gruver87) · Default branch: `main`*  
-*Last surface update: **2026-09-28** — B1–B5 + Phase 2d LR STRICT [`lrstrict1`](docs/evidence/runs/lrstrict1/) · libp2p STRICT [`lp2pstrict1`](docs/evidence/runs/lp2pstrict1/) · tip [`ind48pass1`](docs/evidence/runs/ind48pass1/). Not BLS / not public mainnet / not Hybrid pin.*
+*Last surface update: **2026-09-30** — B1–B5 + Phase 2d LR STRICT [`lrstrict1`](docs/evidence/runs/lrstrict1/) · Phase 3b EVM STRICT [`evmstrict1`](docs/evidence/runs/evmstrict1/) · libp2p STRICT [`lp2pstrict1`](docs/evidence/runs/lp2pstrict1/) · tip [`ind48pass1`](docs/evidence/runs/ind48pass1/). Not BLS / not public mainnet / not Hybrid pin.*

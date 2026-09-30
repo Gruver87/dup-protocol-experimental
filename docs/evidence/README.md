@@ -33,6 +33,7 @@ python scripts/package_mesh_evidence.py \
 | [`runs/lr48fail1/`](runs/lr48fail1/) | Long-Range lab 48h FAIL (historical; superseded by `lr48pass1`) |
 | [`runs/lr2hmesh/`](runs/lr2hmesh/) | **Long-Range lab 3-node mesh 2h PASS** (ADR 0017) |
 | [`runs/lr2h9f3a/`](runs/lr2h9f3a/) | Long-Range lab solo 2h PASS (prior / superseded for mesh claims) |
+| [`runs/evmstrict1/`](runs/evmstrict1/) | **EVM STRICT 48h PASS** (IntervalSec=60, fail=0 mesh_warn=0) — distinct from default `evm48pass1` |
 | [`runs/evm48pass1/`](runs/evm48pass1/) | **Phase 3 post-EVM-prep mesh 48h PASS** — not EVM-only / not mainnet |
 | [`runs/0a7932c4/`](runs/0a7932c4/) | TCP+TLS 48h PASS (do not relabel as libp2p) |
 | [`runs/35104db0/`](runs/35104db0/), [`runs/87f51b3e/`](runs/87f51b3e/) | libp2p 48h FAIL (historical) |
