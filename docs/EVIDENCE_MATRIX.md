@@ -9,7 +9,7 @@ This doc reflects honest status after local prod mesh runs and monitoring — no
 
 ## Executive summary (2026-09-30)
 
-**Experimental (`Gruver87/experimental`)** — Phases **1–5 closed** on an industrial private 3-node mesh (chain `778888`, ADR 0020 libp2p Noise). Packaged STRICT 48h PASS: [`lp2pstrict1`](evidence/runs/lp2pstrict1/), [`lrstrict1`](evidence/runs/lrstrict1/), [`evmstrict1`](evidence/runs/evmstrict1/), [`mempool48pass1`](evidence/runs/mempool48pass1/). Default 48h PASS also on disk: [`3c801b87`](evidence/runs/3c801b87/), [`evm48pass1`](evidence/runs/evm48pass1/), [`ind48pass1`](evidence/runs/ind48pass1/), [`lr48pass1`](evidence/runs/lr48pass1/), TCP+TLS [`0a7932c4`](evidence/runs/0a7932c4/). Host: waves 542 + pytest 2734 (2026-09-21); ADR 0021 audit 13/13 [`adr0021gaudit1`](evidence/runs/adr0021gaudit1/).
+**Experimental (`Gruver87/dup-protocol-experimental`)** — Phases **1–5 closed** on an industrial private 3-node mesh (chain `778888`, ADR 0020 libp2p Noise). Packaged STRICT 48h PASS: [`lp2pstrict1`](evidence/runs/lp2pstrict1/), [`lrstrict1`](evidence/runs/lrstrict1/), [`evmstrict1`](evidence/runs/evmstrict1/), [`mempool48pass1`](evidence/runs/mempool48pass1/). Default 48h PASS also on disk: [`3c801b87`](evidence/runs/3c801b87/), [`evm48pass1`](evidence/runs/evm48pass1/), [`ind48pass1`](evidence/runs/ind48pass1/), [`lr48pass1`](evidence/runs/lr48pass1/), TCP+TLS [`0a7932c4`](evidence/runs/0a7932c4/). Host: waves 542 + pytest 2734 (2026-09-21); ADR 0021 audit 13/13 [`adr0021gaudit1`](evidence/runs/adr0021gaudit1/).
 
 **Hybrid pin (sibling repo)** — tip-v2 48h PASS [`375d14f`](evidence/runs/375d14f/) (different tree) · Phase 4 binder READY · external firm audit **pending**.
 

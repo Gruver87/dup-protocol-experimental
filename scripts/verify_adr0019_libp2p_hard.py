@@ -484,7 +484,7 @@ def check_repo_honesty() -> tuple[bool, str]:
     need = (
         "TCP+TLS",
         "tip proof",
-        "Gruver87/experimental",
+        "Gruver87/dup-protocol-experimental",
         "Slice U",
         "Slice V",
         "Slice W",

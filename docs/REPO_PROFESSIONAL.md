@@ -1,6 +1,6 @@
 # Professional repository posture — Experimental
 
-Hygiene for [Gruver87/experimental](https://github.com/Gruver87/experimental).
+Hygiene for [Gruver87/dup-protocol-experimental](https://github.com/Gruver87/dup-protocol-experimental).
 This is the **R&D sandbox**, not the Hybrid audit pin.
 
 ## Industry baseline
@@ -34,4 +34,4 @@ This is the **R&D sandbox**, not the Hybrid audit pin.
 - Public mainnet / listed ABS
 - External firm audit complete
 
-Industrial pin: [Ultimate Hybrid `v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/releases/tag/v1.3.1339-tip-v2-industrial).
+Industrial pin: [Ultimate Hybrid `v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/dup-protocol/releases/tag/v1.3.1339-tip-v2-industrial).

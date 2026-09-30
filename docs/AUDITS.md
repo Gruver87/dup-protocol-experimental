@@ -3,8 +3,8 @@
 **External third-party L1 / smart-contract / penetration audit: not completed.**
 
 **This repository is not the audit pin.** External third-party L1 audit is tracked on
-[Ultimate Hybrid](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid)
-tag [`v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/releases/tag/v1.3.1339-tip-v2-industrial).
+[Ultimate Hybrid](https://github.com/Gruver87/dup-protocol)
+tag [`v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/dup-protocol/releases/tag/v1.3.1339-tip-v2-industrial).
 
 This sandbox ships rust-libp2p / Long-Range / EVM-depth labs. Lab PASS ≠ firm audit PDF.
 
@@ -21,4 +21,4 @@ This sandbox ships rust-libp2p / Long-Range / EVM-depth labs. Lab PASS ≠ firm 
 `feature_long_range=false` / `feature_oracles=false` / `feature_sharding=false` on `778888` (+ staging LR hard-off).
 Not BLS · not EVM-only 48h · not public mainnet.
 
-Related: [SECURITY.md](../SECURITY.md) · [EXPERIMENTAL_SANDBOX.md](../EXPERIMENTAL_SANDBOX.md) · [EXECUTION_ORDER.md](EXECUTION_ORDER.md) · Hybrid [AUDITS.md](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/AUDITS.md)
+Related: [SECURITY.md](../SECURITY.md) · [EXPERIMENTAL_SANDBOX.md](../EXPERIMENTAL_SANDBOX.md) · [EXECUTION_ORDER.md](EXECUTION_ORDER.md) · Hybrid [AUDITS.md](https://github.com/Gruver87/dup-protocol/blob/master/docs/AUDITS.md)

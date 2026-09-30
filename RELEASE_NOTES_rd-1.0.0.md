@@ -1,7 +1,7 @@
 # rd-1.0.0 — ADR 0019 rust-libp2p through Slice CY (R&D snapshot)
 
 **Tag:** `rd-1.0.0` (GitHub Latest on this repo — R&D snapshot, **not** Hybrid audit pin)  
-**Repo:** [Gruver87/experimental](https://github.com/Gruver87/experimental)  
+**Repo:** [Gruver87/dup-protocol-experimental](https://github.com/Gruver87/dup-protocol-experimental)  
 **Purpose:** first public GitHub Release for the Experimental sandbox so the repo has a real Releases page — **not** the Hybrid audit pin.
 
 ## What this tag proves (operator-local)
@@ -23,12 +23,12 @@
 - NTFS replace = POSIX inode-atomic  
 - `finality_quorum_live=true`
 
-Industrial freeze stays on the **other** repo: [`v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/releases/tag/v1.3.1339-tip-v2-industrial).
+Industrial freeze stays on the **other** repo: [`v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/dup-protocol/releases/tag/v1.3.1339-tip-v2-industrial).
 
 ## Verify
 
 ```powershell
-git clone https://github.com/Gruver87/experimental.git
+git clone https://github.com/Gruver87/dup-protocol-experimental.git
 cd experimental
 pip install -r requirements.txt
 copy .env.example .env
@@ -39,4 +39,4 @@ python scripts/verify_experimental_rd.py
 ## Auditor / operator note
 
 Start Experimental at [docs/AT_A_GLANCE.md](docs/AT_A_GLANCE.md).  
-Start Hybrid firm engagement at Hybrid [AUDIT_ENGAGEMENT_BRIEF](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/AUDIT_ENGAGEMENT_BRIEF.md).
+Start Hybrid firm engagement at Hybrid [AUDIT_ENGAGEMENT_BRIEF](https://github.com/Gruver87/dup-protocol/blob/master/docs/AUDIT_ENGAGEMENT_BRIEF.md).

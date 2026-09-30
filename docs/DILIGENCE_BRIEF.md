@@ -3,7 +3,7 @@
 **Audience:** grant officers, investors, HTP / ПВТ reviewers, technical advisors.  
 **Date:** 2026-10-01 · Language: English (canonical)  
 **Brand:** [BRAND.md](BRAND.md) — **DUP Labs** (org) · **DUP Protocol** (product) · Uladzimir Dabranski (D.U.P.)  
-**Repos:** [`Gruver87/experimental`](https://github.com/Gruver87/experimental) (R&D) · [`Absolute_Blockchain_Ultimate_Hybrid`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid) (industrial pin; URL unchanged)  
+**Repos:** [`Gruver87/dup-protocol-experimental`](https://github.com/Gruver87/dup-protocol-experimental) (R&D) · [`Absolute_Blockchain_Ultimate_Hybrid`](https://github.com/Gruver87/dup-protocol) (industrial pin; URL unchanged)  
 **Former name:** Absolute Blockchain (same trees / evidence).
 
 This page is the **15-minute path**. Claims below map to **on-disk evidence packs** under [`docs/evidence/runs/`](evidence/runs/). Soft marketing language is refused.
@@ -20,7 +20,7 @@ This page is the **15-minute path**. Claims below map to **on-disk evidence pack
 
 | Tree | Role | What you can claim today |
 |------|------|--------------------------|
-| **Industrial pin** ([`Absolute_Blockchain_Ultimate_Hybrid`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid)) | DUP Protocol audit-freeze · tag [`v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/releases/tag/v1.3.1339-tip-v2-industrial) | Tip-v2 48h soak PASS · Phase 4 binder READY for **firm** engagement · **not** public mainnet |
+| **Industrial pin** ([`Absolute_Blockchain_Ultimate_Hybrid`](https://github.com/Gruver87/dup-protocol)) | DUP Protocol audit-freeze · tag [`v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/dup-protocol/releases/tag/v1.3.1339-tip-v2-industrial) | Tip-v2 48h soak PASS · Phase 4 binder READY for **firm** engagement · **not** public mainnet |
 | **experimental** (this repo) | DUP Protocol R&D sandbox · libp2p / Long-Range / EVM depth / mempool Rust | Phases **1–5 closed** with packaged 48h evidence · next = **Phase 6 org** (external audit, ceremony live, secrets rotate) |
 
 Hybrid stays freeze-safe. Experimental absorbs transport / Long-Range / EVM-depth risk. Do **not** conflate the two.
@@ -140,7 +140,7 @@ Detail: [EXECUTION_ORDER](EXECUTION_ORDER.md) · skimmer: [AT_A_GLANCE](AT_A_GLA
 2. Open any STRICT pack README (e.g. [`evmstrict1`](evidence/runs/evmstrict1/)) — check `passed=true`, `hard_fails=0`  
 3. Skim [EVIDENCE_MATRIX](EVIDENCE_MATRIX.md) soak index  
 4. Confirm GitHub Actions green on `main`  
-5. Hybrid firm-audit path (separate tree): [AUDIT_ENGAGEMENT_BRIEF](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/AUDIT_ENGAGEMENT_BRIEF.md)
+5. Hybrid firm-audit path (separate tree): [AUDIT_ENGAGEMENT_BRIEF](https://github.com/Gruver87/dup-protocol/blob/master/docs/AUDIT_ENGAGEMENT_BRIEF.md)
 
 Optional workstation: `.\scripts\verify_pre_soak.ps1 -SkipPrepare` with a live mesh.
 

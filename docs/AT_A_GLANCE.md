@@ -14,12 +14,12 @@ The audit-freeze pin · public audited mainnet · listed token · Hybrid `v1.3.*
 
 | | |
 |---|---|
-| Repo | [`Gruver87/experimental`](https://github.com/Gruver87/experimental) · default **`main`** |
+| Repo | [`Gruver87/dup-protocol-experimental`](https://github.com/Gruver87/dup-protocol-experimental) · default **`main`** |
 | R&D tag | **`rd-1.0.0`** (prerelease snapshot) |
 | ADR 0019 | Slices **A–DB** · phase **105** |
 | Hard gate | **117** steps with `--rebuild` (operator-local, 2026-08-15) |
 | Default transport | **libp2p (ADR 0020)** on Experimental prod mesh JSON — Hybrid pin stays TCP+TLS |
-| Industrial pin | [Hybrid `v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/releases/tag/v1.3.1339-tip-v2-industrial) |
+| Industrial pin | [Hybrid `v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/dup-protocol/releases/tag/v1.3.1339-tip-v2-industrial) |
 | 48h soaks here | TCP+TLS **PASS** (`0a7932c4`) · **libp2p** [`3c801b87`](evidence/runs/3c801b87/) · **libp2p STRICT** [`lp2pstrict1`](evidence/runs/lp2pstrict1/) · **LR lab** [`lr48pass1`](evidence/runs/lr48pass1/) · **LR STRICT** [`lrstrict1`](evidence/runs/lrstrict1/) · **Phase 3 post-EVM** [`evm48pass1`](evidence/runs/evm48pass1/) · **EVM STRICT** [`evmstrict1`](evidence/runs/evmstrict1/) · **mempool+validation STRICT** [`mempool48pass1`](evidence/runs/mempool48pass1/) · **industrial polish tip** [`ind48pass1`](evidence/runs/ind48pass1/). Not BLS / not mainnet / not EVM-only. |
 | Self-check | `.\scripts\verify_global_rd_audit.ps1` (FullLaunch/Live) · `.\scripts\verify_pre_soak.ps1` · `.\scripts\start_pre48h_maxload_2h.ps1` (2h STRICT max-load pre-48h) · `.\scripts\start_mempool_validation_soak.ps1` (mempool+validation STRICT; operator-ordered) · `.\scripts\verify_adr0021_wire_satoshi.ps1` (wire fee/amount satoshi cutover) · `.\scripts\verify_persist_fail_closed.ps1` (hot persist PersistError) · `.\scripts\verify_native_f64_hygiene.ps1` (amount/writeback typed refuse) · `.\scripts\verify_industrial_high_honesty.ps1` (HIGH #18/#19–20/#22/#24) · `.\scripts\verify_wave_e.ps1` · `.\scripts\verify_wave_f.ps1` · `.\scripts\verify_wave_g.ps1` · `.\scripts\verify_wave_h.ps1` · `.\scripts\verify_wave_i.ps1` · `.\scripts\verify_wave_j.ps1` · `.\scripts\verify_wave_k.ps1` · `.\scripts\verify_wave_l.ps1` · `.\scripts\verify_wave_m.ps1` · `.\scripts\verify_wave_n.ps1` · `.\scripts\verify_wave_o.ps1` · `.\scripts\verify_wave_p.ps1` · `.\scripts\verify_wave_q.ps1` · `.\scripts\verify_wave_r.ps1` · `.\scripts\verify_evm_depth_lab.ps1` · `.\scripts\verify_long_range_lab.ps1` · `.\scripts\verify_council_lab.ps1` · `.\scripts\verify_hard_all.ps1` · `python scripts/verify_experimental_rd.py` |
 | Web UI | **Ops Console** `/` (`web/console/`) · legacy explorer `/explorer` · Grafana `deploy/grafana/dashboard.json` |
@@ -68,6 +68,6 @@ Full map: [ARCHITECTURE § R&D execution chain](ARCHITECTURE.md#rd-execution-cha
 
 - **Funds / investors / ПВТ** → [DILIGENCE_BRIEF.md](DILIGENCE_BRIEF.md) (15 min) · [FUND_READINESS.md](FUND_READINESS.md)
 - **Next click** → [EXECUTION_ORDER.md](EXECUTION_ORDER.md) — Phases 1–5 closed incl. LR STRICT [`lrstrict1`](evidence/runs/lrstrict1/) + EVM STRICT [`evmstrict1`](evidence/runs/evmstrict1/) + tip 48h [`ind48pass1`](evidence/runs/ind48pass1/); next Phase 6 org ([INDUSTRIAL_MAX_SCAN_2026-09-20.md](INDUSTRIAL_MAX_SCAN_2026-09-20.md))
-- Hybrid pin (do not break): [Ultimate Hybrid](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid)
+- Hybrid pin (do not break): [Ultimate Hybrid](https://github.com/Gruver87/dup-protocol)
 - Contribute: [CONTRIBUTING](../CONTRIBUTING.md)
 - GitHub About: [REPO_PROFILE](../.github/REPO_PROFILE.md)

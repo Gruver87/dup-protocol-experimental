@@ -1,17 +1,17 @@
-﻿# Contributing — Absolute Blockchain Experimental
+# Contributing — Absolute Blockchain Experimental
 
-Thank you. This is the **R&D sandbox** ([Gruver87/experimental](https://github.com/Gruver87/experimental)) — rust-libp2p, Long-Range, EVM depth. It is **not** the audit-freeze Hybrid pin and **not** a launched public mainnet.
+Thank you. This is the **R&D sandbox** ([Gruver87/dup-protocol-experimental](https://github.com/Gruver87/dup-protocol-experimental)) — rust-libp2p, Long-Range, EVM depth. It is **not** the audit-freeze Hybrid pin and **not** a launched public mainnet.
 
 ## Before you start
 
 1. **30 seconds:** [docs/AT_A_GLANCE.md](docs/AT_A_GLANCE.md)
 2. [DISCLAIMER.md](DISCLAIMER.md) · [EXPERIMENTAL_SANDBOX.md](EXPERIMENTAL_SANDBOX.md)
-3. Industrial pin is the **other** repo: [Ultimate Hybrid](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid). Do **not** open Hybrid PRs for Experimental kernels.
+3. Industrial pin is the **other** repo: [Ultimate Hybrid](https://github.com/Gruver87/dup-protocol). Do **not** open Hybrid PRs for Experimental kernels.
 
 ## 60-second setup
 
 ```bash
-git clone https://github.com/Gruver87/experimental.git
+git clone https://github.com/Gruver87/dup-protocol-experimental.git
 cd experimental
 pip install -r requirements.txt && cp .env.example .env
 ```
@@ -69,7 +69,7 @@ test: extend verify_adr0019_libp2p_hard
 
 ## Questions
 
-- Issues: https://github.com/Gruver87/experimental/issues
+- Issues: https://github.com/Gruver87/dup-protocol-experimental/issues
 - Author: [@Gruver87](https://github.com/Gruver87)
 
 Thank you for keeping Experimental honest — lab PASS is not prod cutover.

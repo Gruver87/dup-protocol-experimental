@@ -1,4 +1,4 @@
-# Experimental R&D fast lane (Gruver87/experimental).
+# Experimental R&D fast lane (Gruver87/dup-protocol-experimental).
 # Does NOT require tip-v2 48h soak. Full Hybrid Node Checks still run via test.yml.
 name: Experimental R&D
 

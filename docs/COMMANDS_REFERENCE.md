@@ -8,7 +8,7 @@
 | | |
 |---|---|
 | **Обновлено** | 2026-09-28 |
-| **Репозитории** | [Experimental](https://github.com/Gruver87/experimental) (R&D) · [Hybrid](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid) (audit pin) |
+| **Репозитории** | [Experimental](https://github.com/Gruver87/dup-protocol-experimental) (R&D) · [Hybrid](https://github.com/Gruver87/dup-protocol) (audit pin) |
 | **Entry** | `python main.py` / `.\scripts\start_node.ps1` |
 | **Статус** | R&D / prod-profile mesh — **не** public audited mainnet |
 

@@ -14,8 +14,8 @@ It is **not** a launched public mainnet, **not** the Hybrid audit pin, and **not
 | Bugs / lab evidence | GitHub Issues ([bug report](.github/ISSUE_TEMPLATE/bug_report.md)) |
 | Security vulnerability | [SECURITY.md](SECURITY.md) — **private** disclosure only |
 | Contributing | [CONTRIBUTING.md](CONTRIBUTING.md) |
-| R&D releases | [CHANGELOG.md](CHANGELOG.md) · [GitHub Releases](https://github.com/Gruver87/experimental/releases) |
-| Industrial pin | [Ultimate Hybrid](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid) |
+| R&D releases | [CHANGELOG.md](CHANGELOG.md) · [GitHub Releases](https://github.com/Gruver87/dup-protocol-experimental/releases) |
+| Industrial pin | [Ultimate Hybrid](https://github.com/Gruver87/dup-protocol) |
 
 ## What we do **not** provide here
 

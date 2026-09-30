@@ -1,6 +1,6 @@
 # Brand — DUP Labs / DUP Protocol
 
-**Surface rename only.** Does **not** change crates, chain IDs, Docker image names, industrial tags, or GitHub repository URLs.
+**Permanent public names** (2026-10-01). Crates, chain IDs, Docker image names, and industrial **tags** are unchanged.
 
 | Layer | Name | Role |
 |-------|------|------|
@@ -9,22 +9,24 @@
 | Author | **Uladzimir Dabranski (D.U.P.)** | Dabranski · Uladzimir · Petrovich |
 | Public expansion (optional) | Decentralized Unified Protocol | Marketing expansion of DUP — personal initials remain primary |
 
-## Repositories (URLs unchanged)
+## Repositories (permanent)
 
-| GitHub repo | Display name |
-|-------------|--------------|
-| [`Gruver87/experimental`](https://github.com/Gruver87/experimental) | DUP Protocol — experimental / R&D |
-| [`Gruver87/Absolute_Blockchain_Ultimate_Hybrid`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid) | DUP Protocol — industrial pin |
+| GitHub repo | Role |
+|-------------|------|
+| [`Gruver87/dup-protocol`](https://github.com/Gruver87/dup-protocol) | **Industrial pin** (audit-freeze) |
+| [`Gruver87/dup-protocol-experimental`](https://github.com/Gruver87/dup-protocol-experimental) | **R&D sandbox** |
 
-## Do **not** rename (break risk)
+Former GitHub names (redirects may work): `Absolute_Blockchain_Ultimate_Hybrid`, `experimental`.
+
+## Do **not** rename without a planned cutover
 
 - `abs_native` / Cargo / PyO3 module
 - Chain IDs `778888` / `77777`
 - Tag `v1.3.1339-tip-v2-industrial`
-- Evidence pack IDs and historical “Absolute…” strings inside sealed packs (honesty trail)
-- Docker compose project names / image refs until a planned cutover
+- Evidence pack IDs and historical “Absolute…” strings inside sealed packs
+- Docker compose project names / `ghcr.io` image refs until planned
 
-## Historical name
+## Historical product name
 
 Former public name: **Absolute Blockchain** (Ultimate Hybrid / Experimental).  
-Evidence packs and older docs may still say Absolute — treat as the same product line under **DUP Protocol**.
+Same product line under **DUP Protocol**.

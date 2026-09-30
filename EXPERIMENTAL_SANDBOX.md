@@ -1,6 +1,6 @@
 # Experimental sandbox (NOT the audit pin)
 
-This folder / [Gruver87/experimental](https://github.com/Gruver87/experimental) is an **R&D copy** of the DUP Protocol industrial pin (GitHub repo still named Absolute Blockchain Ultimate Hybrid — URL unchanged).
+This folder / [Gruver87/dup-protocol-experimental](https://github.com/Gruver87/dup-protocol-experimental) is an **R&D copy** of the DUP Protocol industrial pin (GitHub repo still named Absolute Blockchain Ultimate Hybrid — URL unchanged).
 
 | Path | Role |
 |------|------|
@@ -9,7 +9,7 @@ This folder / [Gruver87/experimental](https://github.com/Gruver87/experimental) 
 
 ## Rules
 
-1. **Push only** to [Gruver87/experimental](https://github.com/Gruver87/experimental) (`origin`).
+1. **Push only** to [Gruver87/dup-protocol-experimental](https://github.com/Gruver87/dup-protocol-experimental) (`origin`).
 2. Remote `audit-frozen` is fetch-only — **do not** push to the audit pin repo.
 3. Work on `experimental/libp2p-longrange-evm` / `rd/*` branches (merge to `main` when ready).
 4. Honesty: experimental ≠ public mainnet ≠ audited firm PDF. Experimental prod mesh (`778888`) **is** libp2p (ADR 0020) with 48h PASS [`3c801b87`](docs/evidence/runs/3c801b87/); Hybrid pin stays TCP+TLS / `feature_libp2p=false`.

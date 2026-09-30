@@ -145,7 +145,7 @@ feature `libp2p`), exposed to Python through the existing
 | Add/remove/expire charge key | Slice DA: operator add/remove and AutoNAT/UPnP/relay-client `ExternalAddrExpired` use the canonical key (suffix cannot occupy or miss the crate slot); `libp2p_rust_behaviour_external_expired_canonical_lab.py` |
 | Persist JSON charge key | Slice DB: load/restore collapses `/p2p/<peer>` suffix (JSON cannot occupy a second unique); Identify candidate re-emit and NewListenAddr charge the key; `libp2p_rust_persist_external_charge_key_lab.py` |
 | Build | Cargo feature `libp2p` (opt-in); default wheel/CI without feature stays lean |
-| Repo | `Gruver87/experimental` only — never audit-pin |
+| Repo | `Gruver87/dup-protocol-experimental` only — never audit-pin |
 
 ### Slice status
 

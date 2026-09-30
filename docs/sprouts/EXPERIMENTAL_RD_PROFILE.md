@@ -1,4 +1,4 @@
-# Profile F — Experimental R&D (Gruver87/experimental)
+# Profile F — Experimental R&D (Gruver87/dup-protocol-experimental)
 
 Lab-only profile for Long-Range. libp2p on Experimental `778888` mesh is
 **ADR 0020** (not Hybrid audit-pin).

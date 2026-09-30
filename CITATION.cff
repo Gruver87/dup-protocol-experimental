@@ -7,8 +7,8 @@ authors:
     given-names: Uladzimir
     alias: Gruver87
     website: "https://github.com/Gruver87"
-repository-code: "https://github.com/Gruver87/experimental"
-url: "https://github.com/Gruver87/experimental"
+repository-code: "https://github.com/Gruver87/dup-protocol-experimental"
+url: "https://github.com/Gruver87/dup-protocol-experimental"
 abstract: >-
   Evidence-first R&D sandbox for DUP Protocol (DUP Labs) — hybrid Python + Rust L1:
   rust-libp2p (ADR 0019), Long-Range / weak-subjectivity labs (ADR 0017), and EVM depth.

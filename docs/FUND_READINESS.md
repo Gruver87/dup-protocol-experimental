@@ -1,13 +1,13 @@
 # Fund / diligence readiness — DUP Protocol Experimental (honest)
 
 **Audience:** grant officers, investors, HTP / ПВТ reviewers, technical advisors.  
-**Date:** 2026-10-01 · Repo: [`Gruver87/experimental`](https://github.com/Gruver87/experimental) · branch `main`  
+**Date:** 2026-10-01 · Repo: [`Gruver87/dup-protocol-experimental`](https://github.com/Gruver87/dup-protocol-experimental) · branch `main`  
 **Brand:** [BRAND.md](BRAND.md) — **DUP Labs** · **DUP Protocol** · Uladzimir Dabranski (D.U.P.)  
 **Not:** public audited mainnet · not the industrial audit-freeze pin · not listed token.  
 **Former name:** Absolute Blockchain Experimental (same codebase; GitHub URLs unchanged).
 
 **15-minute brief (start here):** [DILIGENCE_BRIEF.md](DILIGENCE_BRIEF.md)  
-One-screen status: [AT_A_GLANCE.md](AT_A_GLANCE.md) · Evidence ledger: [EVIDENCE_MATRIX.md](EVIDENCE_MATRIX.md) · Gaps: [MAINNET_GAP_ANALYSIS.md](MAINNET_GAP_ANALYSIS.md) · Vision (industrial pin): [VISION](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/VISION.md).
+One-screen status: [AT_A_GLANCE.md](AT_A_GLANCE.md) · Evidence ledger: [EVIDENCE_MATRIX.md](EVIDENCE_MATRIX.md) · Gaps: [MAINNET_GAP_ANALYSIS.md](MAINNET_GAP_ANALYSIS.md) · Vision (industrial pin): [VISION](https://github.com/Gruver87/dup-protocol/blob/master/docs/VISION.md).
 
 ---
 
@@ -106,6 +106,6 @@ If a badge is red: treat as **blocker for fund decks** until fixed on `main`.
 2. Skim [EVIDENCE_MATRIX](EVIDENCE_MATRIX.md) soak index — open at least one STRICT pack README  
 3. Open GitHub Actions on `main` — confirm green  
 4. Optional: `.\scripts\verify_pre_soak.ps1 -SkipPrepare` on a workstation with mesh  
-5. Hybrid engagement brief (firm audit): [Hybrid AUDIT_ENGAGEMENT_BRIEF](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/AUDIT_ENGAGEMENT_BRIEF.md)
+5. Hybrid engagement brief (firm audit): [Hybrid AUDIT_ENGAGEMENT_BRIEF](https://github.com/Gruver87/dup-protocol/blob/master/docs/AUDIT_ENGAGEMENT_BRIEF.md)
 
 **Bottom line:** ready for **technical diligence on an industrial private mesh / R&D L1**. Not ready to claim **public audited mainnet**.

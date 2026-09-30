@@ -3,7 +3,7 @@
 All notable changes are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 **Experimental tags:** `rd-X.Y.Z` on `main` (this repo).  
-**Hybrid industrial tags:** `v1.3.*` live in [Ultimate Hybrid](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid) — not this Releases page.
+**Hybrid industrial tags:** `v1.3.*` live in [Ultimate Hybrid](https://github.com/Gruver87/dup-protocol) — not this Releases page.
 
 **Current API wave:** `api_wave = 61` (check: `GET /status`)
 
@@ -15,7 +15,8 @@ Canonical language for this repository is **English**. Older inherited entries b
 
 ### Experimental R&D
 
-- **Surface brand: DUP Labs / DUP Protocol (2026-10-01):** display rename only — [docs/BRAND.md](docs/BRAND.md), README, banner, CITATION, diligence/About. Author D.U.P. = Dabranski · Uladzimir · Petrovich. **No** `abs_native` / chain id / Docker / GitHub repo URL / industrial tag rename. Former name Absolute Blockchain kept as historical alias in sealed evidence packs.
+- **Permanent GitHub rename (2026-10-01):** `experimental` → [`dup-protocol-experimental`](https://github.com/Gruver87/dup-protocol-experimental); sibling pin `Absolute_Blockchain_Ultimate_Hybrid` → [`dup-protocol`](https://github.com/Gruver87/dup-protocol). Docs/CITATION/About URLs updated. **No** `abs_native` / chain / tag rename.
+- **Surface brand: DUP Labs / DUP Protocol (2026-10-01):** display rename only — [docs/BRAND.md](docs/BRAND.md), README, banner, CITATION, diligence/About. Author D.U.P. = Dabranski · Uladzimir · Petrovich. **No** `abs_native` / chain id / Docker / industrial tag rename. Former name Absolute Blockchain kept as historical alias in sealed evidence packs.
 - **Diligence surface for funds / investors / ПВТ (2026-09-30):** new [docs/DILIGENCE_BRIEF.md](docs/DILIGENCE_BRIEF.md) — 15-minute honest path with full STRICT + default 48h scorecard, two-repo map, gaps, verify steps. FUND_READINESS STRICT scoreboard; GitHub About → DILIGENCE_BRIEF; PROFILE_README / AT_A_GLANCE / EVIDENCE_MATRIX exec summary synced. **Not** a new soak / **not** mainnet.
 - **EVM STRICT 48h PASS (2026-09-28→30):** pack [`docs/evidence/runs/evmstrict1/`](docs/evidence/runs/evmstrict1/) — `passed=true` strict=true hard_fails=0 mesh_warn=0 warn_lines=0 fail_lines=0 ready_only=0 mesh_ok=2801 tip ~85200→~96089 IntervalSec=60 FullHarnessEvery=6 TipStagnant=3600. Git start `0c36904` · image `0861666a`. Distinct from default [`evm48pass1`](docs/evidence/runs/evm48pass1/). **Not** EVM-only / not geth / not EIP-4844 / not Long-Range / not BLS / not mainnet / not Hybrid.
 - **EVM STRICT deep audit + harden (2026-09-28):** mined `evm48pass1` (under_mesh×8 soft, ready_flap×3, peer_probe soft, historical tip-race `inconsistent`→`tip_skew`). P0: outer wrapper now runs `prepare_48h_soak` before nested `SkipPreflight=$true`; refuse SkipEvmHarness+SkipPreflight without `-Force`; default TipStagnantFailAfterSec=3600. Honesty: `estimate_gas` failed dry-run → `None` / JSON null (no invent `evm_gas_limit`, integer +20% buffer). Gate needles extended. **Superseded for soak claim by `evmstrict1`.**
@@ -111,7 +112,7 @@ Canonical language for this repository is **English**. Older inherited entries b
 
 ## [rd-1.0.0] - 2026-08-15
 
-First GitHub Release for [Gruver87/experimental](https://github.com/Gruver87/experimental) (GitHub **Latest** on this repo). Not the Hybrid audit pin.
+First GitHub Release for [Gruver87/dup-protocol-experimental](https://github.com/Gruver87/dup-protocol-experimental) (GitHub **Latest** on this repo). Not the Hybrid audit pin.
 
 ### ADR 0019 rust-libp2p
 
@@ -140,7 +141,7 @@ First GitHub Release for [Gruver87/experimental](https://github.com/Gruver87/exp
 
 The remainder of this file is the changelog inherited from the Hybrid tree at fork time, plus Experimental waves that landed before `rd-1.0.0`. Hybrid audit-pin releases are **not** published from this repository.
 
-### Experimental R&D (Gruver87/experimental only)
+### Experimental R&D (Gruver87/dup-protocol-experimental only)
 
 - Profile F: `FEATURE_LIBP2P` / `FEATURE_LONG_RANGE` (default + prod forced **off** on industrial JSON)
 - ADR 0017 Long-Range / weak-subjectivity research + `scripts/long_range_lab.py`

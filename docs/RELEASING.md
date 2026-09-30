@@ -1,6 +1,6 @@
 # Releasing — Experimental
 
-How [Gruver87/experimental](https://github.com/Gruver87/experimental) ships **R&D** tags.
+How [Gruver87/dup-protocol-experimental](https://github.com/Gruver87/dup-protocol-experimental) ships **R&D** tags.
 This is **not** the Hybrid industrial line (`v1.3.*-tip-v2-industrial`).
 
 ## Honesty first

@@ -5,7 +5,7 @@
 | Version | Supported |
 |---------|-----------|
 | Latest `rd-X.Y.Z` tag on `main` | Yes (R&D snapshot) |
-| Hybrid `v1.3.*-industrial` tags | **Other repo** — [Ultimate Hybrid](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid) |
+| Hybrid `v1.3.*-industrial` tags | **Other repo** — [Ultimate Hybrid](https://github.com/Gruver87/dup-protocol) |
 
 This repository is an **R&D sandbox** (libp2p / Long-Range / EVM depth). It is **not** a launched public mainnet, **not** the audit pin, and has **not** completed an independent external security audit.
 
@@ -13,7 +13,7 @@ This repository is an **R&D sandbox** (libp2p / Long-Range / EVM depth). It is *
 
 1. **Do not** open a public issue with exploit details.
 2. Prefer private reporting:
-   - [Open a private vulnerability report](https://github.com/Gruver87/experimental/security/advisories/new)
+   - [Open a private vulnerability report](https://github.com/Gruver87/dup-protocol-experimental/security/advisories/new)
    - Or contact the repository owner **Gruver87** via GitHub
 3. Include: affected tag/commit, reproduction steps, impact, and whether a fix is proposed.
 4. If the issue is in the industrial mesh / soak path, report it on **Hybrid** as well — do not assume Experimental is the pin.
