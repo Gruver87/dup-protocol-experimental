@@ -133,7 +133,7 @@ function Start-SoloIfNeeded([string]$TargetBase) {
     Write-Host "Demo solo forces DEPLOYMENT_MODE=dev (UI tour; not prod mesh)." -ForegroundColor DarkGray
 
     $soloCmd = "Set-Location '$Root'; $soloEnvPrefix" +
-        "Write-Host 'Absolute Blockchain - solo (ops console demo, dev)' -ForegroundColor Cyan; python main.py"
+        "Write-Host 'DUP Protocol - solo (ops console demo, dev)' -ForegroundColor Cyan; python main.py"
     Start-Process -FilePath "powershell.exe" `
         -ArgumentList @("-NoExit", "-Command", $soloCmd) `
         -WorkingDirectory $Root

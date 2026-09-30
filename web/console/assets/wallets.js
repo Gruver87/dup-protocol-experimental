@@ -66,7 +66,7 @@
       if (!this.provider) throw new Error("Connect a wallet first");
       const chainId = Number(opts.chainId);
       if (!Number.isFinite(chainId) || chainId <= 0) {
-        throw new Error("Invalid Absolute chain_id");
+        throw new Error("Invalid DUP Protocol chain_id");
       }
       const hexId = toHexChainId(chainId);
       const current = String(await this.chainId()).toLowerCase();
@@ -82,13 +82,13 @@
         // 4902 = unknown chain → add
         if (e && (e.code === 4902 || e.code === -32603 || /Unrecognized chain/i.test(String(e.message)))) {
           const rpcUrl = opts.rpcUrl;
-          if (!rpcUrl) throw new Error("rpcUrl required to add Absolute chain");
+          if (!rpcUrl) throw new Error("rpcUrl required to add DUP Protocol chain");
           await this.provider.request({
             method: "wallet_addEthereumChain",
             params: [
               {
                 chainId: hexId,
-                chainName: opts.chainName || ("Absolute " + chainId),
+                chainName: opts.chainName || ("DUP Protocol " + chainId),
                 nativeCurrency: {
                   name: opts.symbol || "ABS",
                   symbol: opts.symbol || "ABS",

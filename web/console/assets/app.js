@@ -1,21 +1,59 @@
-/* Absolute Ops Console — read-heavy, fail-closed honesty UI. */
+/* DUP Protocol Ops Console — read-heavy, fail-closed honesty UI. */
 (function () {
   "use strict";
 
-  const POLL_MS = 5 * 60 * 1000; // 5 minutes — browse without scroll reset
-  const POLL_LABEL = "Auto 5m";
+  // Soft strip polls — full remount only on manual Refresh / nav change.
+  const POLL_CYCLE = [
+    { ms: 15 * 1000, label: "Auto 15s" },
+    { ms: 60 * 1000, label: "Auto 60s" },
+    { ms: 5 * 60 * 1000, label: "Auto 5m" },
+  ];
+  let pollIdx = 0;
+  let POLL_MS = POLL_CYCLE[0].ms;
+  let POLL_LABEL = POLL_CYCLE[0].label;
 
   const META = {
-    overview: ["Overview", "Live node strip · honesty badges · height sparkline"],
-    mesh: ["Mesh & Sync", "under_mesh · topology · security · wire probe"],
+    overview: ["Overview", "Live strip · honesty · R&D surface badges"],
+    mesh: ["Mesh & Sync", "under_mesh · topology · peer-score · reconnect"],
     metrics: ["Live Metrics", "All scrapeable abs_* series from GET /metrics"],
     mempool: ["Mempool", "Store backend honesty · pending · fee surface"],
     chain: ["Chain", "Recent blocks · tip · state consistency"],
-    wallets: ["Wallets", "EIP-1193 · Absolute chain switch · eth_sendTransaction"],
+    evm: ["EVM", "Compat honesty · opcodes · STRICT pack posture"],
+    features: ["Features", "FEATURE_* flags · native crypto · ceremony"],
+    evidence: ["Evidence", "Sealed STRICT packs · honesty (not live soak)"],
+    wallets: ["Wallets", "EIP-1193 · DUP chain switch · eth_sendTransaction"],
     council: ["Council", "ADR 0022 watch — staging 778889 only (never prod mint)"],
     markets: ["Markets", "Exchange clocks · FX · crypto · macro — not L1 oracle"],
     security: ["Security", "CSP · CORS posture · what this console will not do"],
   };
+
+  const EVIDENCE_PACKS = [
+    {
+      id: "lp2pstrict1",
+      title: "libp2p STRICT",
+      note: "ADR 0020 transport lab — sealed pack on disk",
+    },
+    {
+      id: "lrstrict1",
+      title: "Long-Range STRICT",
+      note: "Lab-only; feature_long_range stays off in prod JSON",
+    },
+    {
+      id: "evmstrict1",
+      title: "EVM STRICT",
+      note: "Compat / opcode honesty — industrial evidence pack",
+    },
+    {
+      id: "mempool48pass1",
+      title: "Mempool 48h",
+      note: "Soak pack (hard_fails=0 claim only with on-disk run)",
+    },
+    {
+      id: "ind48pass1",
+      title: "Industrial 48h",
+      note: "Mesh soak pack — not mainnet readiness",
+    },
+  ];
 
   const state = {
     view: "overview",
@@ -120,7 +158,46 @@
     const st = state.status || {};
     const mp = st.mempool_store || {};
     const root = el("view-overview");
+    const libp = st.libp2p || {};
+    const native = st.native_crypto || {};
+    const featBits = [
+      ["evm", st.evm_enabled],
+      ["libp2p", libp.feature_libp2p ?? libp.active ?? st.feature_libp2p],
+      ["long_range", st.feature_long_range ?? libp.feature_long_range],
+      ["bridge", st.bridge_enabled],
+      ["nft", st.feature_nft ?? st.nft_enabled],
+      ["native", native.available ?? native.self_test ?? st.require_native_crypto],
+    ]
+      .map(([k, v]) => {
+        const on = v === true || v === 1 || v === "true" || v === "on";
+        const unk = v === undefined || v === null;
+        const cls = unk ? "" : on ? "ok" : "warn";
+        const label = unk ? k + "=?" : k + "=" + (on ? "on" : "off");
+        return `<span class="badge ${cls}">${esc(label)}</span>`;
+      })
+      .join("");
     root.innerHTML = `
+      <div class="card" style="margin-bottom:14px">
+        <h2>DUP Protocol · experimental R&amp;D</h2>
+        <p class="muted" style="margin:8px 0 12px;line-height:1.6">
+          Live ops for <strong>dup-protocol-experimental</strong> (DUP Labs).
+          Industrial pin is separate (<code>Gruver87/dup-protocol</code>, tag
+          <code>v1.3.1339-tip-v2-industrial</code>). This console is <em>not</em>
+          soak evidence and <em>not</em> mainnet readiness.
+        </p>
+        <div class="honesty">${featBits}
+          <span class="badge signal">chain=${esc(st.chain_id ?? "—")}</span>
+          <span class="badge">${esc(st.deployment_mode || "—")}</span>
+        </div>
+        <div class="row" style="margin-top:12px;flex-wrap:wrap;gap:8px">
+          <button type="button" class="btn ghost" data-jump="evm">Open EVM</button>
+          <button type="button" class="btn ghost" data-jump="features">Features</button>
+          <button type="button" class="btn ghost" data-jump="evidence">Evidence</button>
+          <button type="button" class="btn ghost" data-jump="mesh">Mesh</button>
+          <a class="btn ghost" href="/explorer">Legacy explorer</a>
+          <a class="btn ghost" href="https://github.com/Gruver87/dup-protocol-experimental" target="_blank" rel="noopener">GitHub</a>
+        </div>
+      </div>
       <div class="grid grid-2">
         <div class="card">
           <h2>Tip velocity</h2>
@@ -154,6 +231,11 @@
               } <span class="muted mono">${esc(
                 st.bridge_disabled_reason || st.bridge_mode || ""
               )}</span></td></tr>
+              <tr><th>Ceremony</th><td class="mono">${esc(
+                st.genesis_ceremony
+                  ? JSON.stringify(st.genesis_ceremony).slice(0, 120)
+                  : "—"
+              )}</td></tr>
               <tr><th>Probe ms</th><td class="mono">${esc(
                 st.status_handler_ms ?? "—"
               )}</td></tr>
@@ -176,14 +258,20 @@
         </div>
         <div class="card">
           <h2>Quick links</h2>
-          <div class="row" style="margin-top:8px">
+          <div class="row" style="margin-top:8px;flex-wrap:wrap;gap:8px">
             <a class="btn ghost" href="/metrics" target="_blank" rel="noopener">/metrics</a>
             <a class="btn ghost" href="/health/ready" target="_blank" rel="noopener">/health/ready</a>
             <a class="btn ghost" href="/status?probe=1" target="_blank" rel="noopener">/status?probe=1</a>
+            <a class="btn ghost" href="/evm/status" target="_blank" rel="noopener">/evm/status</a>
+            <a class="btn ghost" href="/features" target="_blank" rel="noopener">/features</a>
+            <a class="btn ghost" href="/native/crypto" target="_blank" rel="noopener">/native/crypto</a>
             <a class="btn ghost" href="/openapi.json" target="_blank" rel="noopener">openapi</a>
           </div>
         </div>
       </div>`;
+    root.querySelectorAll("[data-jump]").forEach((btn) => {
+      btn.addEventListener("click", () => setView(btn.getAttribute("data-jump")));
+    });
     const h = el("chart-height");
     const p = el("chart-peers");
     const m = el("chart-mempool");
@@ -213,6 +301,7 @@
     let topo = null;
     let sec = null;
     let sync = null;
+    let scores = null;
     try {
       topo = await AbsApi.getJson("/p2p/topology");
     } catch (_) {}
@@ -222,10 +311,20 @@
     try {
       sync = await AbsApi.getJson("/sync/status");
     } catch (_) {}
+    try {
+      scores = await AbsApi.getJson("/p2p/peer-score");
+    } catch (_) {}
     const st = state.status || {};
     const under =
       st.p2p_sync_status === "under_mesh" ||
       st.p2p_sync_status === "under_mesh_lagging";
+    const scoreList = Array.isArray(scores)
+      ? scores
+      : scores && Array.isArray(scores.peers)
+        ? scores.peers
+        : scores && Array.isArray(scores.scores)
+          ? scores.scores
+          : [];
     root.innerHTML = `
       <div class="grid grid-2">
         <div class="card">
@@ -255,6 +354,11 @@
               })
             )}</td></tr>
           </table>
+          <div class="row" style="margin:12px 0;gap:8px;flex-wrap:wrap">
+            <button type="button" class="btn" id="btn-p2p-reconnect">POST /p2p/reconnect</button>
+            <button type="button" class="btn ghost" id="btn-mesh-refresh">Refresh mesh</button>
+          </div>
+          <pre class="mono muted" id="reconnect-out" style="white-space:pre-wrap;max-height:120px;overflow:auto"></pre>
           <h3>sync/status</h3>
           <pre class="mono muted" style="white-space:pre-wrap;max-height:180px;overflow:auto">${esc(
             JSON.stringify(sync || { error: "unavailable" }, null, 2)
@@ -262,7 +366,7 @@
         </div>
         <div class="card">
           <h2>P2P security</h2>
-          <pre class="mono muted" style="white-space:pre-wrap;max-height:360px;overflow:auto">${esc(
+          <pre class="mono muted" style="white-space:pre-wrap;max-height:280px;overflow:auto">${esc(
             JSON.stringify(
               sec
                 ? {
@@ -284,7 +388,52 @@
             JSON.stringify(topo || { error: "unavailable" }, null, 2)
           )}</pre>
         </div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h2>Peer scores</h2>
+        <p class="muted" style="margin-bottom:10px">GET /p2p/peer-score — height gap + last seen.</p>
+        <table>
+          <thead><tr><th>Peer</th><th>Score / gap</th><th>Detail</th></tr></thead>
+          <tbody>
+            ${
+              scoreList.length
+                ? scoreList
+                    .slice(0, 32)
+                    .map((p) => {
+                      const id =
+                        p.peer_id || p.id || p.addr || p.node_id || "—";
+                      const score =
+                        p.score ?? p.height_gap ?? p.gap ?? p.health ?? "—";
+                      return `<tr><td class="mono">${esc(
+                        String(id).slice(0, 28)
+                      )}</td><td class="mono">${esc(score)}</td><td class="mono muted">${esc(
+                        JSON.stringify(p).slice(0, 120)
+                      )}</td></tr>`;
+                    })
+                    .join("")
+                : `<tr><td colspan="3" class="muted">${esc(
+                    scores
+                      ? JSON.stringify(scores).slice(0, 200)
+                      : "unavailable"
+                  )}</td></tr>`
+            }
+          </tbody>
+        </table>
       </div>`;
+    el("btn-mesh-refresh").onclick = () => renderMesh();
+    el("btn-p2p-reconnect").onclick = async () => {
+      const out = el("reconnect-out");
+      out.textContent = "reconnect…";
+      try {
+        const r = await AbsApi.postJson("/p2p/reconnect", {});
+        out.textContent = JSON.stringify(r, null, 2);
+        toast("P2P reconnect finished");
+        setTimeout(() => renderMesh(), 800);
+      } catch (e) {
+        out.textContent = String(e.message || e);
+        toast("Reconnect failed: " + (e.message || e));
+      }
+    };
   }
 
   function metricKey(m) {
@@ -441,6 +590,214 @@
       </div>`;
   }
 
+  async function renderEvm() {
+    const root = el("view-evm");
+    root.innerHTML = `<div class="card"><h2>Loading EVM…</h2></div>`;
+    let status = null;
+    let opcodes = null;
+    try {
+      status = await AbsApi.getJson("/evm/status");
+    } catch (e) {
+      status = { error: String(e.message || e) };
+    }
+    try {
+      opcodes = await AbsApi.getJson("/evm/supported-opcodes");
+    } catch (_) {}
+    const enabled = !!(status && (status.evm_enabled || status.enabled));
+    const opRows =
+      (opcodes && (opcodes.opcodes || opcodes.supported || opcodes.by_category)) ||
+      (status && status.opcodes) ||
+      null;
+    let opHtml = "";
+    if (Array.isArray(opRows)) {
+      opHtml = opRows
+        .slice(0, 80)
+        .map((o) => {
+          if (typeof o === "string") return `<span class="badge">${esc(o)}</span>`;
+          const name = o.name || o.op || o.mnemonic || JSON.stringify(o);
+          return `<span class="badge">${esc(name)}</span>`;
+        })
+        .join(" ");
+    } else if (opRows && typeof opRows === "object") {
+      opHtml = Object.keys(opRows)
+        .slice(0, 40)
+        .map((k) => {
+          const v = opRows[k];
+          const n = Array.isArray(v) ? v.length : typeof v === "object" ? Object.keys(v).length : v;
+          return `<span class="badge">${esc(k)}:${esc(n)}</span>`;
+        })
+        .join(" ");
+    }
+    root.innerHTML = `
+      <div class="grid grid-2">
+        <div class="card">
+          <h2>EVM honesty</h2>
+          ${
+            enabled
+              ? `<div class="ok-box">EVM surface enabled on this node.</div>`
+              : `<div class="warn-box">EVM disabled or unavailable — check FEATURE_EVM / config.</div>`
+          }
+          <div class="honesty" style="margin:10px 0">
+            <span class="badge ${enabled ? "ok" : "warn"}">evm=${enabled ? "on" : "off"}</span>
+            <span class="badge">compat=${esc(
+              (status && (status.compat_level || status.honesty_label || status.mode)) || "—"
+            )}</span>
+          </div>
+          <pre class="mono muted" style="white-space:pre-wrap;max-height:420px;overflow:auto">${esc(
+            JSON.stringify(status || {}, null, 2)
+          )}</pre>
+          <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap">
+            <button type="button" class="btn ghost" id="btn-evm-refresh">Refresh</button>
+            <a class="btn ghost" href="/evm/status" target="_blank" rel="noopener">Raw /evm/status</a>
+            <a class="btn ghost" href="/evm/supported-opcodes" target="_blank" rel="noopener">Opcodes</a>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Supported opcodes</h2>
+          <p class="muted" style="margin-bottom:10px">
+            Live from node — not a mainnet claim. STRICT pack <code>evmstrict1</code> is separate evidence.
+          </p>
+          <div class="honesty" style="flex-wrap:wrap;gap:6px">${
+            opHtml || '<span class="muted">No opcode summary</span>'
+          }</div>
+          <pre class="mono muted" style="margin-top:12px;white-space:pre-wrap;max-height:360px;overflow:auto">${esc(
+            JSON.stringify(opcodes || { note: "unavailable" }, null, 2).slice(0, 8000)
+          )}</pre>
+        </div>
+      </div>`;
+    el("btn-evm-refresh").onclick = () => renderEvm();
+  }
+
+  async function renderFeatures() {
+    const root = el("view-features");
+    root.innerHTML = `<div class="card"><h2>Loading features…</h2></div>`;
+    let feats = null;
+    let native = null;
+    let ceremony = null;
+    try {
+      feats = await AbsApi.getJson("/features");
+    } catch (e) {
+      feats = { error: String(e.message || e) };
+    }
+    try {
+      native = await AbsApi.getJson("/native/crypto");
+    } catch (_) {}
+    try {
+      ceremony = await AbsApi.getJson("/chain/genesis/ceremony");
+    } catch (_) {}
+    const modules = [
+      "evm",
+      "bridge",
+      "nft",
+      "zk",
+      "sharding",
+      "oracles",
+      "wasm",
+      "plasma",
+      "lightning",
+      "pq",
+      "mev",
+      "ai_agents",
+    ];
+    const modCards = modules
+      .map((name) => {
+        const m = feats && feats[name];
+        if (!m || typeof m !== "object") return "";
+        const on = !!m.enabled;
+        const loaded = !!m.loaded;
+        return `<div class="metric-tile"><div class="name">${esc(
+          name
+        )}</div><div class="val"><span class="badge ${on ? "ok" : "warn"}">${
+          on ? "on" : "off"
+        }</span> <span class="badge ${loaded ? "ok" : ""}">loaded=${esc(
+          String(loaded)
+        )}</span></div><div class="muted" style="margin-top:6px;font-size:11px">tier=${esc(
+          m.tier || "—"
+        )}${m.prod_blocked_reason ? " · " + esc(m.prod_blocked_reason) : ""}</div></div>`;
+      })
+      .join("");
+    root.innerHTML = `
+      <div class="grid grid-2">
+        <div class="card">
+          <h2>FEATURE_* / modules</h2>
+          <p class="muted" style="margin-bottom:10px">GET /features — fail-closed defaults stay off in prod JSON.</p>
+          <div class="metric-grid" style="margin-bottom:12px">${
+            modCards || '<span class="muted">See raw JSON</span>'
+          }</div>
+          <pre class="mono muted" style="white-space:pre-wrap;max-height:320px;overflow:auto">${esc(
+            JSON.stringify(feats || {}, null, 2).slice(0, 12000)
+          )}</pre>
+          <button type="button" class="btn ghost" id="btn-feat-refresh" style="margin-top:10px">Refresh</button>
+        </div>
+        <div class="card">
+          <h2>Native crypto · ceremony</h2>
+          <h3>/native/crypto</h3>
+          <pre class="mono muted" style="white-space:pre-wrap;max-height:240px;overflow:auto">${esc(
+            JSON.stringify(native || { error: "unavailable" }, null, 2).slice(0, 6000)
+          )}</pre>
+          <h3>/chain/genesis/ceremony</h3>
+          <pre class="mono muted" style="white-space:pre-wrap;max-height:240px;overflow:auto">${esc(
+            JSON.stringify(ceremony || { error: "unavailable" }, null, 2).slice(0, 6000)
+          )}</pre>
+        </div>
+      </div>`;
+    el("btn-feat-refresh").onclick = () => renderFeatures();
+  }
+
+  function renderEvidence() {
+    const root = el("view-evidence");
+    const st = state.status || {};
+    root.innerHTML = `
+      <div class="warn-box">
+        This panel lists <strong>sealed on-disk packs</strong> and R&amp;D honesty —
+        it does <em>not</em> run soak and must not be quoted as live PASS.
+      </div>
+      <div class="grid grid-2" style="margin-top:14px">
+        <div class="card">
+          <h2>STRICT / soak packs</h2>
+          <table>
+            <thead><tr><th>Pack</th><th>Note</th></tr></thead>
+            <tbody>
+              ${EVIDENCE_PACKS.map(
+                (p) =>
+                  `<tr><td class="mono">${esc(p.id)}</td><td><strong>${esc(
+                    p.title
+                  )}</strong><br/><span class="muted">${esc(p.note)}</span></td></tr>`
+              ).join("")}
+            </tbody>
+          </table>
+          <div class="row" style="margin-top:12px;gap:8px;flex-wrap:wrap">
+            <a class="btn ghost" href="https://github.com/Gruver87/dup-protocol-experimental" target="_blank" rel="noopener">Experimental repo</a>
+            <a class="btn ghost" href="https://github.com/Gruver87/dup-protocol" target="_blank" rel="noopener">Industrial pin</a>
+            <button type="button" class="btn ghost" data-jump="evm">EVM live</button>
+            <button type="button" class="btn ghost" data-jump="features">Features live</button>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Live node posture</h2>
+          <table>
+            <tr><th>deployment_mode</th><td class="mono">${esc(st.deployment_mode || "—")}</td></tr>
+            <tr><th>chain_id</th><td class="mono">${esc(st.chain_id ?? "—")}</td></tr>
+            <tr><th>p2p_sync</th><td>${badgeForSync(st.p2p_sync_status)}</td></tr>
+            <tr><th>bridge</th><td>${esc(
+              st.bridge_enabled ? "ON" : "OFF"
+            )}</td></tr>
+            <tr><th>tip</th><td class="mono">${esc(st.height ?? "—")} / ${esc(
+              (st.head_hash || "").slice(0, 16) || "—"
+            )}</td></tr>
+          </table>
+          <p class="muted" style="margin-top:12px;line-height:1.6">
+            Long-Range stays lab-only until ADR 0017 is complete.
+            libp2p is Experimental / opt-in — pin default remains TCP+TLS.
+            Docs: <code>docs/EVIDENCE_MATRIX.md</code>, <code>docs/OPS_CONSOLE.md</code>.
+          </p>
+        </div>
+      </div>`;
+    root.querySelectorAll("[data-jump]").forEach((btn) => {
+      btn.addEventListener("click", () => setView(btn.getAttribute("data-jump")));
+    });
+  }
+
   async function renderWallets() {
     const root = el("view-wallets");
     const st = state.status || {};
@@ -482,12 +839,12 @@
       <div class="warn-box">
         Keys never POST to the node. MetaMask signs locally after
         <code>wallet_switchEthereumChain</code> / <code>wallet_addEthereumChain</code>
-        to Absolute chain_id <strong>${esc(chainId)}</strong> with JSON-RPC
+        to DUP Protocol chain_id <strong>${esc(chainId)}</strong> with JSON-RPC
         <code>${esc(AbsApi.rpcBase || "—")}</code>.
       </div>
       <div class="grid grid-2">
         <div class="card">
-          <h2>Connect &amp; Absolute chain</h2>
+          <h2>Connect &amp; DUP chain</h2>
           <p class="muted" style="margin-bottom:10px">${
             injected
               ? "Injected provider detected."
@@ -495,7 +852,7 @@
           }</p>
           <div class="row">
             <button type="button" class="btn" id="btn-connect">Connect</button>
-            <button type="button" class="btn ghost" id="btn-switch-chain">Switch to Absolute</button>
+            <button type="button" class="btn ghost" id="btn-switch-chain">Switch to DUP</button>
             <button type="button" class="btn ghost" id="btn-sign-ping">Sign ping</button>
           </div>
           <div id="wallet-connect-out" class="mono" style="margin-top:12px"></div>
@@ -543,7 +900,7 @@
       return AbsWallets.ensureAbsoluteChain({
         chainId: cid,
         rpcUrl: AbsApi.rpcBase,
-        chainName: "Absolute " + cid,
+        chainName: "DUP Protocol " + cid,
         symbol: symbol,
         explorerUrl: AbsApi.base || window.location.origin,
       });
@@ -568,14 +925,14 @@
         if (!AbsWallets.accounts[0]) await AbsWallets.connectInjected();
         const r = await ensureChain();
         el("wallet-connect-out").textContent = JSON.stringify(r, null, 2);
-        toast("On Absolute chain");
+        toast("On DUP Protocol chain");
       } catch (e) {
         toast(String(e.message || e));
       }
     };
     el("btn-sign-ping").onclick = async () => {
       try {
-        const msg = "Absolute Ops Console ping " + new Date().toISOString();
+        const msg = "DUP Protocol Ops Console ping " + new Date().toISOString();
         const sig = await AbsWallets.personalSign(msg);
         el("wallet-connect-out").textContent = JSON.stringify(
           { message: msg, signature: sig },
@@ -801,7 +1158,7 @@
 
     root.innerHTML = `
       <div class="warn-box">
-        Orientation only — <strong>not</strong> Absolute consensus / not on-chain oracle.
+        Orientation only — <strong>not</strong> DUP Protocol consensus / not on-chain oracle.
         Feeds: ${(snap.upstreams || []).map(esc).join(", ") || "—"}.
         Cache ${(snap.cache || "?")} · TTL ${esc(snap.ttl_sec || "—")}s · ${esc(
           snap.generated_at || ""
@@ -969,7 +1326,7 @@
             <li>No private key paste → POST /tx/sign</li>
             <li>No JWT / API keys stored by default</li>
             <li>No admin mutations / council mint from this console</li>
-            <li>eth_sendTransaction only via injected wallet on Absolute chain_id</li>
+            <li>eth_sendTransaction only via injected wallet on DUP chain_id</li>
             <li>Not a mainnet readiness claim · not soak evidence</li>
           </ul>
         </div>
@@ -992,6 +1349,15 @@
         break;
       case "chain":
         renderChain();
+        break;
+      case "evm":
+        renderEvm();
+        break;
+      case "features":
+        renderFeatures();
+        break;
+      case "evidence":
+        renderEvidence();
         break;
       case "wallets":
         renderWallets();
@@ -1098,10 +1464,29 @@
     });
     el("btn-refresh").onclick = () => refreshAll({ soft: false });
     el("btn-poll").onclick = () => {
-      state.poll = !state.poll;
-      el("btn-poll").dataset.on = state.poll ? "1" : "0";
-      el("btn-poll").textContent = state.poll ? POLL_LABEL : "Paused";
+      if (!state.poll) {
+        state.poll = true;
+        el("btn-poll").dataset.on = "1";
+        el("btn-poll").textContent = POLL_LABEL;
+        schedule();
+        toast("Auto-refresh " + POLL_LABEL);
+        return;
+      }
+      pollIdx = (pollIdx + 1) % (POLL_CYCLE.length + 1);
+      if (pollIdx === POLL_CYCLE.length) {
+        state.poll = false;
+        el("btn-poll").dataset.on = "0";
+        el("btn-poll").textContent = "Paused";
+        schedule();
+        toast("Auto-refresh paused");
+        return;
+      }
+      POLL_MS = POLL_CYCLE[pollIdx].ms;
+      POLL_LABEL = POLL_CYCLE[pollIdx].label;
+      el("btn-poll").dataset.on = "1";
+      el("btn-poll").textContent = POLL_LABEL;
       schedule();
+      toast("Auto-refresh " + POLL_LABEL);
     };
     el("btn-theme").onclick = () => {
       const cur = document.documentElement.getAttribute("data-theme") || "dark";

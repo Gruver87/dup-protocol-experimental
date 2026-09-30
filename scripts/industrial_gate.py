@@ -185,6 +185,17 @@ def _check_p2p_hardening() -> tuple[list[str], list[str]]:
         errors.append("ops console must include council watch + wallet sendTx")
     if "renderMarkets" not in console_app or "/market/snapshot" not in console_app:
         errors.append("ops console must include Markets panel wired to /market/snapshot")
+    if "renderEvm" not in console_app or "/evm/status" not in console_app:
+        errors.append("ops console must include EVM panel wired to /evm/status")
+    if "renderFeatures" not in console_app or "/features" not in console_app:
+        errors.append("ops console must include Features panel wired to /features")
+    if "renderEvidence" not in console_app:
+        errors.append("ops console must include Evidence honesty panel")
+    if "/p2p/peer-score" not in console_app or "/p2p/reconnect" not in console_app:
+        errors.append("ops console mesh must wire peer-score + reconnect")
+    console_index = (ROOT / "web" / "console" / "index.html").read_text(encoding="utf-8")
+    if "DUP PROTOCOL" not in console_index and "DUP Protocol" not in console_index:
+        errors.append("ops console index must brand DUP Protocol")
     if not (ROOT / "api" / "market_feed.py").is_file():
         errors.append("api/market_feed.py missing (ops market snapshot)")
     else:

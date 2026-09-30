@@ -1,4 +1,4 @@
-/* Same-origin REST + Absolute JSON-RPC client. Never sends secrets. */
+/* Same-origin REST + DUP Protocol JSON-RPC client. Never sends secrets. */
 (function (global) {
   "use strict";
 
@@ -88,6 +88,38 @@
     },
     async getText(path) {
       return this.get(path);
+    },
+    async postJson(path, body, opts) {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), (opts && opts.timeoutMs) || 15000);
+      try {
+        const res = await fetch(this.url(path), {
+          method: "POST",
+          credentials: "same-origin",
+          signal: ctrl.signal,
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body == null ? {} : body),
+        });
+        const ct = res.headers.get("content-type") || "";
+        const payload = ct.includes("application/json")
+          ? await res.json()
+          : await res.text();
+        if (!res.ok) {
+          const err = new Error(
+            (payload && payload.error) ||
+              (typeof payload === "string" ? payload : "HTTP " + res.status)
+          );
+          err.status = res.status;
+          err.body = payload;
+          throw err;
+        }
+        return payload;
+      } finally {
+        clearTimeout(t);
+      }
     },
     async eth(method, params, opts) {
       const rpc = this.rpcBase || deriveRpcUrl(this.base, 8545);

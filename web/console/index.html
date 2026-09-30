@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta name="referrer" content="no-referrer" />
-  <title>Absolute — Ops Console</title>
+  <title>DUP Protocol — Ops Console</title>
   <link rel="stylesheet" href="/console/assets/console.css" />
   <script src="/console/assets/theme.js"></script>
 </head>
@@ -15,8 +15,8 @@
     <div class="brand">
       <div class="brand-mark" aria-hidden="true"></div>
       <div>
-        <div class="brand-name">ABSOLUTE</div>
-        <div class="brand-sub">ops console</div>
+        <div class="brand-name">DUP PROTOCOL</div>
+        <div class="brand-sub">ops console · DUP Labs</div>
       </div>
     </div>
     <nav class="nav">
@@ -25,6 +25,9 @@
       <button type="button" class="nav-btn" data-view="metrics">Live Metrics</button>
       <button type="button" class="nav-btn" data-view="mempool">Mempool</button>
       <button type="button" class="nav-btn" data-view="chain">Chain</button>
+      <button type="button" class="nav-btn" data-view="evm">EVM</button>
+      <button type="button" class="nav-btn" data-view="features">Features</button>
+      <button type="button" class="nav-btn" data-view="evidence">Evidence</button>
       <button type="button" class="nav-btn" data-view="wallets">Wallets</button>
       <button type="button" class="nav-btn" data-view="council">Council</button>
       <button type="button" class="nav-btn" data-view="markets">Markets</button>
@@ -35,6 +38,7 @@
       <button type="button" class="btn ghost theme-btn" id="btn-theme">Theme</button>
       <a class="rail-link" href="/explorer">Legacy explorer</a>
       <a class="rail-link" href="/docs">API docs</a>
+      <a class="rail-link" href="/openapi.json" target="_blank" rel="noopener">OpenAPI</a>
     </div>
   </aside>
 
@@ -54,7 +58,7 @@
           <input id="eth-rpc" type="text" spellcheck="false" autocomplete="off" value="" />
         </label>
         <button type="button" class="btn ghost" id="btn-refresh">Refresh</button>
-        <button type="button" class="btn" id="btn-poll" data-on="1">Auto 5m</button>
+        <button type="button" class="btn" id="btn-poll" data-on="1" title="Cycle poll interval">Auto 15s</button>
       </div>
     </header>
 
@@ -65,6 +69,9 @@
     <section class="view" id="view-metrics"></section>
     <section class="view" id="view-mempool"></section>
     <section class="view" id="view-chain"></section>
+    <section class="view" id="view-evm"></section>
+    <section class="view" id="view-features"></section>
+    <section class="view" id="view-evidence"></section>
     <section class="view" id="view-wallets"></section>
     <section class="view" id="view-council"></section>
     <section class="view" id="view-markets"></section>
