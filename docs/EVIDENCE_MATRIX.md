@@ -1,17 +1,21 @@
-# Evidence matrix — what is proven vs not (Jul 2026)
+# Evidence matrix — what is proven vs not
 
 **Purpose:** separate **automation that exists** from **operational evidence** collected on a live prod mesh.  
 This doc reflects honest status after local prod mesh runs and monitoring — not marketing claims.
 
+**Funds / ПВТ entry:** [DILIGENCE_BRIEF.md](DILIGENCE_BRIEF.md) · [FUND_READINESS.md](FUND_READINESS.md)
+
 ---
 
-## Executive summary
+## Executive summary (2026-09-30)
 
-**Absolute Blockchain Ultimate Hybrid** is a working R&D L1 / devnet stack with a functioning **3-node production-profile mesh** (chain `778888`), state synchronization, RocksDB hybrid persistence, Rust crypto on the hot path, automated CI/gates, and baseline ops tooling (health watch, DR rehearsal scripts, restart recovery).
+**Experimental (`Gruver87/experimental`)** — Phases **1–5 closed** on an industrial private 3-node mesh (chain `778888`, ADR 0020 libp2p Noise). Packaged STRICT 48h PASS: [`lp2pstrict1`](evidence/runs/lp2pstrict1/), [`lrstrict1`](evidence/runs/lrstrict1/), [`evmstrict1`](evidence/runs/evmstrict1/), [`mempool48pass1`](evidence/runs/mempool48pass1/). Default 48h PASS also on disk: [`3c801b87`](evidence/runs/3c801b87/), [`evm48pass1`](evidence/runs/evm48pass1/), [`ind48pass1`](evidence/runs/ind48pass1/), [`lr48pass1`](evidence/runs/lr48pass1/), TCP+TLS [`0a7932c4`](evidence/runs/0a7932c4/). Host: waves 542 + pytest 2734 (2026-09-21); ADR 0021 audit 13/13 [`adr0021gaudit1`](evidence/runs/adr0021gaudit1/).
 
-**Public mainnet-ready readiness is not proven.** Missing confirmed evidence for independent external security audit. **48h prod mesh soak PASS** (Jul float tip 19–21 2026; **tip-v2 `b_satoshi` Aug 5–7 2026**). **Cross-node EVM (mempool path) is proven** on local prod mesh (Jul 12 evening).
+**Hybrid pin (sibling repo)** — tip-v2 48h PASS [`375d14f`](evidence/runs/375d14f/) (different tree) · Phase 4 binder READY · external firm audit **pending**.
 
-Compared to documentation-only claims, **evidence level increased** in Jul 2026: real prod mesh bring-up logs, harness alignment, **7h soak passed**, **failover drill**, **signed tx propagation**, and **cross-node EVM (mempool deploy + 3 RPC storage)**.
+**Public mainnet-ready readiness is not proven.** Missing confirmed evidence for independent external security audit. Not BLS / not EVM-only 48h / not listed ABS.
+
+Historical Jul 2026 operator-local rows below remain on record; do not treat them as Experimental `main` pack claims unless a `docs/evidence/runs/<id>/` directory exists.
 
 ---
 

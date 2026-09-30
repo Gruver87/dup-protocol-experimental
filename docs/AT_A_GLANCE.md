@@ -27,9 +27,9 @@ The audit-freeze pin · public audited mainnet · listed ABS · Hybrid `v1.3.*-i
 
 ## Pipeline (columns)
 
-| 1 libp2p 48h | 2a LR solo 2h | 2b LR mesh 2h | 2c LR lab 48h | 2d LR STRICT 48h | 3 EVM mesh 48h | 4 Mempool Rust |
-|:------------:|:-------------:|:-------------:|:-------------:|:---------------:|:--------------:|:--------------:|
-| **PASS** [`3c801b87`](evidence/runs/3c801b87/) | **PASS** [`lr2h9f3a`](evidence/runs/lr2h9f3a/) | **PASS** [`lr2hmesh`](evidence/runs/lr2hmesh/) | **PASS** [`lr48pass1`](evidence/runs/lr48pass1/) | **PASS** [`lrstrict1`](evidence/runs/lrstrict1/) | **PASS** [`evm48pass1`](evidence/runs/evm48pass1/) | **PASS** [`mempool48pass1`](evidence/runs/mempool48pass1/) + audit [`adr0021gaudit1`](evidence/runs/adr0021gaudit1/) |
+| 1 libp2p 48h | 2a LR solo 2h | 2b LR mesh 2h | 2c LR lab 48h | 2d LR STRICT | 3 EVM mesh | 3b EVM STRICT | 4 Mempool Rust |
+|:------------:|:-------------:|:-------------:|:-------------:|:------------:|:----------:|:-------------:|:--------------:|
+| **PASS** [`3c801b87`](evidence/runs/3c801b87/) | **PASS** [`lr2h9f3a`](evidence/runs/lr2h9f3a/) | **PASS** [`lr2hmesh`](evidence/runs/lr2hmesh/) | **PASS** [`lr48pass1`](evidence/runs/lr48pass1/) | **PASS** [`lrstrict1`](evidence/runs/lrstrict1/) | **PASS** [`evm48pass1`](evidence/runs/evm48pass1/) | **PASS** [`evmstrict1`](evidence/runs/evmstrict1/) | **PASS** [`mempool48pass1`](evidence/runs/mempool48pass1/) + audit [`adr0021gaudit1`](evidence/runs/adr0021gaudit1/) |
 
 Full map: [ARCHITECTURE § R&D execution chain](ARCHITECTURE.md#rd-execution-chain) · [EXECUTION_ORDER](EXECUTION_ORDER.md).
 
@@ -66,7 +66,8 @@ Full map: [ARCHITECTURE § R&D execution chain](ARCHITECTURE.md#rd-execution-cha
 
 ## Next click
 
-- **Next click** → [FUND_READINESS.md](FUND_READINESS.md) for grant/diligence; [EXECUTION_ORDER.md](EXECUTION_ORDER.md) — Phases 1–5 closed incl. LR STRICT [`lrstrict1`](evidence/runs/lrstrict1/) + tip 48h [`ind48pass1`](evidence/runs/ind48pass1/); next Phase 6 org ([INDUSTRIAL_MAX_SCAN_2026-09-20.md](INDUSTRIAL_MAX_SCAN_2026-09-20.md))
+- **Funds / investors / ПВТ** → [DILIGENCE_BRIEF.md](DILIGENCE_BRIEF.md) (15 min) · [FUND_READINESS.md](FUND_READINESS.md)
+- **Next click** → [EXECUTION_ORDER.md](EXECUTION_ORDER.md) — Phases 1–5 closed incl. LR STRICT [`lrstrict1`](evidence/runs/lrstrict1/) + EVM STRICT [`evmstrict1`](evidence/runs/evmstrict1/) + tip 48h [`ind48pass1`](evidence/runs/ind48pass1/); next Phase 6 org ([INDUSTRIAL_MAX_SCAN_2026-09-20.md](INDUSTRIAL_MAX_SCAN_2026-09-20.md))
 - Hybrid pin (do not break): [Ultimate Hybrid](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid)
 - Contribute: [CONTRIBUTING](../CONTRIBUTING.md)
 - GitHub About: [REPO_PROFILE](../.github/REPO_PROFILE.md)

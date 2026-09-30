@@ -2,12 +2,12 @@
 
 Evidence-first **hybrid Python + Rust L1** R&D — local prod-profile mesh, fail-closed gates, and honest status. **Not** a launched public mainnet. **Not** a listed token.
 
-**Start here:** [VISION & honest scope](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/VISION.md)
+**Start here:** [VISION & honest scope](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/VISION.md) · **Funds / ПВТ (15 min):** [Diligence brief](https://github.com/Gruver87/experimental/blob/main/docs/DILIGENCE_BRIEF.md)
 
 | Repository | Role | Start |
 |------------|------|-------|
 | [**Absolute_Blockchain_Ultimate_Hybrid**](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid) | **Industrial audit pin** · tip-v2 48h soak **PASS** · Phase 4 binder **READY** · external firm audit **pending** | [VISION](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/VISION.md) · [AT_A_GLANCE](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/AT_A_GLANCE.md) · [AUDIT_ENGAGEMENT_BRIEF](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/AUDIT_ENGAGEMENT_BRIEF.md) |
-| [**experimental**](https://github.com/Gruver87/experimental) | **R&D sandbox** · rust-libp2p **48h PASS** (`3c801b87`) + STRICT (`lp2pstrict1`) · LR lab **48h PASS** (`lr48pass1`) + STRICT (`lrstrict1`) · Phase 3–5 closed · ADR 0021 closed | [AT_A_GLANCE](https://github.com/Gruver87/experimental/blob/main/docs/AT_A_GLANCE.md) · [EXECUTION_ORDER](https://github.com/Gruver87/experimental/blob/main/docs/EXECUTION_ORDER.md) · [FUND_READINESS](https://github.com/Gruver87/experimental/blob/main/docs/FUND_READINESS.md) |
+| [**experimental**](https://github.com/Gruver87/experimental) | **R&D sandbox** · Phases 1–5 **closed** · STRICT packs: `lp2pstrict1` · `lrstrict1` · `evmstrict1` · `mempool48pass1` · tip `ind48pass1` | [DILIGENCE_BRIEF](https://github.com/Gruver87/experimental/blob/main/docs/DILIGENCE_BRIEF.md) · [FUND_READINESS](https://github.com/Gruver87/experimental/blob/main/docs/FUND_READINESS.md) · [AT_A_GLANCE](https://github.com/Gruver87/experimental/blob/main/docs/AT_A_GLANCE.md) |
 
 ## Positioning (honest)
 
@@ -18,8 +18,9 @@ Evidence-first **hybrid Python + Rust L1** R&D — local prod-profile mesh, fail
 ## For reviewers
 
 1. Read [VISION](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/VISION.md) (15-minute path)
-2. Hybrid pin tag [`v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/releases/tag/v1.3.1339-tip-v2-industrial)
-3. Tip-v2 soak evidence [`375d14f`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/tree/master/docs/evidence/runs/375d14f)
-4. Experimental R&D release [`rd-1.0.0`](https://github.com/Gruver87/experimental/releases/tag/rd-1.0.0)
+2. Experimental diligence: [DILIGENCE_BRIEF](https://github.com/Gruver87/experimental/blob/main/docs/DILIGENCE_BRIEF.md)
+3. Hybrid pin tag [`v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/releases/tag/v1.3.1339-tip-v2-industrial)
+4. Tip-v2 soak evidence [`375d14f`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/tree/master/docs/evidence/runs/375d14f)
+5. Experimental R&D release [`rd-1.0.0`](https://github.com/Gruver87/experimental/releases/tag/rd-1.0.0)
 
 Author: **Uladzimir Dabranski (D.U.P.)** · GitHub: [Gruver87](https://github.com/Gruver87)

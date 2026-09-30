@@ -16,7 +16,7 @@ Canonical docs language is **English**. If GitHub shows a translation, open **Vi
 > **Industrial pin lives next door:** [`Absolute_Blockchain_Ultimate_Hybrid`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid) · tag [`v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/releases/tag/v1.3.1339-tip-v2-industrial)  
 > **This repo:** Profile F labs. Do not port these kernels onto the Hybrid pin.
 
-**Skimmer (60s):** [AT_A_GLANCE](docs/AT_A_GLANCE.md) · **Funds / diligence:** [FUND_READINESS](docs/FUND_READINESS.md) · **What runs when:** [EXECUTION_ORDER](docs/EXECUTION_ORDER.md) · **Evidence:** [EVIDENCE_MATRIX](docs/EVIDENCE_MATRIX.md)  
+**Skimmer (60s):** [AT_A_GLANCE](docs/AT_A_GLANCE.md) · **Funds / ПВТ (15 min):** [DILIGENCE_BRIEF](docs/DILIGENCE_BRIEF.md) · **Fund card:** [FUND_READINESS](docs/FUND_READINESS.md) · **What runs when:** [EXECUTION_ORDER](docs/EXECUTION_ORDER.md) · **Evidence:** [EVIDENCE_MATRIX](docs/EVIDENCE_MATRIX.md)  
 **Project vision (Hybrid pin, honest scope):** [VISION](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/VISION.md)
 
 ---
@@ -26,7 +26,7 @@ Canonical docs language is **English**. If GitHub shows a translation, open **Vi
 | Audience | Start here |
 |----------|------------|
 | **Architects / principals** | [AT_A_GLANCE](docs/AT_A_GLANCE.md) → [ARCHITECTURE](docs/ARCHITECTURE.md) → ADR [0017](docs/adr/0017-long-range-research.md) / [0019](docs/adr/0019-rust-libp2p-industrial.md) / [0020](docs/adr/0020-libp2p-industrial-mesh.md) |
-| **Grant officers / diligence** | [FUND_READINESS](docs/FUND_READINESS.md) · Hybrid [VISION](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/VISION.md) · [EVIDENCE_MATRIX](docs/EVIDENCE_MATRIX.md) · [EXECUTION_ORDER](docs/EXECUTION_ORDER.md) (Phases 1–5 + LR STRICT [`lrstrict1`](docs/evidence/runs/lrstrict1/) + EVM STRICT [`evmstrict1`](docs/evidence/runs/evmstrict1/) + libp2p STRICT [`lp2pstrict1`](docs/evidence/runs/lp2pstrict1/) + tip [`ind48pass1`](docs/evidence/runs/ind48pass1/); next Phase 6 org) |
+| **Grant officers / diligence / ПВТ** | [DILIGENCE_BRIEF](docs/DILIGENCE_BRIEF.md) · [FUND_READINESS](docs/FUND_READINESS.md) · Hybrid [VISION](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/VISION.md) · [EVIDENCE_MATRIX](docs/EVIDENCE_MATRIX.md) · [EXECUTION_ORDER](docs/EXECUTION_ORDER.md) (Phases 1–5 + LR STRICT [`lrstrict1`](docs/evidence/runs/lrstrict1/) + EVM STRICT [`evmstrict1`](docs/evidence/runs/evmstrict1/) + libp2p STRICT [`lp2pstrict1`](docs/evidence/runs/lp2pstrict1/) + tip [`ind48pass1`](docs/evidence/runs/ind48pass1/); next Phase 6 org) |
 | **Operators** | [Start in 60 seconds](#start-in-60-seconds) · `python scripts/verify_experimental_rd.py` · optional `python scripts/verify_parallel_rd_batch.py` |
 | **Auditors (this tree)** | R&D sandbox only — firm engagement package lives on the [Hybrid pin](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/AUDIT_ENGAGEMENT_BRIEF.md) |
 
@@ -77,7 +77,7 @@ Explorer (solo): http://localhost:8080
 | Hot persist PersistError + native f64 refuse | **Landed** | `verify_persist_fail_closed.ps1` · `verify_native_f64_hygiene.ps1` |
 | Industrial HIGH honesty + host verify restore | **Landed** | `verify_industrial_high_honesty.ps1` · waves+pytest 2734 · mesh probe tip ~44442 |
 | Industrial polish tip 48h (ADR 0021 wire on mesh) | **PASS** | 2026-09-21→23 [`ind48pass1`](docs/evidence/runs/ind48pass1/) · tip ~46099→~56972 · `hard_fails=0` · git `719deb4` |
-| Fund / diligence card | **Landed** | [FUND_READINESS](docs/FUND_READINESS.md) |
+| Fund / diligence card | **Landed** | [DILIGENCE_BRIEF](docs/DILIGENCE_BRIEF.md) · [FUND_READINESS](docs/FUND_READINESS.md) |
 | EVM / oracle / shard labs | **Lab + mesh soak** | waves + `evm_pre_48h_harness.py` · prod sprout flags **off** |
 | Hybrid 48h soak / firm audit / public mainnet | **No — other repo** | [Hybrid pin](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid) |
 
@@ -98,7 +98,7 @@ What is closed vs open on **this** tree. Columns = execution order ([EXECUTION_O
 | **2d** | Long-Range lab STRICT 48h | **DONE** | [`lrstrict1`](docs/evidence/runs/lrstrict1/) · [STRICT_SOAK_PARITY](docs/sprouts/STRICT_SOAK_PARITY.md) |
 | **3** | EVM mesh regression + post-prep 48h | **DONE** | [`evm48pass1`](docs/evidence/runs/evm48pass1/) · STRICT [`evmstrict1`](docs/evidence/runs/evmstrict1/) · preflight `evm_pre_48h_harness.py` |
 | **4** | Mempool / validation → Rust | **DONE** (phases 0–3 + mesh bake + global audit + STRICT 48h) | [`adr0021gaudit1`](docs/evidence/runs/adr0021gaudit1/) · [`mempool48pass1`](docs/evidence/runs/mempool48pass1/) · [ADR 0021](docs/adr/0021-mempool-validation-rust-phases.md) |
-| **5** | Industrial polish (wire satoshi · persist · native f64 · HIGH · MED · verify restore · tip 48h) | **DONE** | [INDUSTRIAL_MAX_SCAN](docs/INDUSTRIAL_MAX_SCAN_2026-09-20.md) · [`ind48pass1`](docs/evidence/runs/ind48pass1/) · [FUND_READINESS](docs/FUND_READINESS.md) |
+| **5** | Industrial polish (wire satoshi · persist · native f64 · HIGH · MED · verify restore · tip 48h) | **DONE** | [INDUSTRIAL_MAX_SCAN](docs/INDUSTRIAL_MAX_SCAN_2026-09-20.md) · [`ind48pass1`](docs/evidence/runs/ind48pass1/) · [DILIGENCE_BRIEF](docs/DILIGENCE_BRIEF.md) · [FUND_READINESS](docs/FUND_READINESS.md) |
 | **6** | External audit / ceremony live | **Org** | [MAINNET_GAP_ANALYSIS](docs/MAINNET_GAP_ANALYSIS.md) |
 | **6+** | Oracles / shard / council (lab) | **Lab parallel** | flags **off** on prod JSON |
 | — | Hybrid audit pin / public mainnet | **Other repo** | never claimed here |
@@ -207,6 +207,7 @@ Default Hybrid CI / prod mesh builds **without** the `libp2p` feature.
 |------|------|
 | Vision (Hybrid pin) | [VISION](https://github.com/Gruver87/Absolute_Blockchain_Ultimate_Hybrid/blob/master/docs/VISION.md) |
 | One-screen card | [AT_A_GLANCE](docs/AT_A_GLANCE.md) |
+| Diligence brief (funds / ПВТ, 15 min) | [DILIGENCE_BRIEF](docs/DILIGENCE_BRIEF.md) |
 | Funds / diligence (honest) | [FUND_READINESS](docs/FUND_READINESS.md) |
 | Execution order (blockers) | [EXECUTION_ORDER](docs/EXECUTION_ORDER.md) |
 | Evidence ledger | [EVIDENCE_MATRIX](docs/EVIDENCE_MATRIX.md) |
@@ -236,4 +237,4 @@ MIT — [LICENSE](LICENSE)
 ---
 
 *Author: ULADZIMIR DABRANSKI (D.U.P.) · Owner: [Gruver87](https://github.com/Gruver87) · Default branch: `main`*  
-*Last surface update: **2026-09-30** — B1–B5 + Phase 2d LR STRICT [`lrstrict1`](docs/evidence/runs/lrstrict1/) · Phase 3b EVM STRICT [`evmstrict1`](docs/evidence/runs/evmstrict1/) · libp2p STRICT [`lp2pstrict1`](docs/evidence/runs/lp2pstrict1/) · tip [`ind48pass1`](docs/evidence/runs/ind48pass1/). Not BLS / not public mainnet / not Hybrid pin.*
+*Last surface update: **2026-09-30** — diligence brief for funds/ПВТ · Phases 1–5 + STRICT packs [`lp2pstrict1`](docs/evidence/runs/lp2pstrict1/) · [`lrstrict1`](docs/evidence/runs/lrstrict1/) · [`evmstrict1`](docs/evidence/runs/evmstrict1/) · [`mempool48pass1`](docs/evidence/runs/mempool48pass1/) · tip [`ind48pass1`](docs/evidence/runs/ind48pass1/). Not BLS / not public mainnet / not Hybrid pin.*

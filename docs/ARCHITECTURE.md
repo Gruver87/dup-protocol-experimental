@@ -17,7 +17,7 @@
 
 ## R&D execution chain
 
-Honest progress columns for this sandbox (not Hybrid). Detail: [EXECUTION_ORDER](EXECUTION_ORDER.md) · [EVIDENCE_MATRIX](EVIDENCE_MATRIX.md).
+Honest progress columns for this sandbox (not Hybrid). Detail: [EXECUTION_ORDER](EXECUTION_ORDER.md) · [EVIDENCE_MATRIX](EVIDENCE_MATRIX.md) · funds/ПВТ: [DILIGENCE_BRIEF](DILIGENCE_BRIEF.md).
 
 | | Phase 1 | Phase 2a | Phase 2b | Phase 2c | Phase 2d | Phase 3 | Phase 3b | Phase 4 |
 |--|:-------:|:--------:|:--------:|:--------:|:--------:|:-------:|:--------:|:-------:|
