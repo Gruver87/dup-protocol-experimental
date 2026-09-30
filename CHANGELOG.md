@@ -3,7 +3,7 @@
 All notable changes are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 **Experimental tags:** `rd-X.Y.Z` on `main` (this repo).  
-**Hybrid industrial tags:** `v1.3.*` live in [Ultimate Hybrid](https://github.com/Gruver87/dup-protocol) — not this Releases page.
+**Industrial tags:** `v1.3.*` live in [`dup-protocol`](https://github.com/Gruver87/dup-protocol) — not this Releases page.
 
 **Current API wave:** `api_wave = 61` (check: `GET /status`)
 
