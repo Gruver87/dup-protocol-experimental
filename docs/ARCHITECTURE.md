@@ -4,7 +4,7 @@
 **Brand:** [BRAND.md](BRAND.md) — **DUP Labs** · **DUP Protocol**  
 **Scope:** [Gruver87/dup-protocol-experimental](https://github.com/Gruver87/dup-protocol-experimental) — R&D sandbox. Domain ports match the industrial pin (ADR **0001–0016**); this tree also carries **0017–0021** labs.  
 **Not** a launched public mainnet. **Not** the audit-freeze pin.  
-**Industrial pin (sibling):** [`Absolute_Blockchain_Ultimate_Hybrid`](https://github.com/Gruver87/dup-protocol) (display: DUP Protocol industrial pin) tag [`v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/dup-protocol/releases/tag/v1.3.1339-tip-v2-industrial).  
+**Industrial pin (sibling):** [`dup-protocol`](https://github.com/Gruver87/dup-protocol) tag [`v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/dup-protocol/releases/tag/v1.3.1339-tip-v2-industrial).  
 **Former name:** Absolute Blockchain Experimental.
 
 ---

@@ -12,7 +12,7 @@ Thank you. This is the **R&D sandbox** ([Gruver87/dup-protocol-experimental](htt
 
 ```bash
 git clone https://github.com/Gruver87/dup-protocol-experimental.git
-cd experimental
+cd dup-protocol-experimental
 pip install -r requirements.txt && cp .env.example .env
 ```
 

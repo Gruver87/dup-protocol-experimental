@@ -8,7 +8,7 @@ R&D sandbox for **DUP Protocol** (DUP Labs): rust-libp2p (ADR 0019), Long-Range 
 
 ## What it is not
 
-The audit-freeze pin · public audited mainnet · listed token · Hybrid `v1.3.*-industrial` tags (repo URL still `Absolute_Blockchain_Ultimate_Hybrid`).
+The audit-freeze pin · public audited mainnet · listed token · industrial `v1.3.*-industrial` tags (repo: [`dup-protocol`](https://github.com/Gruver87/dup-protocol)).
 
 ## Status
 
@@ -68,6 +68,6 @@ Full map: [ARCHITECTURE § R&D execution chain](ARCHITECTURE.md#rd-execution-cha
 
 - **Funds / investors / ПВТ** → [DILIGENCE_BRIEF.md](DILIGENCE_BRIEF.md) (15 min) · [FUND_READINESS.md](FUND_READINESS.md)
 - **Next click** → [EXECUTION_ORDER.md](EXECUTION_ORDER.md) — Phases 1–5 closed incl. LR STRICT [`lrstrict1`](evidence/runs/lrstrict1/) + EVM STRICT [`evmstrict1`](evidence/runs/evmstrict1/) + tip 48h [`ind48pass1`](evidence/runs/ind48pass1/); next Phase 6 org ([INDUSTRIAL_MAX_SCAN_2026-09-20.md](INDUSTRIAL_MAX_SCAN_2026-09-20.md))
-- Hybrid pin (do not break): [Ultimate Hybrid](https://github.com/Gruver87/dup-protocol)
+- Hybrid pin (do not break): [`dup-protocol`](https://github.com/Gruver87/dup-protocol)
 - Contribute: [CONTRIBUTING](../CONTRIBUTING.md)
 - GitHub About: [REPO_PROFILE](../.github/REPO_PROFILE.md)

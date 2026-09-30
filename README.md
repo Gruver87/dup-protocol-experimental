@@ -4,7 +4,7 @@
 
 **Brand:** [DUP Labs](docs/BRAND.md) · product **DUP Protocol** · author Uladzimir Dabranski (D.U.P.).  
 **R&D only.** rust-libp2p · Long-Range · EVM depth. **Not** the audit-freeze tree.  
-Former name: Absolute Blockchain Experimental (same codebase; URLs unchanged).
+Former name: Absolute Blockchain Experimental (same codebase). GitHub: [`dup-protocol-experimental`](https://github.com/Gruver87/dup-protocol-experimental).
 
 Canonical docs language is **English**. If GitHub shows a translation, open **View original**.
 
@@ -15,7 +15,7 @@ Canonical docs language is **English**. If GitHub shows a translation, open **Vi
 [![Security checks](https://github.com/Gruver87/dup-protocol-experimental/actions/workflows/security-audit.yml/badge.svg?branch=main)](https://github.com/Gruver87/dup-protocol-experimental/actions/workflows/security-audit.yml)
 [![Community health](https://img.shields.io/badge/community%20health-100%25-brightgreen)](https://github.com/Gruver87/dup-protocol-experimental#docs-map)
 
-> **Industrial pin lives next door:** [`Absolute_Blockchain_Ultimate_Hybrid`](https://github.com/Gruver87/dup-protocol) (display: **DUP Protocol — industrial pin**) · tag [`v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/dup-protocol/releases/tag/v1.3.1339-tip-v2-industrial)  
+> **Industrial pin lives next door:** [`dup-protocol`](https://github.com/Gruver87/dup-protocol) (**DUP Protocol** industrial pin) · tag [`v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/dup-protocol/releases/tag/v1.3.1339-tip-v2-industrial)  
 > **This repo:** Profile F labs. Do not port these kernels onto the industrial pin.
 
 **Skimmer (60s):** [AT_A_GLANCE](docs/AT_A_GLANCE.md) · **Funds / ПВТ (15 min):** [DILIGENCE_BRIEF](docs/DILIGENCE_BRIEF.md) · **Fund card:** [FUND_READINESS](docs/FUND_READINESS.md) · **Brand:** [BRAND](docs/BRAND.md) · **What runs when:** [EXECUTION_ORDER](docs/EXECUTION_ORDER.md) · **Evidence:** [EVIDENCE_MATRIX](docs/EVIDENCE_MATRIX.md)  
@@ -28,9 +28,9 @@ Canonical docs language is **English**. If GitHub shows a translation, open **Vi
 | Audience | Start here |
 |----------|------------|
 | **Architects / principals** | [AT_A_GLANCE](docs/AT_A_GLANCE.md) → [ARCHITECTURE](docs/ARCHITECTURE.md) → ADR [0017](docs/adr/0017-long-range-research.md) / [0019](docs/adr/0019-rust-libp2p-industrial.md) / [0020](docs/adr/0020-libp2p-industrial-mesh.md) |
-| **Grant officers / diligence / ПВТ** | [DILIGENCE_BRIEF](docs/DILIGENCE_BRIEF.md) · [FUND_READINESS](docs/FUND_READINESS.md) · Hybrid [VISION](https://github.com/Gruver87/dup-protocol/blob/master/docs/VISION.md) · [EVIDENCE_MATRIX](docs/EVIDENCE_MATRIX.md) · [EXECUTION_ORDER](docs/EXECUTION_ORDER.md) (Phases 1–5 + LR STRICT [`lrstrict1`](docs/evidence/runs/lrstrict1/) + EVM STRICT [`evmstrict1`](docs/evidence/runs/evmstrict1/) + libp2p STRICT [`lp2pstrict1`](docs/evidence/runs/lp2pstrict1/) + tip [`ind48pass1`](docs/evidence/runs/ind48pass1/); next Phase 6 org) |
+| **Grant officers / diligence / ПВТ** | [DILIGENCE_BRIEF](docs/DILIGENCE_BRIEF.md) · [FUND_READINESS](docs/FUND_READINESS.md) · pin [VISION](https://github.com/Gruver87/dup-protocol/blob/master/docs/VISION.md) · [EVIDENCE_MATRIX](docs/EVIDENCE_MATRIX.md) · [EXECUTION_ORDER](docs/EXECUTION_ORDER.md) (Phases 1–5 + LR STRICT [`lrstrict1`](docs/evidence/runs/lrstrict1/) + EVM STRICT [`evmstrict1`](docs/evidence/runs/evmstrict1/) + libp2p STRICT [`lp2pstrict1`](docs/evidence/runs/lp2pstrict1/) + tip [`ind48pass1`](docs/evidence/runs/ind48pass1/); next Phase 6 org) |
 | **Operators** | [Start in 60 seconds](#start-in-60-seconds) · `python scripts/verify_experimental_rd.py` · optional `python scripts/verify_parallel_rd_batch.py` |
-| **Auditors (this tree)** | R&D sandbox only — firm engagement package lives on the [Hybrid pin](https://github.com/Gruver87/dup-protocol/blob/master/docs/AUDIT_ENGAGEMENT_BRIEF.md) |
+| **Auditors (this tree)** | R&D sandbox only — firm engagement package lives on the [industrial pin](https://github.com/Gruver87/dup-protocol/blob/master/docs/AUDIT_ENGAGEMENT_BRIEF.md) |
 
 Sandbox rules: [EXPERIMENTAL_SANDBOX.md](EXPERIMENTAL_SANDBOX.md) · Profile F: [EXPERIMENTAL_RD_PROFILE](docs/sprouts/EXPERIMENTAL_RD_PROFILE.md)
 
@@ -40,7 +40,7 @@ Sandbox rules: [EXPERIMENTAL_SANDBOX.md](EXPERIMENTAL_SANDBOX.md) · Profile F: 
 
 ```bash
 git clone https://github.com/Gruver87/dup-protocol-experimental.git
-cd experimental
+cd dup-protocol-experimental
 pip install -r requirements.txt && cp .env.example .env
 ```
 
@@ -81,7 +81,7 @@ Explorer (solo): http://localhost:8080
 | Industrial polish tip 48h (ADR 0021 wire on mesh) | **PASS** | 2026-09-21→23 [`ind48pass1`](docs/evidence/runs/ind48pass1/) · tip ~46099→~56972 · `hard_fails=0` · git `719deb4` |
 | Fund / diligence card | **Landed** | [DILIGENCE_BRIEF](docs/DILIGENCE_BRIEF.md) · [FUND_READINESS](docs/FUND_READINESS.md) |
 | EVM / oracle / shard labs | **Lab + mesh soak** | waves + `evm_pre_48h_harness.py` · prod sprout flags **off** |
-| Hybrid 48h soak / firm audit / public mainnet | **No — other repo** | [Hybrid pin](https://github.com/Gruver87/dup-protocol) |
+| Hybrid 48h soak / firm audit / public mainnet | **No — other repo** | [Industrial pin](https://github.com/Gruver87/dup-protocol) |
 
 **Jump:** [Pipeline](#rd-pipeline-honest-chain) · [Tracks](#what-is-active-here) · [Verify](#clone--verify) · [Docs](#docs-map) · [Contribute](CONTRIBUTING.md)
 
@@ -207,7 +207,7 @@ Default Hybrid CI / prod mesh builds **without** the `libp2p` feature.
 
 | Need | Open |
 |------|------|
-| Vision (Hybrid pin) | [VISION](https://github.com/Gruver87/dup-protocol/blob/master/docs/VISION.md) |
+| Vision (industrial pin) | [VISION](https://github.com/Gruver87/dup-protocol/blob/master/docs/VISION.md) |
 | One-screen card | [AT_A_GLANCE](docs/AT_A_GLANCE.md) |
 | Brand (DUP Labs / DUP Protocol) | [BRAND](docs/BRAND.md) |
 | Diligence brief (funds / ПВТ, 15 min) | [DILIGENCE_BRIEF](docs/DILIGENCE_BRIEF.md) |
@@ -223,7 +223,7 @@ Default Hybrid CI / prod mesh builds **without** the `libp2p` feature.
 | Security / contribute | [SECURITY](SECURITY.md) · [CONTRIBUTING](CONTRIBUTING.md) · [SUPPORT](SUPPORT.md) · [Code of Conduct](CODE_OF_CONDUCT.md) |
 | Cite this software | [CITATION.cff](CITATION.cff) |
 | GitHub About paste | [REPO_PROFILE](.github/REPO_PROFILE.md) |
-| Audit pin (other repo) | [Ultimate Hybrid](https://github.com/Gruver87/dup-protocol) · [EVIDENCE_MATRIX](https://github.com/Gruver87/dup-protocol/blob/master/docs/EVIDENCE_MATRIX.md) |
+| Audit pin (other repo) | [`dup-protocol`](https://github.com/Gruver87/dup-protocol) · [EVIDENCE_MATRIX](https://github.com/Gruver87/dup-protocol/blob/master/docs/EVIDENCE_MATRIX.md) |
 
 ---
 
@@ -240,4 +240,4 @@ MIT — [LICENSE](LICENSE)
 ---
 
 *Author: ULADZIMIR DABRANSKI (D.U.P.) · Owner: [Gruver87](https://github.com/Gruver87) · Default branch: `main`*  
-*Last surface update: **2026-10-01** — surface brand **DUP Labs / DUP Protocol** ([BRAND](docs/BRAND.md); no crate/chain/repo rename) · diligence · Phases 1–5 + STRICT packs. Not BLS / not public mainnet / not industrial pin freeze.*
+*Last surface update: **2026-10-01** — brand **DUP Labs / DUP Protocol** · repos [`dup-protocol-experimental`](https://github.com/Gruver87/dup-protocol-experimental) + pin [`dup-protocol`](https://github.com/Gruver87/dup-protocol) · diligence · Phases 1–5 + STRICT packs. Not BLS / not public mainnet / not industrial pin freeze.*

@@ -4,7 +4,7 @@
 **Date:** 2026-10-01 · Repo: [`Gruver87/dup-protocol-experimental`](https://github.com/Gruver87/dup-protocol-experimental) · branch `main`  
 **Brand:** [BRAND.md](BRAND.md) — **DUP Labs** · **DUP Protocol** · Uladzimir Dabranski (D.U.P.)  
 **Not:** public audited mainnet · not the industrial audit-freeze pin · not listed token.  
-**Former name:** Absolute Blockchain Experimental (same codebase; GitHub URLs unchanged).
+**Former name:** Absolute Blockchain Experimental (same codebase). GitHub: [`dup-protocol-experimental`](https://github.com/Gruver87/dup-protocol-experimental).
 
 **15-minute brief (start here):** [DILIGENCE_BRIEF.md](DILIGENCE_BRIEF.md)  
 One-screen status: [AT_A_GLANCE.md](AT_A_GLANCE.md) · Evidence ledger: [EVIDENCE_MATRIX.md](EVIDENCE_MATRIX.md) · Gaps: [MAINNET_GAP_ANALYSIS.md](MAINNET_GAP_ANALYSIS.md) · Vision (industrial pin): [VISION](https://github.com/Gruver87/dup-protocol/blob/master/docs/VISION.md).

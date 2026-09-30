@@ -75,7 +75,7 @@ noise-protocol
 | **Closed** | B1 [`3c801b87`](../docs/evidence/runs/3c801b87/) · B2 [`lr48pass1`](../docs/evidence/runs/lr48pass1/) + STRICT [`lrstrict1`](../docs/evidence/runs/lrstrict1/) · Phase 3 [`evm48pass1`](../docs/evidence/runs/evm48pass1/) + STRICT [`evmstrict1`](../docs/evidence/runs/evmstrict1/) · Phase 4 [`adr0021gaudit1`](../docs/evidence/runs/adr0021gaudit1/) + STRICT [`mempool48pass1`](../docs/evidence/runs/mempool48pass1/) · Phase 5 industrial tip [`ind48pass1`](../docs/evidence/runs/ind48pass1/) · libp2p STRICT [`lp2pstrict1`](../docs/evidence/runs/lp2pstrict1/) |
 | **Open / next** | Phase 6 org — [DILIGENCE_BRIEF](../docs/DILIGENCE_BRIEF.md) · [FUND_READINESS](../docs/FUND_READINESS.md) · [INDUSTRIAL_MAX_SCAN](../docs/INDUSTRIAL_MAX_SCAN_2026-09-20.md) |
 | **Notes** | [CHANGELOG](../CHANGELOG.md) · [RELEASING](../docs/RELEASING.md) |
-| **Industrial sibling** | [`Absolute_Blockchain_Ultimate_Hybrid`](https://github.com/Gruver87/dup-protocol) — display **DUP Protocol industrial pin** · **not** this freeze |
+| **Industrial sibling** | [`dup-protocol`](https://github.com/Gruver87/dup-protocol) — **DUP Protocol industrial pin** · **not** this freeze |
 | **Self-check** | `.\scripts\verify_global_rd_audit.ps1` · `.\scripts\verify_pre_soak.ps1` · `python scripts/verify_experimental_rd.py` |
 | **CI** | `experimental-rd.yml`, `test.yml`, `security-audit.yml` |
 | **Community health** | **100%** (GitHub community profile) |

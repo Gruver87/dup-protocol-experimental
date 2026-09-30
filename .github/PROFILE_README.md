@@ -4,12 +4,12 @@ Evidence-first **hybrid Python + Rust L1** — product **DUP Protocol**. Local p
 
 **Brand:** [BRAND](https://github.com/Gruver87/dup-protocol-experimental/blob/main/docs/BRAND.md) · **Diligence (15 min):** [DILIGENCE_BRIEF](https://github.com/Gruver87/dup-protocol-experimental/blob/main/docs/DILIGENCE_BRIEF.md)  
 **Author:** Uladzimir Dabranski (D.U.P.) — Dabranski · Uladzimir · Petrovich  
-**Former public name:** Absolute Blockchain (Ultimate Hybrid / Experimental) — same codebases; GitHub repo URLs unchanged for now.
+**Former public name:** Absolute Blockchain (Ultimate Hybrid / Experimental) — same codebases; GitHub now [`dup-protocol`](https://github.com/Gruver87/dup-protocol) + [`dup-protocol-experimental`](https://github.com/Gruver87/dup-protocol-experimental).
 
 | Repository | Role | Start |
 |------------|------|-------|
-| [**Absolute_Blockchain_Ultimate_Hybrid**](https://github.com/Gruver87/dup-protocol) | **DUP Protocol — industrial pin** · tip-v2 48h soak **PASS** · Phase 4 binder **READY** · external firm audit **pending** | [VISION](https://github.com/Gruver87/dup-protocol/blob/master/docs/VISION.md) · [AT_A_GLANCE](https://github.com/Gruver87/dup-protocol/blob/master/docs/AT_A_GLANCE.md) · [AUDIT_ENGAGEMENT_BRIEF](https://github.com/Gruver87/dup-protocol/blob/master/docs/AUDIT_ENGAGEMENT_BRIEF.md) |
-| [**experimental**](https://github.com/Gruver87/dup-protocol-experimental) | **DUP Protocol — R&D** · Phases 1–5 **closed** · STRICT: `lp2pstrict1` · `lrstrict1` · `evmstrict1` · `mempool48pass1` · tip `ind48pass1` | [DILIGENCE_BRIEF](https://github.com/Gruver87/dup-protocol-experimental/blob/main/docs/DILIGENCE_BRIEF.md) · [FUND_READINESS](https://github.com/Gruver87/dup-protocol-experimental/blob/main/docs/FUND_READINESS.md) · [AT_A_GLANCE](https://github.com/Gruver87/dup-protocol-experimental/blob/main/docs/AT_A_GLANCE.md) |
+| [**dup-protocol**](https://github.com/Gruver87/dup-protocol) | **DUP Protocol — industrial pin** · tip-v2 48h soak **PASS** · Phase 4 binder **READY** · external firm audit **pending** | [VISION](https://github.com/Gruver87/dup-protocol/blob/master/docs/VISION.md) · [AT_A_GLANCE](https://github.com/Gruver87/dup-protocol/blob/master/docs/AT_A_GLANCE.md) · [AUDIT_ENGAGEMENT_BRIEF](https://github.com/Gruver87/dup-protocol/blob/master/docs/AUDIT_ENGAGEMENT_BRIEF.md) |
+| [**dup-protocol-experimental**](https://github.com/Gruver87/dup-protocol-experimental) | **DUP Protocol — R&D** · Phases 1–5 **closed** · STRICT: `lp2pstrict1` · `lrstrict1` · `evmstrict1` · `mempool48pass1` · tip `ind48pass1` | [DILIGENCE_BRIEF](https://github.com/Gruver87/dup-protocol-experimental/blob/main/docs/DILIGENCE_BRIEF.md) · [FUND_READINESS](https://github.com/Gruver87/dup-protocol-experimental/blob/main/docs/FUND_READINESS.md) · [AT_A_GLANCE](https://github.com/Gruver87/dup-protocol-experimental/blob/main/docs/AT_A_GLANCE.md) |
 
 ## Positioning (honest)
 
