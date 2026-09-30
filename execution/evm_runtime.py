@@ -10,6 +10,15 @@ from typing import Any, Dict, List, Mapping
 
 # Mirror docs/sprouts/EVM_COMPAT_MATRIX.md — update both when a wave closes a row.
 _COMPAT_ROWS: List[Dict[str, str]] = [
+    {
+        "area": "opcode_map_yellow_paper",
+        "status": "absolute_native",
+        "notes": (
+            "Comparison/bitwise bytes remapped vs Yellow Paper "
+            "(e.g. Absolute 0x10=AND, 0x16=LT; YP 0x10=LT, 0x16=AND). "
+            "Not solc/geth drop-in. Remap is breaking ADR — not silent."
+        ),
+    },
     {"area": "transfer_fee_burn", "status": "supported", "notes": "Native apply + satoshi domain"},
     {
         "area": "create_create2_deploy_salt",
@@ -169,13 +178,15 @@ def evm_compat_honesty_snapshot(config: Any | None = None) -> Dict[str, Any]:
     elif prod_hardened:
         detail = (
             f"evm_prod_profile: CREATE2+deploy_salt armed; gas_limit={gas_limit}; "
-            "Shanghai/Cancun subset — not full geth / not EIP-4844"
+            "Absolute opcode map (not Yellow Paper LT/AND); Shanghai/Cancun subset labels — "
+            "not full geth / not EIP-4844 / not solc drop-in"
         )
     elif mode in ("prod", "production", "staging"):
         detail = "evm_prod_incomplete: CREATE2 or deploy_salt not armed on config"
     else:
         detail = (
             f"evm_dev_profile: gas_limit={gas_limit}; "
+            "Absolute opcode map (not Yellow Paper); "
             "lab waves 8–11 (precompile/rpc/nested/reorg/logs/filters); mesh smoke separate"
         )
 
@@ -186,6 +197,20 @@ def evm_compat_honesty_snapshot(config: Any | None = None) -> Dict[str, Any]:
         "evm_create2_eip1014": create2,
         "evm_require_deploy_salt": deploy_salt,
         "prod_hardened": bool(prod_hardened),
+        "opcode_map_honesty": {
+            "yellow_paper_compatible": False,
+            "absolute_native_map": True,
+            "example": {
+                "absolute_0x10": "AND",
+                "absolute_0x16": "LT",
+                "yellow_paper_0x10": "LT",
+                "yellow_paper_0x16": "AND",
+            },
+            "note": (
+                "solc/geth bytecode is not drop-in; remap to Yellow Paper is a "
+                "breaking ADR (Phase F) — not silent"
+            ),
+        },
         "compat_matrix": compat_matrix_rows(),
         "supported_count": supported_n,
         "supported_absolute_count": absolute_n,

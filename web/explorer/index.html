@@ -159,7 +159,13 @@
     <div class="stat-item"><span class="stat-label">Bridge</span><span class="stat-value" id="s-bridge">—</span></div>
   </div>
   <div id="prod-auth-banner" style="display:none;margin-bottom:12px;padding:10px 14px;border:1px solid var(--yellow);border-radius:8px;font-size:12px;background:rgba(255,200,0,0.08)">
-    <b>Production mode</b> — admin POSTs need JWT. Settings → Get JWT Token. RPC may require API key.
+    <b>Auth honesty</b> — admin POSTs need JWT when <code>jwt_enforce_admin</code> is on (not only <code>deployment_mode=prod</code>).
+    Settings → Get JWT (user role). Admin mint requires <code>ABS_ALLOW_DEV_ADMIN_JWT=1</code>. Prefer <a href="/">Ops Console</a> for wallets (no key paste).
+  </div>
+  <div style="margin-bottom:12px;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--gray)">
+    <b style="color:var(--yellow)">Legacy explorer</b> — lab / mutation surface.
+    <a href="/" style="color:var(--blue)">Ops Console</a> is the industrial read-only dashboard.
+    Private-key paste to the node is <b>disabled</b> here (Phase B trust UX).
   </div>
 
   <!-- DASHBOARD -->
@@ -302,11 +308,11 @@
     <div class="grid2">
       <div class="card">
         <h3>Sign Transaction</h3>
-        <div class="form-row"><label>From</label><input id="tx-sign-from" placeholder="0xabc..."/></div>
-        <div class="form-row"><label>To</label><input id="tx-sign-to" placeholder="0xdef..."/></div>
-        <div class="form-row"><label>Amount</label><input id="tx-sign-amount" type="number" value="1"/></div>
-        <div class="form-row"><label>Private Key (hex)</label><input id="tx-sign-key" placeholder="your private key hex" type="password"/></div>
-        <button class="btn btn-blue" onclick="signTransaction()" style="width:100%">Sign Transaction</button>
+        <div class="warn-box" style="padding:10px;border:1px solid var(--yellow);border-radius:6px;margin-bottom:10px;font-size:12px;line-height:1.5">
+          Private-key paste → <code>POST /tx/sign</code> is <b>disabled</b> in this explorer.
+          Use <a href="/#wallets">Ops Console → Wallets</a> (EIP-1193 / MetaMask) — keys never leave the browser wallet.
+        </div>
+        <button class="btn btn-outline" onclick="location.href='/#wallets'" style="width:100%">Open Ops Console wallets</button>
         <div id="tx-sign-result" style="margin-top:10px;font-family:monospace;font-size:11px"></div>
       </div>
       <div class="card">
@@ -563,14 +569,17 @@
 
   <!-- ZK PROOFS -->
   <div id="sec-zk" class="section">
+    <div style="margin-bottom:12px;padding:10px 14px;border:1px solid var(--yellow);border-radius:8px;font-size:12px">
+      <b>DEMO / R&amp;D</b> — Range proofs refused (hash theater removed). Knowledge/balance are educational Fiat–Shamir only — not audited ZK.
+    </div>
     <div class="grid2">
       <div class="card">
         <h3>Zero-Knowledge Proof Demo</h3>
         <div class="form-row"><label>Proof Type</label>
           <select id="zk-type" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:6px;width:100%">
             <option value="knowledge">Knowledge Proof (know a secret)</option>
-            <option value="range">Range Proof (value in range)</option>
-            <option value="balance">Balance Proof (balance > threshold)</option>
+            <option value="range" disabled>Range Proof (REFUSED — not ZK)</option>
+            <option value="balance">Balance Proof (R&amp;D only)</option>
           </select>
         </div>
         <div class="form-row"><label>Secret value</label><input id="zk-secret" type="number" value="42" /></div>
@@ -684,6 +693,9 @@
 
   <!-- POST-QUANTUM CRYPTO -->
   <div id="sec-pq" class="section">
+    <div style="margin-bottom:12px;padding:10px 14px;border:1px solid var(--yellow);border-radius:8px;font-size:12px">
+      <b>DEMO / R&amp;D</b> — PQ backends are <code>NotImplemented</code> (no NIST ML-DSA). Not a security product.
+    </div>
     <div class="grid2">
       <div class="card">
         <h3>Post-Quantum Status</h3>
@@ -1688,15 +1700,18 @@
     <div class="grid2" style="margin-top:16px">
       <div class="card">
         <h3>Sign &amp; Verify Transaction</h3>
-        <div class="form-row"><label>Private Key (hex)</label><input id="crypto-privkey" /></div>
+        <div style="padding:10px;border:1px solid var(--yellow);border-radius:6px;margin-bottom:10px;font-size:12px;line-height:1.5">
+          Node-side private-key signing is <b>disabled</b>. Verify-only still works if you paste a signature.
+          Prefer <a href="/#wallets">Ops Console wallets</a>.
+        </div>
         <div class="form-row"><label>Transaction JSON</label>
           <textarea id="crypto-txdata" rows="4" placeholder='{"from":"0x...","to":"0x...","value":1.0,"nonce":0}'></textarea>
         </div>
         <div style="display:flex;gap:8px;margin-bottom:8px">
-          <button class="btn btn-blue" onclick="cryptoSign()" style="flex:1">Sign</button>
+          <button class="btn btn-outline" disabled title="Disabled — no key paste" style="flex:1;opacity:.5">Sign (disabled)</button>
           <button class="btn btn-outline" onclick="cryptoVerify()" style="flex:1">Verify</button>
         </div>
-        <div class="form-row"><label>Signature</label><input id="crypto-signature" placeholder="auto-filled after sign" /></div>
+        <div class="form-row"><label>Signature</label><input id="crypto-signature" placeholder="paste signature to verify" /></div>
         <div id="crypto-sign-result" style="font-size:13px;margin-top:4px"></div>
         <div id="crypto-verify-result" style="font-size:13px;margin-top:4px"></div>
       </div>
@@ -1739,8 +1754,9 @@ function authHeaders(extra = {}) {
 function applyDeploymentMode(st) {
   DEPLOYMENT_MODE = st?.deployment_mode || 'dev';
   const prod = DEPLOYMENT_MODE === 'prod';
+  const jwtOn = !!(st?.jwt_enforce_admin ?? st?.security?.jwt_enforce_admin);
   const banner = document.getElementById('prod-auth-banner');
-  if (banner) banner.style.display = prod ? 'block' : 'none';
+  if (banner) banner.style.display = (prod || jwtOn) ? 'block' : 'none';
   const faucetPanel = document.getElementById('devnet-faucet-panel');
   if (faucetPanel) faucetPanel.style.display = prod ? 'none' : 'block';
   const poolPanel = document.getElementById('pool-spend-panel');
@@ -2822,27 +2838,19 @@ async function cryptoKeygen() {
   const r = await post('/crypto/keygen', {});
   const el = document.getElementById('crypto-result');
   if (r && r.address) {
-    el.innerHTML = `<div class="badge badge-green">Key pair generated</div>
+    // Do not paint private keys in the browser DOM (Phase B trust UX).
+    el.innerHTML = `<div class="badge badge-green">Key pair generated (private key not shown)</div>
       <div class="form-row" style="margin-top:12px"><label>Address</label><input readonly value="${r.address}"></div>
-      <div class="form-row"><label>Public Key</label><input readonly value="${r.public_key}"></div>
-      <div class="form-row"><label>Private Key (keep secret!)</label><input readonly value="${r.private_key}" style="color:var(--yellow)"></div>`;
-    document.getElementById('crypto-privkey').value = r.private_key;
+      <div class="form-row"><label>Public Key</label><input readonly value="${r.public_key || ''}"></div>
+      <p style="color:var(--gray);font-size:12px;margin-top:8px">Private key omitted on purpose — use Ops Console / offline wallet tools.</p>`;
   } else {
     el.innerHTML = `<span style="color:var(--red)">${r?.error||'Failed'}</span>`;
   }
 }
 
 async function cryptoSign() {
-  const pk = document.getElementById('crypto-privkey').value;
-  const txRaw = document.getElementById('crypto-txdata').value;
-  if (!pk || !txRaw) return alert('Private key and transaction data required');
-  let tx = {};
-  try { tx = JSON.parse(txRaw); } catch { return alert('Invalid JSON'); }
-  const r = await post('/crypto/sign', {private_key: pk, transaction: tx});
-  document.getElementById('crypto-sign-result').innerHTML =
-    r?.signature ? `<div class="badge badge-green">Signed</div><input readonly style="margin-top:8px" value="${r.signature}">`
-                 : `<span style="color:var(--red)">${r?.error||'Failed'}</span>`;
-  if (r?.signature) document.getElementById('crypto-signature').value = r.signature;
+  alert('Node-side private-key signing disabled. Use Ops Console → Wallets.');
+  location.href = '/#wallets';
 }
 
 async function cryptoVerify() {
@@ -3653,21 +3661,8 @@ async function lookupWalletBalance() {
 }
 
 async function signTransaction() {
-  const from = document.getElementById('tx-sign-from').value.trim();
-  const to = document.getElementById('tx-sign-to').value.trim();
-  const amount = parseFloat(document.getElementById('tx-sign-amount').value)||1;
-  const private_key = document.getElementById('tx-sign-key').value.trim();
-  if (!from || !to) return alert('From and To required');
-  if (!private_key) return alert('Private key required');
-  const acct = await get('/address/' + encodeURIComponent(from));
-  const nonce = acct?.nonce ?? 0;
-  const r = await post('/tx/sign', {from, to, amount, nonce, private_key});
-  document.getElementById('tx-sign-result').innerHTML =
-    r?.tx_hash ? `<div class="badge badge-green">Signed!</div>
-      <div>Hash: <span class="hash">${r.tx_hash}</span></div>
-      <div>Nonce: ${nonce}</div>
-      <div>Signature: <span style="color:var(--yellow);font-size:10px;word-break:break-all">${r.signature}</span></div>`
-    : `<span style="color:var(--red)">${r?.error||'Failed'}</span>`;
+  alert('Private-key paste disabled. Use Ops Console → Wallets (MetaMask / EIP-1193).');
+  location.href = '/#wallets';
 }
 
 // ── NFT Extended functions ─────────────────────────────────────────────────────

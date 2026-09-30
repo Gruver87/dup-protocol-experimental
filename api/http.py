@@ -3410,6 +3410,17 @@ class RESTHandler(BaseHTTPRequestHandler):
                 if role not in ("user", "admin"):
                     self._error(400, "role must be user or admin")
                     return
+                # Fail-closed: admin JWT mint in non-prod requires explicit operator arm.
+                # Prevents open staging/dev admin mint (audit Phase B).
+                if role == "admin":
+                    allow = str(os.environ.get("ABS_ALLOW_DEV_ADMIN_JWT", "") or "").strip().lower()
+                    if allow not in ("1", "true", "yes", "on"):
+                        self._error(
+                            403,
+                            "admin JWT mint refused outside prod unless "
+                            "ABS_ALLOW_DEV_ADMIN_JWT=1 (lab/operator only)",
+                        )
+                        return
                 if _JWT_AVAILABLE and jwt_auth and addr:
                     token = jwt_auth.generate_token(addr, role=role)
                     self._json({
@@ -5204,7 +5215,19 @@ class RESTHandler(BaseHTTPRequestHandler):
                 except (json.JSONDecodeError, ValueError, TypeError) as e:
                     self._error(400, f"invalid proof: {e}")
                     return
-                ok = zk.verify_range(proof, min_v, max_v)
+                try:
+                    ok = zk.verify_range(proof, min_v, max_v)
+                except NotImplementedError as e:
+                    self._json(
+                        {
+                            "valid": False,
+                            "canonical": False,
+                            "educational_only": False,
+                            "error": str(e),
+                            "refused": True,
+                        }
+                    )
+                    return
                 self._json({"valid": ok is True, "value_checked": value})
 
             # ── Slashing engine ───────────────────────────────────────────────
@@ -5622,7 +5645,21 @@ class RESTHandler(BaseHTTPRequestHandler):
                 min_v  = int(qs.get("min", ["0"])[0])
                 max_v  = int(qs.get("max", ["100"])[0])
                 if zk and hasattr(zk, "prove_range"):
-                    proof = zk.prove_range(value, min_v, max_v)
+                    try:
+                        proof = zk.prove_range(value, min_v, max_v)
+                    except NotImplementedError as e:
+                        self._json(
+                            {
+                                "enabled": True,
+                                "valid": False,
+                                "canonical": False,
+                                "educational_only": False,
+                                "refused": True,
+                                "error": str(e),
+                                "range": f"[{min_v}, {max_v}]",
+                            }
+                        )
+                        return
                     self._json({
                         "proof": proof.__dict__ if hasattr(proof,'__dict__') else str(proof),
                         "valid": True,
@@ -8148,7 +8185,18 @@ class RESTHandler(BaseHTTPRequestHandler):
                 min_v = int(body.get("min_value", 0))
                 max_v = int(body.get("max_value", 100))
                 if zk and hasattr(zk, "prove_range"):
-                    proof = zk.prove_range(value, min_v, max_v)
+                    try:
+                        proof = zk.prove_range(value, min_v, max_v)
+                    except NotImplementedError as e:
+                        self._json(
+                            {
+                                "valid": False,
+                                "canonical": False,
+                                "refused": True,
+                                "error": str(e),
+                            }
+                        )
+                        return
                     self._json({"proof": str(proof), "valid": True})
                 else:
                     self._error(503, "ZK range proofs not available")

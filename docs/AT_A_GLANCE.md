@@ -67,7 +67,7 @@ Full map: [ARCHITECTURE § R&D execution chain](ARCHITECTURE.md#rd-execution-cha
 ## Next click
 
 - **Funds / investors / ПВТ** → [DILIGENCE_BRIEF.md](DILIGENCE_BRIEF.md) (15 min) · [FUND_READINESS.md](FUND_READINESS.md)
-- **Next click** → [EXECUTION_ORDER.md](EXECUTION_ORDER.md) — Phases 1–5 closed incl. LR STRICT [`lrstrict1`](evidence/runs/lrstrict1/) + EVM STRICT [`evmstrict1`](evidence/runs/evmstrict1/) + tip 48h [`ind48pass1`](evidence/runs/ind48pass1/); next Phase 6 org ([INDUSTRIAL_MAX_SCAN_2026-09-20.md](INDUSTRIAL_MAX_SCAN_2026-09-20.md))
+- **Next click** → [EXECUTION_ORDER.md](EXECUTION_ORDER.md) — Phases 1–5 closed; next Phase 6 org · **safe code polish order:** [AUDIT_90D_FIX_PLAN.md](AUDIT_90D_FIX_PLAN.md)
 - Hybrid pin (do not break): [`dup-protocol`](https://github.com/Gruver87/dup-protocol)
 - Contribute: [CONTRIBUTING](../CONTRIBUTING.md)
 - GitHub About: [REPO_PROFILE](../.github/REPO_PROFILE.md)

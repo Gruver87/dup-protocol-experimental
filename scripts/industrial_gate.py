@@ -196,6 +196,12 @@ def _check_p2p_hardening() -> tuple[list[str], list[str]]:
     console_index = (ROOT / "web" / "console" / "index.html").read_text(encoding="utf-8")
     if "DUP PROTOCOL" not in console_index and "DUP Protocol" not in console_index:
         errors.append("ops console index must brand DUP Protocol")
+    evm_rt = (ROOT / "execution" / "evm_runtime.py").read_text(encoding="utf-8")
+    if "opcode_map_honesty" not in evm_rt or "yellow_paper_compatible" not in evm_rt:
+        errors.append("evm_runtime must disclose Absolute opcode map ≠ Yellow Paper")
+    zk_src = (ROOT / "features" / "zk.py").read_text(encoding="utf-8")
+    if "zk_range_proof_not_implemented" not in zk_src:
+        errors.append("features/zk.py must refuse educational range hash theater")
     if not (ROOT / "api" / "market_feed.py").is_file():
         errors.append("api/market_feed.py missing (ops market snapshot)")
     else:

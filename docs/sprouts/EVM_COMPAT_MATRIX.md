@@ -1,10 +1,11 @@
 # EVM compatibility matrix (honest)
 
 Scope: Absolute hybrid EVM subset on the single apply path.  
-**Not** a full Ethereum client. Target reference: Shanghai / Cancun opcodes where noted.
+**Not** a full Ethereum client. **Not** Yellow Paper opcode-compatible for comparison/bitwise bytes.
 
 | Area | Status | Notes |
 |------|--------|-------|
+| **Opcode map (LT/GT/AND/…)** | **Absolute-native (not Yellow Paper)** | Comparison/bitwise bytes are **remapped** vs Ethereum: e.g. Absolute `0x10=AND`, `0x16=LT` (Yellow Paper: `0x10=LT`, `0x16=AND`). Same map in `evm_interpreter.py` and `native/.../evm_pure_runner.rs`. **solc / geth bytecode is not drop-in.** Remap to Yellow Paper is a breaking Phase F ADR — not done silently. See `GET /evm/status` → `opcode_map_honesty` |
 | Transfer + fee burn | **Supported** | Native apply + satoshi domain. Nested CALL writeback `transfer_value` refuses `insufficient_writeback_value` (no clamp-to-zero mint). Host `deploy_contract` / `call_contract` value is one debit+credit via `try_debit_satoshi` |
 | CREATE / CREATE2 + deploy salt | **Supported (prod)** | `evm_create2_eip1014` + `evm_require_deploy_salt`. Endowment is on the account before init (constructor can forward value); revert refunds |
 | CALL / STATICCALL host | **Partial** | Host-in-apply; nested depth cap 4. Inline CALL `RETURNDATACOPY` uses the live return buffer. Inline STATICCALL refuses SSTORE/LOG/CREATE/TSTORE/SELFDESTRUCT and value-CALL. Nested CALL/DELEGATECALL under STATICCALL is sticky (EIP-214): SSTORE does not commit. Nested OOG burns all forwarded gas (REVERT does not). Python interpreter handoff also refuses static writes. Nested CALL to empty code (EOA) succeeds with empty returndata; value still transfers when the caller covers satoshi (otherwise CALL returns 0, no mint). No-code writeback does not persist empty storage (DELEGATECALL to a precompile must not wipe the caller) |
@@ -40,6 +41,7 @@ Scope: Absolute hybrid EVM subset on the single apply path.
 |----------------|----------------|
 | `supported` / `supported_prod` | **Supported** / **Supported (prod)** |
 | `supported_absolute` | **Supported (Absolute honesty)** |
+| `absolute_native` | **Absolute-native** (not Yellow Paper / not solc drop-in) |
 | `partial` | **Partial** (CALL / precompiles subset) |
 | `not_claimed` | **Not claimed** |
 
