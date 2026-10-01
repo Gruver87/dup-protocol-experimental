@@ -29,8 +29,8 @@ Canonical docs language is **English**. If GitHub shows a translation, open **Vi
 |----------|------------|
 | **Architects / principals** | [AT_A_GLANCE](docs/AT_A_GLANCE.md) → [ARCHITECTURE](docs/ARCHITECTURE.md) → ADR [0017](docs/adr/0017-long-range-research.md) / [0019](docs/adr/0019-rust-libp2p-industrial.md) / [0020](docs/adr/0020-libp2p-industrial-mesh.md) |
 | **Grant officers / diligence / ПВТ** | [DILIGENCE_BRIEF](docs/DILIGENCE_BRIEF.md) · [FUND_READINESS](docs/FUND_READINESS.md) · pin [VISION](https://github.com/Gruver87/dup-protocol/blob/master/docs/VISION.md) · [EVIDENCE_MATRIX](docs/EVIDENCE_MATRIX.md) · [EXECUTION_ORDER](docs/EXECUTION_ORDER.md) (Phases 1–5 + LR STRICT [`lrstrict1`](docs/evidence/runs/lrstrict1/) + EVM STRICT [`evmstrict1`](docs/evidence/runs/evmstrict1/) + libp2p STRICT [`lp2pstrict1`](docs/evidence/runs/lp2pstrict1/) + tip [`ind48pass1`](docs/evidence/runs/ind48pass1/); next Phase 6 org) |
-| **Operators** | [Start in 60 seconds](#start-in-60-seconds) · `python scripts/verify_experimental_rd.py` · optional `python scripts/verify_parallel_rd_batch.py` |
-| **Auditors (this tree)** | R&D sandbox only — firm engagement package lives on the [industrial pin](https://github.com/Gruver87/dup-protocol/blob/master/docs/AUDIT_ENGAGEMENT_BRIEF.md) |
+| **Operators** | [Start in 60 seconds](#start-in-60-seconds) · `python scripts/verify_experimental_rd.py` · optional `python scripts/verify_parallel_rd_batch.py` · thin SDK [`sdk/README.md`](sdk/README.md) |
+| **Auditors (this tree)** | R&D sandbox · Phase 6 **prep** [`phase6prep1`](docs/evidence/runs/phase6prep1/) / [FIRM_KICKOFF_CHECKLIST](docs/FIRM_KICKOFF_CHECKLIST.md) — firm PDF lives with the [industrial pin](https://github.com/Gruver87/dup-protocol/blob/master/docs/AUDIT_ENGAGEMENT_BRIEF.md) |
 
 Sandbox rules: [EXPERIMENTAL_SANDBOX.md](EXPERIMENTAL_SANDBOX.md) · Profile F: [EXPERIMENTAL_RD_PROFILE](docs/sprouts/EXPERIMENTAL_RD_PROFILE.md)
 
@@ -80,6 +80,11 @@ Explorer (solo): http://localhost:8080
 | Industrial HIGH honesty + host verify restore | **Landed** | `verify_industrial_high_honesty.ps1` · waves+pytest 2734 · mesh probe tip ~44442 |
 | Industrial polish tip 48h (ADR 0021 wire on mesh) | **PASS** | 2026-09-21→23 [`ind48pass1`](docs/evidence/runs/ind48pass1/) · tip ~46099→~56972 · `hard_fails=0` · git `719deb4` |
 | Fund / diligence card | **Landed** | [DILIGENCE_BRIEF](docs/DILIGENCE_BRIEF.md) · [FUND_READINESS](docs/FUND_READINESS.md) |
+| Phase 6 firm kickoff **prep** | **PREP** (not firm PASS) | [`phase6prep1`](docs/evidence/runs/phase6prep1/) · [FIRM_KICKOFF_CHECKLIST](docs/FIRM_KICKOFF_CHECKLIST.md) · `.\scripts\verify_audit_engagement_prep.ps1` |
+| Thin operator SDK v0 (`dup_sdk`) | **Landed** (lab) | [`sdk/README.md`](sdk/README.md) · `python scripts/dup_sdk_lab.py` · TLS on · satoshi-honest · JWT/API key via env. **Not** pin SDK / **not** custody |
+| AI / MEV sprouts harden | **Lab** | [AI_LAB_PROFILE](docs/sprouts/AI_LAB_PROFILE.md) · `python scripts/ai_lab.py`. Prod `feature_ai_*` / `feature_mev` **false**. **Not** consensus |
+| NFT marketplace satoshi lab | **Lab** | [NFT_LAB_PROFILE](docs/sprouts/NFT_LAB_PROFILE.md) · `python scripts/nft_lab.py` · `.\scripts\verify_nft_marketplace.ps1`. Prod `feature_nft=false`. **Not** ERC-721 |
+| Critical-path audit scan (2026-10-01) | **Landed** (code+gate) | [AUDIT_FULL_SCAN_2026-10-01](docs/AUDIT_FULL_SCAN_2026-10-01.md) · `python scripts/audit_critical_paths.py`. **Not** soak / **not** mesh L1 claim |
 | EVM / oracle / shard labs | **Lab + mesh soak** | waves + `evm_pre_48h_harness.py` · prod sprout flags **off** |
 | Hybrid 48h soak / firm audit / public mainnet | **No — other repo** | [Industrial pin](https://github.com/Gruver87/dup-protocol) |
 
@@ -101,8 +106,8 @@ What is closed vs open on **this** tree. Columns = execution order ([EXECUTION_O
 | **3** | EVM mesh regression + post-prep 48h | **DONE** | [`evm48pass1`](docs/evidence/runs/evm48pass1/) · STRICT [`evmstrict1`](docs/evidence/runs/evmstrict1/) · preflight `evm_pre_48h_harness.py` |
 | **4** | Mempool / validation → Rust | **DONE** (phases 0–3 + mesh bake + global audit + STRICT 48h) | [`adr0021gaudit1`](docs/evidence/runs/adr0021gaudit1/) · [`mempool48pass1`](docs/evidence/runs/mempool48pass1/) · [ADR 0021](docs/adr/0021-mempool-validation-rust-phases.md) |
 | **5** | Industrial polish (wire satoshi · persist · native f64 · HIGH · MED · verify restore · tip 48h) | **DONE** | [INDUSTRIAL_MAX_SCAN](docs/INDUSTRIAL_MAX_SCAN_2026-09-20.md) · [`ind48pass1`](docs/evidence/runs/ind48pass1/) · [DILIGENCE_BRIEF](docs/DILIGENCE_BRIEF.md) · [FUND_READINESS](docs/FUND_READINESS.md) |
-| **6** | External audit / ceremony live | **Org** | [MAINNET_GAP_ANALYSIS](docs/MAINNET_GAP_ANALYSIS.md) |
-| **6+** | Oracles / shard / council (lab) | **Lab parallel** | flags **off** on prod JSON |
+| **6** | External audit / ceremony live | **Org / PREP** | [MAINNET_GAP_ANALYSIS](docs/MAINNET_GAP_ANALYSIS.md) · prep [`phase6prep1`](docs/evidence/runs/phase6prep1/) · [FIRM_KICKOFF_CHECKLIST](docs/FIRM_KICKOFF_CHECKLIST.md) (**not** firm PASS) |
+| **6+** | Oracles / shard / council / NFT / AI (lab) | **Lab parallel** | flags **off** on prod JSON · SDK [`sdk/`](sdk/) · [AUDIT_FULL_SCAN_2026-10-01](docs/AUDIT_FULL_SCAN_2026-10-01.md) |
 | — | Hybrid audit pin / public mainnet | **Other repo** | never claimed here |
 
 ```mermaid
@@ -131,6 +136,10 @@ Full layer map: [ARCHITECTURE](docs/ARCHITECTURE.md#rd-execution-chain).
 | **ADR 0017 Long-Range** | Lab mesh 2h + lab 48h + **STRICT 48h PASS** · B2 closed · not BLS/prod | [`lrstrict1`](docs/evidence/runs/lrstrict1/) · [`lr48pass1`](docs/evidence/runs/lr48pass1/) · [LONG_RANGE_LAB_PROFILE](docs/sprouts/LONG_RANGE_LAB_PROFILE.md) |
 | **EVM depth / RPC honesty** | Waves 8–11 + Phase 3 mesh 48h + **STRICT 48h PASS** | [`evmstrict1`](docs/evidence/runs/evmstrict1/) · [`evm48pass1`](docs/evidence/runs/evm48pass1/) · [EVM_COMPAT_MATRIX](docs/sprouts/EVM_COMPAT_MATRIX.md) |
 | **ADR 0021 mempool Rust** | Phases 0–3 + mesh bake + global audit + **STRICT 48h** + wire satoshi cutover | [`mempool48pass1`](docs/evidence/runs/mempool48pass1/) · [`adr0021gaudit1`](docs/evidence/runs/adr0021gaudit1/) · [ADR 0021](docs/adr/0021-mempool-validation-rust-phases.md) |
+| **Thin operator SDK** | v0 lab client (`dup_sdk`) — status/health/balance_satoshi/tx + NFT reads | [`sdk/README.md`](sdk/README.md) |
+| **AI / MEV / NFT sprouts** | Satoshi-honest labs; prod flags **false** | [AI_LAB_PROFILE](docs/sprouts/AI_LAB_PROFILE.md) · [NFT_LAB_PROFILE](docs/sprouts/NFT_LAB_PROFILE.md) |
+| **Phase 6 engagement prep** | Docs + checklist on disk; firm kickoff still **human** | [`phase6prep1`](docs/evidence/runs/phase6prep1/) · [FIRM_KICKOFF_CHECKLIST](docs/FIRM_KICKOFF_CHECKLIST.md) |
+| **Critical-path audit scan** | Fail-closed money default · NFT auction satoshi · prod CORS `*` refuse | [AUDIT_FULL_SCAN_2026-10-01](docs/AUDIT_FULL_SCAN_2026-10-01.md) |
 
 Latest ADR 0019 work lands on `main`. Historical slice PRs: [#16](https://github.com/Gruver87/dup-protocol-experimental/pull/16).
 
@@ -197,6 +206,8 @@ Default Hybrid CI / prod mesh builds **without** the `libp2p` feature.
 - EVM STRICT 48h PASS [`evmstrict1`](docs/evidence/runs/evmstrict1/) ≠ EVM-only 48h ≠ geth ≠ EIP-4844 ≠ mainnet.
 - Phase 4 ADR 0021 global audit PASS [`adr0021gaudit1`](docs/evidence/runs/adr0021gaudit1/) ≠ mainnet. STRICT mempool+validation 48h is separate PASS [`mempool48pass1`](docs/evidence/runs/mempool48pass1/).
 - Wire satoshi / PersistError / native f64 hygiene = operator verify scripts ≠ new 48h soak ≠ mainnet.
+- Phase 6 prep [`phase6prep1`](docs/evidence/runs/phase6prep1/) ≠ firm audit PDF ≠ pen-test PASS.
+- Thin SDK / AI / NFT labs ≠ prod feature flags on `778888` ≠ consensus-wired marketplace.
 - Do **not** push R&D into the audit-freeze Hybrid repo.
 - ABS tokenomics in-repo model ≠ listed asset / public mainnet.
 - Experimental tags are `rd-X.Y.Z` — **never** the Hybrid `v1.3.*-industrial` line.
@@ -219,6 +230,11 @@ Default Hybrid CI / prod mesh builds **without** the `libp2p` feature.
 | Architecture | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
 | Profile F flags | [docs/sprouts/EXPERIMENTAL_RD_PROFILE.md](docs/sprouts/EXPERIMENTAL_RD_PROFILE.md) |
 | Long-Range lab profile | [docs/sprouts/LONG_RANGE_LAB_PROFILE.md](docs/sprouts/LONG_RANGE_LAB_PROFILE.md) |
+| Thin operator SDK | [sdk/README.md](sdk/README.md) |
+| AI / MEV lab | [docs/sprouts/AI_LAB_PROFILE.md](docs/sprouts/AI_LAB_PROFILE.md) |
+| NFT marketplace lab | [docs/sprouts/NFT_LAB_PROFILE.md](docs/sprouts/NFT_LAB_PROFILE.md) |
+| Phase 6 firm prep | [FIRM_KICKOFF_CHECKLIST](docs/FIRM_KICKOFF_CHECKLIST.md) · [`phase6prep1`](docs/evidence/runs/phase6prep1/) |
+| Critical-path audit scan | [AUDIT_FULL_SCAN_2026-10-01](docs/AUDIT_FULL_SCAN_2026-10-01.md) |
 | Releasing | [docs/RELEASING.md](docs/RELEASING.md) · [CHANGELOG](CHANGELOG.md) |
 | Security / contribute | [SECURITY](SECURITY.md) · [CONTRIBUTING](CONTRIBUTING.md) · [SUPPORT](SUPPORT.md) · [Code of Conduct](CODE_OF_CONDUCT.md) |
 | Cite this software | [CITATION.cff](CITATION.cff) |
@@ -240,4 +256,4 @@ MIT — [LICENSE](LICENSE)
 ---
 
 *Author: ULADZIMIR DABRANSKI (D.U.P.) · Owner: [Gruver87](https://github.com/Gruver87) · Default branch: `main`*  
-*Last surface update: **2026-10-01** — brand **DUP Labs / DUP Protocol** · repos [`dup-protocol-experimental`](https://github.com/Gruver87/dup-protocol-experimental) + pin [`dup-protocol`](https://github.com/Gruver87/dup-protocol) · diligence · Phases 1–5 + STRICT packs. Not BLS / not public mainnet / not industrial pin freeze.*
+*Last surface update: **2026-10-01** — brand **DUP Labs / DUP Protocol** · Phases 1–5 + STRICT packs · Phase 6 **prep** · thin SDK · AI/NFT labs · critical-path audit scan. Not BLS / not public mainnet / not firm PASS / not industrial pin freeze.*

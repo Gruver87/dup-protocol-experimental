@@ -1,6 +1,6 @@
 # DUP Protocol thin operator SDK (experimental v0.1)
 
-**Package:** `sdk/dup_sdk` · **Version:** 0.1.1  
+**Package:** `sdk/dup_sdk` · **Version:** 0.1.2  
 **Audience:** operators / diligence / scripts on **dup-protocol-experimental**  
 **Not:** public audited mainnet · industrial pin official SDK · wallet custody · full geth
 
