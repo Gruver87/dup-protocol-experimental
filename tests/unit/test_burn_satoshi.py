@@ -73,6 +73,10 @@ def test_block_and_proposer_audit_total_burned_satoshi():
         assert audit["total_burned_satoshi"] == int(to_satoshi(1.25))
         metrics = db.get_chain_metrics(window=8)
         assert metrics["burn_last_window_satoshi"] == int(to_satoshi(1.25))
+        stats = db.get_proposer_stats(limit=5)
+        assert stats[0]["total_burned_satoshi"] == int(to_satoshi(1.25))
+        detail = db.get_proposer_detail("0xminer")
+        assert detail["total_burned_satoshi"] == int(to_satoshi(1.25))
     finally:
         db.close()
         os.remove(path)

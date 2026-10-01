@@ -15,6 +15,7 @@ Canonical language for this repository is **English**. Older inherited entries b
 
 ### Experimental R&D
 
+- **AUDIT Phase G money dual-write cascade (2026-10-01):** SQLite (+ Rocks where missing) persist satoshi twins for validators/bridge/sprouts/NFT/channel_state/AI-MEV/burn_stats/blocks/proposer_audit/tx+receipts; Phase G/gate needles. Oracle price floats and lightning `fee_rate` stay non-ABS by design. **Not** soak / **not** firm audit PASS. Operator: `.\scripts\verify_audit_phase.ps1 -Phase G`.
 - **Face sync after GitHub rename (2026-10-01):** README/diligence no longer show old Absolute repo link text; clone `cd dup-protocol-experimental`; all `.cursor/rules/*.mdc` force-tracked on GitHub (were local-only via gitignore).
 - **Surface brand: DUP Labs / DUP Protocol (2026-10-01):** display rename only — [docs/BRAND.md](docs/BRAND.md), README, banner, CITATION, diligence/About. Author D.U.P. = Dabranski · Uladzimir · Petrovich. **No** `abs_native` / chain id / Docker / industrial tag rename. Former name Absolute Blockchain kept as historical alias in sealed evidence packs.
 - **Diligence surface for funds / investors / ПВТ (2026-09-30):** new [docs/DILIGENCE_BRIEF.md](docs/DILIGENCE_BRIEF.md) — 15-minute honest path with full STRICT + default 48h scorecard, two-repo map, gaps, verify steps. FUND_READINESS STRICT scoreboard; GitHub About → DILIGENCE_BRIEF; PROFILE_README / AT_A_GLANCE / EVIDENCE_MATRIX exec summary synced. **Not** a new soak / **not** mainnet.

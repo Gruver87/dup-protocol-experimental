@@ -86,6 +86,23 @@
 
 ---
 
+## Phase G — Refuse float money fallback ✅ DONE (2026-10-01)
+
+| Step | Action | Status |
+|------|--------|--------|
+| G1 | Hot-path refuse `allow_float_fallback=False` (EVM/sprouts/StateService/…) | Done |
+| G2 | Validators / bridge / plasma / lightning / will satoshi dual-write | Done |
+| G3 | NFT + channel_state + AI/MEV profit satoshi dual-write | Done |
+| G4 | burn_stats + blocks + proposer_audit `total_burned_satoshi` | Done |
+| G5 | SQLite transactions / tx_receipts `value/fee/burned_satoshi` (Rocks already) | Done |
+| G6 | Proposer stats/detail prefer satoshi aggregate | Done |
+
+**Intentional residual (not ABS ledger):** oracle feed/report `value` = market price float; lightning `fee_rate` = rate not amount.
+
+**Verify:** `.\scripts\verify_audit_phase.ps1 -Phase G`
+
+---
+
 ## Done definition per phase
 
 - Unit tests green for touched surfaces  
@@ -93,7 +110,7 @@
 - Docs honesty matches code  
 - No claim of soak unless pack exists  
 
-**Current focus:** transactions/tx_receipts value/fee/burned satoshi dual-write (SQLite catch-up to Rocks). Firm kickoff shelf. E4 soak operator-only.
+**Current focus:** Phase G money dual-write cascade complete on ABS ledger persist. Firm kickoff shelf (Phase H prep only). E4 soak operator-only.
 
 ---
 
