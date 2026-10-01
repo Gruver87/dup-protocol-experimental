@@ -261,6 +261,41 @@ class Client:
             return int(raw, 16)
         return int(raw)
 
+    # ── NFT marketplace (read-only sprout helpers) ────────────────────────
+
+    def get_nft_stats(self) -> JsonDict:
+        out = self.get("/nft/stats")
+        return out if isinstance(out, dict) else {"raw": out}
+
+    def get_nft_marketplace(self) -> JsonDict:
+        out = self.get("/nft/marketplace")
+        return out if isinstance(out, dict) else {"raw": out}
+
+    def get_nft_listings(self) -> Any:
+        return self.get("/nft/listings")
+
+    def get_nft_token(self, token_id: str) -> JsonDict:
+        tid = (token_id or "").strip()
+        if not tid:
+            raise ValueError("token_id required")
+        out = self.get(f"/nft/token/{tid}")
+        if isinstance(out, dict):
+            # Prefer satoshi twin when present
+            if out.get("price_satoshi") is None and out.get("price") is not None:
+                try:
+                    out = dict(out)
+                    out["price_satoshi"] = to_satoshi(out["price"])
+                except Exception:
+                    pass
+            return out
+        return {"raw": out}
+
+    def get_nft_by_owner(self, owner: str) -> Any:
+        addr = (owner or "").strip()
+        if not addr:
+            raise ValueError("owner required")
+        return self.get(f"/nft/owner/{addr}")
+
     def get_balance_satoshi(self, address: str) -> int:
         """Prefer REST ``/wallet/balance/{addr}``; fall back to eth_getBalance wei→sat."""
         addr = (address or "").strip()

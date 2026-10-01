@@ -71,6 +71,7 @@ Full map: [ARCHITECTURE § R&D execution chain](ARCHITECTURE.md#rd-execution-cha
 - **Pipeline** → [EXECUTION_ORDER.md](EXECUTION_ORDER.md) — Phases 1–5 closed (+ [`phase5reverify2`](evidence/runs/phase5reverify2/)); **AUDIT 90D A–H:** [AUDIT_90D_FIX_PLAN.md](AUDIT_90D_FIX_PLAN.md) · `.\scripts\verify_audit_90d_all.ps1`
 - **Thin operator SDK v0** → [`sdk/README.md`](../sdk/README.md) (`sdk/dup_sdk`) — status/health/balance_satoshi/tx submit; `python scripts/dup_sdk_lab.py`. **Not** mainnet / **not** pin / **not** wallet custody
 - **AI/MEV lab sprouts** → [`sprouts/AI_LAB_PROFILE.md`](sprouts/AI_LAB_PROFILE.md) — `python scripts/ai_lab.py` · `python scripts/ai_ops_anomaly.py`. Prod flags stay **false**. **Not** consensus / **not** soak
+- **NFT marketplace lab** → [`sprouts/NFT_LAB_PROFILE.md`](sprouts/NFT_LAB_PROFILE.md) — `python scripts/nft_lab.py`; SDK `get_nft_*`. Prod `feature_nft=false`. **Not** ERC-721 / **not** soak
 - Hybrid pin (do not break): [`dup-protocol`](https://github.com/Gruver87/dup-protocol)
 - Contribute: [CONTRIBUTING](../CONTRIBUTING.md)
 - GitHub About: [REPO_PROFILE](../.github/REPO_PROFILE.md)

@@ -1,17 +1,51 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-NFT Marketplace — встроен в Absolute Blockchain.
-Перенесён из nft_core.py и расширен поддержкой БД и EventBus.
+NFT Marketplace — ADR 0016 app-profile sprout (Profile C / staging).
+
+Honesty: prod ``feature_nft=false`` on 778888. Not consensus-wired. Not ERC-721 claim.
+Money prefers integer ``price_satoshi``; non-integral float-only prices refused.
 """
 
-import json
+from __future__ import annotations
+
+import logging
 import time
 import threading
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from dataclasses import dataclass, field
 
 from crypto import native
+
+logger = logging.getLogger(__name__)
+
+HONESTY = (
+    "nft marketplace sprout: app-profile / staging — "
+    "not consensus / not prod 778888 feature_nft / not ERC-721 claim"
+)
+
+
+def resolve_price_satoshi(
+    *,
+    price: Optional[Any] = None,
+    price_satoshi: Optional[Any] = None,
+) -> int:
+    """Prefer satoshi; refuse non-integral float ABS without satoshi twin."""
+    from runtime.amount import to_satoshi
+
+    if price_satoshi is not None:
+        if isinstance(price_satoshi, bool):
+            raise ValueError("price_satoshi: bool refused")
+        if isinstance(price_satoshi, float):
+            raise ValueError("price_satoshi must be int, got float")
+        return max(0, int(price_satoshi))
+    if price is None:
+        raise ValueError("price or price_satoshi required")
+    if isinstance(price, bool):
+        raise ValueError("price: bool refused")
+    if isinstance(price, float) and not price.is_integer():
+        raise ValueError("non-integral float price refused without price_satoshi")
+    return max(0, int(to_satoshi(price)))
 
 
 @dataclass
@@ -23,9 +57,20 @@ class NFTToken:
     owner: str
     creator: str
     price: float = 0.0
+    price_satoshi: int = 0
     for_sale: bool = False
     created_at: float = field(default_factory=time.time)
     metadata: Dict = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        from runtime.amount import from_satoshi_float, to_satoshi
+
+        if self.price_satoshi:
+            self.price_satoshi = max(0, int(self.price_satoshi))
+            self.price = float(from_satoshi_float(self.price_satoshi))
+        else:
+            self.price_satoshi = int(to_satoshi(self.price or 0))
+            self.price = float(from_satoshi_float(self.price_satoshi))
 
     def to_dict(self) -> Dict:
         return {
@@ -36,6 +81,7 @@ class NFTToken:
             "owner": self.owner,
             "creator": self.creator,
             "price": self.price,
+            "price_satoshi": int(self.price_satoshi),
             "for_sale": self.for_sale,
             "created_at": self.created_at,
             "metadata": self.metadata,
@@ -44,12 +90,12 @@ class NFTToken:
 
 class NFTMarketplace:
     """
-    NFT маркетплейс, интегрированный с балансами блокчейна.
-    При покупке/продаже ABS-балансы обновляются через db.
+    NFT marketplace integrated with chain balances (sprout — not L1 forge).
+    Buy/sell update ABS balances via db (satoshi deltas, fail-closed).
     """
 
-    MINT_FEE = 1.0   # стоимость создания NFT в ABS
-    ROYALTY = 0.05   # 5% роялти создателю при каждой продаже
+    MINT_FEE = 1.0   # ABS display; charged as satoshi
+    ROYALTY = 0.05   # 5% royalty to creator on each sale
 
     def __init__(self, db=None, bus=None):
         self.db = db
@@ -63,8 +109,12 @@ class NFTMarketplace:
         if not self.tokens:
             self._load_genesis_collection()
             self._persist_all()
-        print(f"[NFT] Marketplace initialized ({len(self.tokens)} tokens, "
-              f"persisted={bool(self.db and hasattr(self.db, 'get_nft_tokens'))})")
+        logger.info(
+            "NFT marketplace init tokens=%s persisted=%s honesty=%s",
+            len(self.tokens),
+            bool(self.db and hasattr(self.db, "get_nft_tokens")),
+            HONESTY,
+        )
 
     def _token_from_dict(self, d: Dict) -> NFTToken:
         return NFTToken(
@@ -74,7 +124,8 @@ class NFTMarketplace:
             image_url=d.get("image_url", ""),
             owner=d.get("owner", ""),
             creator=d.get("creator", ""),
-            price=float(d.get("price", 0)),
+            price=float(d.get("price", 0) or 0),
+            price_satoshi=int(d["price_satoshi"]) if d.get("price_satoshi") is not None else 0,
             for_sale=bool(d.get("for_sale")),
             created_at=float(d.get("created_at", time.time())),
             metadata=d.get("metadata") or {},
@@ -242,20 +293,37 @@ class NFTMarketplace:
 
     def _mint_internal(self, token_id, name, description, image_url, creator, price):
         if token_id not in self.tokens:
+            sat = resolve_price_satoshi(price=price)
+            from runtime.amount import from_satoshi_float
+
             self.tokens[token_id] = NFTToken(
                 token_id=token_id, name=name, description=description,
                 image_url=image_url, owner=creator, creator=creator,
-                price=price, for_sale=(price > 0),
+                price=from_satoshi_float(sat), price_satoshi=sat,
+                for_sale=(sat > 0),
             )
 
     # ── Создание NFT ─────────────────────────────────────────────────────────
 
-    def mint(self, token_id: str, name: str, description: str,
-             image_url: str, creator: str, price: float = 0.0) -> Dict:
-        """Создать новый NFT. Списывает MINT_FEE с создателя (atomic UoW when available)."""
+    def mint(
+        self,
+        token_id: str,
+        name: str,
+        description: str,
+        image_url: str,
+        creator: str,
+        price: float = 0.0,
+        *,
+        price_satoshi: Optional[int] = None,
+    ) -> Dict:
+        """Create NFT. Charges MINT_FEE from creator (atomic UoW when available)."""
         with self.lock:
             if token_id in self.tokens:
                 return {"success": False, "error": "token_id already exists"}
+            try:
+                list_sat = resolve_price_satoshi(price=price, price_satoshi=price_satoshi)
+            except ValueError as exc:
+                return {"success": False, "error": str(exc)}
 
             try:
                 with self._uow():
@@ -265,10 +333,14 @@ class NFTMarketplace:
                             "error": f"Need {self.MINT_FEE} ABS to mint",
                         }
 
+                    from runtime.amount import from_satoshi_float
+
                     self.tokens[token_id] = NFTToken(
                         token_id=token_id, name=name, description=description,
                         image_url=image_url, owner=creator, creator=creator,
-                        price=price, for_sale=(price > 0),
+                        price=from_satoshi_float(list_sat),
+                        price_satoshi=list_sat,
+                        for_sale=(list_sat > 0),
                     )
                     self._persist_token(token_id)
             except Exception as exc:
@@ -281,27 +353,48 @@ class NFTMarketplace:
             return {
                 "success": True,
                 "token_id": token_id,
+                "price_satoshi": list_sat,
                 "uow_atomic": self._has_atomic_uow(),
+                "consensus_wired": False,
             }
 
     # ── Торговля ─────────────────────────────────────────────────────────────
 
-    def list_for_sale(self, token_id: str, owner: str, price: float) -> Dict:
+    def list_for_sale(
+        self,
+        token_id: str,
+        owner: str,
+        price: Optional[float] = None,
+        *,
+        price_satoshi: Optional[int] = None,
+    ) -> Dict:
         with self.lock:
-            if price <= 0:
+            try:
+                sat = resolve_price_satoshi(price=price, price_satoshi=price_satoshi)
+            except ValueError as exc:
+                return {"success": False, "error": str(exc)}
+            if sat <= 0:
                 return {"success": False, "error": "price must be > 0"}
             if token_id not in self.tokens:
                 return {"success": False, "error": "not found"}
             t = self.tokens[token_id]
             if t.owner != owner:
                 return {"success": False, "error": "not owner"}
-            t.price = price
+            from runtime.amount import from_satoshi_float
+
+            t.price_satoshi = sat
+            t.price = float(from_satoshi_float(sat))
             t.for_sale = True
             self._persist_token(token_id)
-            return {"success": True, "token_id": token_id, "price": price}
+            return {
+                "success": True,
+                "token_id": token_id,
+                "price": t.price,
+                "price_satoshi": sat,
+            }
 
     def buy(self, token_id: str, buyer: str) -> Dict:
-        """Покупка NFT. ABS переводится продавцу и создателю (роялти) в одном UoW."""
+        """Buy NFT. ABS settles seller + creator royalty in one UoW."""
         with self.lock:
             if token_id not in self.tokens:
                 return {"success": False, "error": "not found"}
@@ -311,6 +404,7 @@ class NFTMarketplace:
             if buyer == t.owner:
                 return {"success": False, "error": "already owner"}
 
+            price_sat = int(t.price_satoshi or resolve_price_satoshi(price=t.price))
             price = t.price
             old_owner = t.owner
             old_for_sale = t.for_sale
@@ -328,7 +422,7 @@ class NFTMarketplace:
                     self._persist_token(token_id)
                     self._record_sale({
                         "token_id": token_id, "from": old_owner,
-                        "to": buyer, "price": price,
+                        "to": buyer, "price": price, "price_satoshi": price_sat,
                         "type": "buy", "timestamp": int(time.time()),
                     })
             except Exception as exc:
@@ -339,7 +433,7 @@ class NFTMarketplace:
             if self.bus:
                 self.bus.emit("nft.sold", {
                     "token_id": token_id, "buyer": buyer,
-                    "seller": old_owner, "price": price,
+                    "seller": old_owner, "price": price, "price_satoshi": price_sat,
                 })
 
             return {
@@ -347,7 +441,9 @@ class NFTMarketplace:
                 "token_id": token_id,
                 "buyer": buyer,
                 "price": price,
+                "price_satoshi": price_sat,
                 "uow_atomic": self._has_atomic_uow(),
+                "consensus_wired": False,
             }
 
     def transfer(self, token_id: str, from_addr: str, to_addr: str) -> Dict:
@@ -393,50 +489,66 @@ class NFTMarketplace:
             return [t.to_dict() for t in self.tokens.values()]
 
     def get_stats(self) -> Dict:
+        from runtime.amount import from_satoshi_float, to_satoshi
+
         with self.lock:
             persisted = bool(self.db and hasattr(self.db, "get_nft_tokens"))
             balance_bound = self._has_balance_backend()
+            total_sat = sum(
+                int(t.price_satoshi) for t in self.tokens.values() if t.for_sale
+            )
             return {
                 "total_tokens": len(self.tokens),
                 "on_sale": sum(1 for t in self.tokens.values() if t.for_sale),
                 "unique_owners": len({t.owner for t in self.tokens.values()}),
-                "total_value": sum(t.price for t in self.tokens.values() if t.for_sale),
+                "total_value": float(from_satoshi_float(total_sat)),
+                "total_value_satoshi": int(total_sat),
                 "mint_fee": self.MINT_FEE,
+                "mint_fee_satoshi": int(to_satoshi(self.MINT_FEE)),
                 "royalty_pct": self.ROYALTY * 100,
                 "total_sales": len(self.sales_history),
                 "total_offers": len(self.offers),
                 "active_auctions": sum(1 for a in self.auctions.values() if a.get("status") == "active"),
                 "persisted": persisted,
                 "balance_backend": balance_bound,
-                # Balance mutations + persist share db.atomic() when available (ADR 0016).
                 "execution_bound": balance_bound,
                 "uow_atomic": self._has_atomic_uow(),
                 "on_chain_standard": False,
+                "consensus_wired": False,
                 "enabled": True,
                 "tier": "app-profile",
                 "adr": "0016",
+                "honesty": HONESTY,
             }
 
     # ── Offers ────────────────────────────────────────────────────────────────
 
     def make_offer(self, token_id: str, bidder: str, price: float,
-                   hours: int = 24) -> Optional[str]:
+                   hours: int = 24, *, price_satoshi: Optional[int] = None) -> Optional[str]:
         """Create a purchase offer for any NFT (not just for-sale ones)."""
         with self.lock:
-            if price <= 0:
+            try:
+                sat = resolve_price_satoshi(price=price, price_satoshi=price_satoshi)
+            except ValueError:
+                return None
+            if sat <= 0:
                 return None
             if token_id not in self.tokens:
                 return None
-            if not self._has_balance_backend() or self._balance(bidder) < price:
+            from runtime.amount import from_satoshi_float
+
+            price_abs = float(from_satoshi_float(sat))
+            if not self._has_balance_backend() or self._balance(bidder) < price_abs:
                 return None
             offer_id = native.sha256_hex(
-                f"{token_id}{bidder}{price}{time.time()}".encode()
+                f"{token_id}{bidder}{sat}{time.time()}".encode()
             )[:16]
             self.offers[offer_id] = {
                 "offer_id": offer_id,
                 "token_id": token_id,
                 "bidder": bidder,
-                "price": price,
+                "price": price_abs,
+                "price_satoshi": sat,
                 "expires_at": int(time.time()) + hours * 3600,
                 "status": "pending",
                 "created_at": int(time.time()),

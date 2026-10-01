@@ -66,12 +66,17 @@ c.submit_signed_tx({
 })
 ```
 
-## Lab
+## NFT marketplace (read-only)
 
-```powershell
-python scripts/dup_sdk_lab.py
-python scripts/dup_sdk_lab.py --base-url http://127.0.0.1:18180
+App-profile sprout — **not** prod `feature_nft` on 778888.
+
+```python
+print(c.get_nft_stats())
+print(c.get_nft_token("abs_genesis_crown"))
+print(c.get_nft_listings())
 ```
+
+Lab: `python scripts/nft_lab.py` · profile: `docs/sprouts/NFT_LAB_PROFILE.md`
 
 Offline self-check always runs. Live mesh is optional — **not** a soak claim.  
 If `DUP_SDK_BEARER` / `RPC_API_KEYS` are set, lab retries `eth_blockNumber` with auth.

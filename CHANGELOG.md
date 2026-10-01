@@ -15,6 +15,7 @@ Canonical language for this repository is **English**. Older inherited entries b
 
 ### Experimental R&D
 
+- **NFT marketplace sprout harden (2026-10-01):** satoshi `price_satoshi` on mint/list/buy; refuse dust float; `scripts/nft_lab.py` + [`docs/sprouts/NFT_LAB_PROFILE.md`](docs/sprouts/NFT_LAB_PROFILE.md); SDK read helpers (`get_nft_stats` / token / listings) in `dup_sdk` 0.1.2. Prod `feature_nft=false`. **Not** ERC-721 / **not** consensus / **not** soak.
 - **Commands face sync (2026-10-01):** `docs/ALL_COMMANDS.txt` (+ Desktop `Absolute_Blockchain_All_Commands_FIXED.txt`) — Parts 33–36: AUDIT 90D, Phase 6 firm prep, `dup_sdk` v0.1.1, AI/MEV labs; GitHub URLs → `dup-protocol` / `dup-protocol-experimental`. **Not** soak / **not** firm PASS.
 - **Thin operator SDK v0.1.1 (2026-10-01):** `bearer_token` / `Client.from_env()` (`DUP_SDK_BEARER` / `DUP_SDK_API_KEY` / `RPC_API_KEYS`); placeholder secrets refused. Fixes prod-mesh eth_* auth wiring without inventing tokens. **Not** wallet custody / **not** mainnet / **not** PyPI.
 

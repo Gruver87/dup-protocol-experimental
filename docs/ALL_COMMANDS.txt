@@ -77,6 +77,7 @@
 #   ЧАСТЬ  34   Phase 6 firm kickoff (org) — NOT firm PASS
 #   ЧАСТЬ  35   Thin operator SDK v0.1 (dup_sdk)
 #   ЧАСТЬ  36   AI / MEV sprouts lab (flags OFF on prod)
+#   ЧАСТЬ  37   NFT marketplace lab (feature_nft OFF on prod)
 # =============================================================================
 
 
@@ -546,6 +547,7 @@ python scripts/guarantor_council_staging_ceremony.py --base-url http://127.0.0.1
 python scripts/dup_sdk_lab.py
 python scripts/ai_lab.py
 python scripts/ai_ops_anomaly.py --offline-only
+python scripts/nft_lab.py
 
 
 # =============================================================================
@@ -796,6 +798,19 @@ python -m pytest tests/unit/test_ai_sprout_harden.py tests/unit/test_wave43_ai_a
 #   phase6prep1                firm kickoff PREP (NOT firm PASS)
 # [PIN] tip-v2: see Hybrid/pin EVIDENCE_MATRIX · tag v1.3.1339-tip-v2-industrial
 
+
+
+# =============================================================================
+# ЧАСТЬ 37: NFT MARKETPLACE LAB [LAB] [EXP]
+# =============================================================================
+# feature_nft MUST stay false on prod 778888. Profile C staging 778889 OK.
+# NOT ERC-721 / NOT consensus / NOT soak / NOT mainnet marketplace claim.
+
+cd C:\Users\vovun\Desktop\Absolute_Blockchain_Experimental
+python scripts/nft_lab.py
+python -m pytest tests/unit/test_nft_marketplace_harden.py tests/unit/test_nft_uow.py -q
+# SDK reads: Client("http://127.0.0.1:19080").get_nft_stats()
+# Docs: docs/sprouts/NFT_LAB_PROFILE.md
 
 # =============================================================================
 # КОНЕЦ СПРАВОЧНИКА

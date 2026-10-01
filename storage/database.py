@@ -3307,7 +3307,13 @@ class Database:
     # ── NFT marketplace (Wave 46 persistence) ─────────────────────────────────
 
     def save_nft_token(self, token: Dict) -> None:
-        price, price_sat = self._abs_sat(token.get("price", 0), field="price")
+        if token.get("price_satoshi") is not None:
+            from runtime.amount import from_satoshi_float
+
+            price_sat = max(0, int(token["price_satoshi"]))
+            price = from_satoshi_float(price_sat)
+        else:
+            price, price_sat = self._abs_sat(token.get("price", 0), field="price")
         with self.lock:
             self.conn.execute(
                 """INSERT OR REPLACE INTO nft_tokens
