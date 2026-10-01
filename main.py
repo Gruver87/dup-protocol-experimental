@@ -569,14 +569,13 @@ class NodeOrchestrator:
                                 from runtime.amount import to_satoshi
 
                                 fund_sat = int(to_satoshi(10_000))
-                                if hasattr(self.db, "balance_delta_satoshi"):
-                                    self.db.balance_delta_satoshi(
-                                        self.wallet.address, fund_sat
+                                if not hasattr(self.db, "balance_delta_satoshi"):
+                                    raise RuntimeError(
+                                        "satoshi_store_required_dev_signer_fund"
                                     )
-                                else:
-                                    self.db.update_balance(
-                                        self.wallet.address, 10_000.0
-                                    )
+                                self.db.balance_delta_satoshi(
+                                    self.wallet.address, fund_sat
+                                )
                                 print(
                                     f"[Node] Dev signer created + funded (10k ABS): "
                                     f"{self.wallet.address}"
@@ -598,14 +597,13 @@ class NodeOrchestrator:
                                 from runtime.amount import to_satoshi
 
                                 fund_sat = int(to_satoshi(10_000))
-                                if hasattr(self.db, "balance_delta_satoshi"):
-                                    self.db.balance_delta_satoshi(
-                                        self.wallet.address, fund_sat
+                                if not hasattr(self.db, "balance_delta_satoshi"):
+                                    raise RuntimeError(
+                                        "satoshi_store_required_dev_signer_fund"
                                     )
-                                else:
-                                    self.db.update_balance(
-                                        self.wallet.address, 10_000.0
-                                    )
+                                self.db.balance_delta_satoshi(
+                                    self.wallet.address, fund_sat
+                                )
                             print(
                                 f"[Node] Dev signing wallet ready: {self.wallet.address} "
                                 f"(miner unchanged: {config.miner_address})"

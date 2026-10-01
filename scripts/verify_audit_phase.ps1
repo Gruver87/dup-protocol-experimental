@@ -279,9 +279,12 @@ function Verify-PhaseG {
     Assert-FileContains "features/ai_manager.py" "allow_float_fallback=False" "G AI fee refuse float"
     Assert-FileContains "bridge/abs_bridge.py" "satoshi_store_required" "G bridge refuse float fallback"
     Assert-FileContains "runtime/devnet_validators.py" "allow_float_fallback=False" "G devnet validators satoshi fund"
-    Run-Pytest "G unit: pool spend + wasm fee" @(
+    Assert-FileContains "core/components/state_service.py" "satoshi_store_required_credit" "G StateService credit refuse float"
+    Assert-FileContains "main.py" "satoshi_store_required_dev_signer_fund" "G dev signer refuse float fund"
+    Run-Pytest "G unit: pool spend + wasm fee + state credit" @(
         "tests/unit/test_devnet_pool_spend.py"
         "tests/unit/test_wave42_wasm_relayer.py"
+        "tests/unit/test_state_service_satoshi_credit.py"
     )
 }
 

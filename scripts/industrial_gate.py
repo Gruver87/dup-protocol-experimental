@@ -279,6 +279,11 @@ def _check_p2p_hardening() -> tuple[list[str], list[str]]:
         src = (ROOT / rel).read_text(encoding="utf-8")
         if "allow_float_fallback=False" not in src and "satoshi_store_required" not in src:
             errors.append(f"{rel} must refuse float money fallback")
+    ss = (ROOT / "core" / "components" / "state_service.py").read_text(encoding="utf-8")
+    if "satoshi_store_required_credit" not in ss:
+        errors.append("StateService._credit_sat must refuse float fallback")
+    if "update_balance(address, abs_delta)" in ss:
+        errors.append("StateService must not float-fallback credit via update_balance")
     if not (ROOT / "api" / "market_feed.py").is_file():
         errors.append("api/market_feed.py missing (ops market snapshot)")
     else:

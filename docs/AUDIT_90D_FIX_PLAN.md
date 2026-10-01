@@ -93,7 +93,7 @@
 - Docs honesty matches code  
 - No claim of soak unless pack exists  
 
-**Current focus:** Phase G extended — residual float money on pool-spend / WASM / AI fees / bridge else / devnet validators refused. Remaining without soak: **firm audit kickoff (org)** · E4 tip soak (operator-ordered only).
+**Current focus:** Phase G — StateService._credit_sat + dev-signer fund refuse float fallback. Remaining without soak: **firm audit kickoff (org)** · E4 tip soak (operator-ordered only).
 
 ---
 
