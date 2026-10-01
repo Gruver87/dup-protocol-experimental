@@ -180,16 +180,24 @@ class AIAgentManager:
             self.db.save_ai_agent(agent.to_db())
 
     def _charge_create_fee(self, owner: str) -> bool:
-        if (
-            not self.db
-            or not hasattr(self.db, "get_balance")
-            or not hasattr(self.db, "update_balance")
-        ):
+        if not self.db or not owner:
             return False
-        if self.db.get_balance(owner) < self.CREATE_FEE:
+        from runtime.amount import apply_store_delta_satoshi, to_satoshi
+
+        fee_sat = int(to_satoshi(self.CREATE_FEE))
+        if hasattr(self.db, "get_balance_satoshi"):
+            if int(self.db.get_balance_satoshi(owner) or 0) < fee_sat:
+                return False
+        elif hasattr(self.db, "get_balance"):
+            if self.db.get_balance(owner) < self.CREATE_FEE:
+                return False
+        else:
             return False
-        self.db.update_balance(owner, -self.CREATE_FEE)
-        return True
+        return bool(
+            apply_store_delta_satoshi(
+                self.db, owner, -fee_sat, allow_float_fallback=False
+            )
+        )
 
     def create_agent(self, name: str, owner: str,
                      agent_type: str = "transformer") -> Optional[str]:

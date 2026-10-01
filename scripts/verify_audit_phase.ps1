@@ -275,6 +275,14 @@ function Verify-PhaseG {
     Assert-FileContains "dynamic_sharding.py" "allow_float_fallback=False" "G sharding refuse float"
     Assert-FileContains "api/http.py" "satoshi_store_required" "G faucet refuse float"
     Assert-FileContains "consensus/cross_shard_coordinator.py" "allow_float_fallback=False" "G cross-shard refuse float"
+    Assert-FileContains "features/wasm_vm.py" "allow_float_fallback=False" "G wasm fee refuse float"
+    Assert-FileContains "features/ai_manager.py" "allow_float_fallback=False" "G AI fee refuse float"
+    Assert-FileContains "bridge/abs_bridge.py" "satoshi_store_required" "G bridge refuse float fallback"
+    Assert-FileContains "runtime/devnet_validators.py" "allow_float_fallback=False" "G devnet validators satoshi fund"
+    Run-Pytest "G unit: pool spend + wasm fee" @(
+        "tests/unit/test_devnet_pool_spend.py"
+        "tests/unit/test_wave42_wasm_relayer.py"
+    )
 }
 
 Write-Host "AUDIT 90D phase self-check (dup-protocol-experimental)" -ForegroundColor Cyan

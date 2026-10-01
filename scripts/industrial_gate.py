@@ -270,6 +270,15 @@ def _check_p2p_hardening() -> tuple[list[str], list[str]]:
     http_faucet = (ROOT / "api" / "http.py").read_text(encoding="utf-8")
     if "satoshi_store_required" not in http_faucet:
         errors.append("devnet faucet must refuse float update_balance fallback")
+    for rel in (
+        "features/wasm_vm.py",
+        "features/ai_manager.py",
+        "bridge/abs_bridge.py",
+        "runtime/devnet_validators.py",
+    ):
+        src = (ROOT / rel).read_text(encoding="utf-8")
+        if "allow_float_fallback=False" not in src and "satoshi_store_required" not in src:
+            errors.append(f"{rel} must refuse float money fallback")
     if not (ROOT / "api" / "market_feed.py").is_file():
         errors.append("api/market_feed.py missing (ops market snapshot)")
     else:

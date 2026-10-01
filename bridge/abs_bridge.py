@@ -250,8 +250,21 @@ class RustBridge:
                 tx_hash=tx_hash,
             )
         else:
-            self.db.update_balance(from_addr, -amount)
-            self.db.update_balance(self.config.burn_address, bridge_burn)
+            from runtime.amount import apply_store_delta_satoshi
+
+            burn_sats = int(to_satoshi(bridge_burn))
+            if not (
+                apply_store_delta_satoshi(
+                    self.db, from_addr, -amount_sats, allow_float_fallback=False
+                )
+                and apply_store_delta_satoshi(
+                    self.db,
+                    self.config.burn_address,
+                    burn_sats,
+                    allow_float_fallback=False,
+                )
+            ):
+                return {"error": "satoshi_store_required"}
             self.db.save_bridge_lock(from_addr, to_chain, to_addr, net_amount, tx_hash)
 
         if l1_tx_hash:
@@ -410,7 +423,13 @@ class RustBridge:
                     "credit_key": claim.get("credit_key"),
                 }
         else:
-            self.db.update_balance(recipient, amount)
+            from runtime.amount import apply_store_delta_satoshi, to_satoshi
+
+            credit_sats = int(to_satoshi(amount))
+            if not apply_store_delta_satoshi(
+                self.db, recipient, credit_sats, allow_float_fallback=False
+            ):
+                return {"confirmed": False, "error": "satoshi_store_required"}
             self.db.save_bridge_credit(
                 event_tx, recipient, amount, from_chain, log_index=int(log_index or 0)
             )

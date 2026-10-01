@@ -9593,7 +9593,7 @@ def _handle_devnet_pool_spend(body: Dict, bc, db, cfg, pool_locks) -> Dict:
     if amount <= 0:
         raise ValueError("amount must be positive")
 
-    from runtime.amount import money_abs
+    from runtime.amount import apply_store_delta_satoshi, from_satoshi_float, money_abs, to_satoshi
     from runtime.tokenomics import build_allocations, resolve_founder_address
 
     founder = resolve_founder_address(
@@ -9605,13 +9605,24 @@ def _handle_devnet_pool_spend(body: Dict, bc, db, cfg, pool_locks) -> Dict:
     if not from_addr:
         raise ValueError("pool address not found")
 
-    balance = money_abs(db.get_balance(from_addr), field="balance")
+    amount_sat = int(to_satoshi(amount))
+    if hasattr(db, "get_balance_satoshi"):
+        balance = float(from_satoshi_float(int(db.get_balance_satoshi(from_addr) or 0)))
+    else:
+        balance = money_abs(db.get_balance(from_addr), field="balance")
     allowed, reason = pool_locks.is_outgoing_allowed(from_addr, amount, balance)
     if not allowed:
         raise ValueError(reason)
 
-    db.update_balance(from_addr, -amount)
-    db.update_balance(to_addr, amount)
+    if not (
+        apply_store_delta_satoshi(
+            db, from_addr, -amount_sat, allow_float_fallback=False
+        )
+        and apply_store_delta_satoshi(
+            db, to_addr, amount_sat, allow_float_fallback=False
+        )
+    ):
+        raise ValueError("satoshi_store_required")
     pool_locks.record_outgoing(from_addr, amount)
 
     tx_hash = native.sha256_hex(
