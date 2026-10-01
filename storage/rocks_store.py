@@ -2056,13 +2056,16 @@ class RocksChainStore:
         from runtime.amount import from_satoshi_float, money_abs, to_satoshi
 
         burned = money_abs(burned_amount, field="burned")
-        total = from_satoshi_float(
-            to_satoshi(self.get_total_burned()) + to_satoshi(burned)
-        )
+        burned_sat = int(to_satoshi(burned))
+        prev_total = self.get_total_burned()
+        total_sat = int(to_satoshi(prev_total)) + burned_sat
+        total = from_satoshi_float(total_sat)
         row = {
             "block_height": int(block_height),
             "burned_amount": burned,
+            "burned_amount_satoshi": burned_sat,
             "total_burned": total,
+            "total_burned_satoshi": total_sat,
         }
         self._raw_put(kc.key_burn(int(block_height)), json.dumps(row).encode("utf-8"))
 
@@ -2073,7 +2076,7 @@ class RocksChainStore:
     def get_total_burned(self) -> float:
         # prefix_last is O(1); a full P_BURN scan grows with height and poisoned
         # both persist (_insert_burn_record) and GET /status after ~30h soak.
-        from runtime.amount import money_abs
+        from runtime.amount import from_satoshi_float, money_abs
 
         engine = self._engine
         last_kv = None
@@ -2088,6 +2091,8 @@ class RocksChainStore:
             row = self._loads_json_or_none(bytes(value), context="burn_total")
             if row is None:
                 return 0.0
+            if row.get("total_burned_satoshi") is not None:
+                return from_satoshi_float(int(row["total_burned_satoshi"]))
             return money_abs(row.get("total_burned", 0.0), field="total_burned")
         rows = self._scan_prefix(kc.P_BURN)
         if not rows:
@@ -2096,11 +2101,19 @@ class RocksChainStore:
         row = self._loads_json_or_none(last[1], context="burn_total")
         if row is None:
             return 0.0
+        if row.get("total_burned_satoshi") is not None:
+            return from_satoshi_float(int(row["total_burned_satoshi"]))
         return money_abs(row.get("total_burned", 0.0), field="total_burned")
 
     def get_burn_stats(self) -> Dict:
+        from runtime.amount import to_satoshi
+
         total = self.get_total_burned()
-        return {"total_burned": total, "burn_address": ""}
+        return {
+            "total_burned": total,
+            "total_burned_satoshi": int(to_satoshi(total)),
+            "burn_address": "",
+        }
 
     # ── block commit ──────────────────────────────────────────────────────
 

@@ -93,7 +93,7 @@
 - Docs honesty matches code  
 - No claim of soak unless pack exists  
 
-**Current focus:** NFT + lightning channel_state dual-write *_satoshi (SQLite + Rocks NFT). Firm kickoff shelf. E4 soak operator-only.
+**Current focus:** burn_stats dual-write *_satoshi (SQLite + Rocks). Firm kickoff shelf. E4 soak operator-only.
 
 ---
 

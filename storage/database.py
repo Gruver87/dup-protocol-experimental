@@ -164,6 +164,8 @@ class Database:
             ("nft_sales", "price_satoshi", "INTEGER"),
             ("lightning_channel_states", "balance1_satoshi", "INTEGER"),
             ("lightning_channel_states", "balance2_satoshi", "INTEGER"),
+            ("burn_stats", "burned_amount_satoshi", "INTEGER"),
+            ("burn_stats", "total_burned_satoshi", "INTEGER"),
             ("plasma_blocks", "merkle_root", "TEXT NOT NULL DEFAULT ''"),
             ("plasma_blocks", "tx_root",     "TEXT NOT NULL DEFAULT ''"),
         ]
@@ -213,6 +215,42 @@ class Database:
         self._backfill_validator_stake_satoshi()
         self._backfill_bridge_amount_satoshi()
         self._backfill_feature_amount_satoshi()
+        self._backfill_burn_satoshi()
+
+    def _backfill_burn_satoshi(self) -> None:
+        """Backfill burn_stats satoshi twins from float ABS (idempotent)."""
+        try:
+            from runtime.amount import to_satoshi
+
+            cols = {
+                row[1]
+                for row in self.conn.execute("PRAGMA table_info(burn_stats)").fetchall()
+            }
+            pairs = (
+                ("burned_amount", "burned_amount_satoshi"),
+                ("total_burned", "total_burned_satoshi"),
+            )
+            for abs_col, sat_col in pairs:
+                if sat_col not in cols or abs_col not in cols:
+                    continue
+                # INTEGER PRIMARY KEY (block_height) aliases rowid — select PK explicitly.
+                rows = self.conn.execute(
+                    f"SELECT block_height, {abs_col} FROM burn_stats "
+                    f"WHERE {sat_col} IS NULL"
+                ).fetchall()
+                for r in rows:
+                    sat = int(to_satoshi(r[abs_col] or 0))
+                    self.conn.execute(
+                        f"UPDATE burn_stats SET {sat_col}=? WHERE block_height=?",
+                        (sat, r["block_height"]),
+                    )
+                if rows:
+                    print(
+                        f"[DB] Migration: backfilled burn_stats.{sat_col} for {len(rows)} row(s)"
+                    )
+            self.conn.commit()
+        except Exception as e:
+            print(f"[DB] Migration burn satoshi backfill warning: {e}")
 
     def _backfill_feature_amount_satoshi(self) -> None:
         """Backfill sprout money satoshi columns from float ABS (idempotent)."""
@@ -1908,16 +1946,25 @@ class Database:
         from runtime.amount import from_satoshi_float, money_abs, to_satoshi
 
         burned = money_abs(burned_amount, field="burned")
+        burned_sat = int(to_satoshi(burned))
         prev = self.conn.execute(
-            "SELECT COALESCE(MAX(total_burned),0) as tb FROM burn_stats"
+            """SELECT COALESCE(MAX(total_burned),0) as tb,
+                      COALESCE(MAX(total_burned_satoshi),0) as tb_sat
+               FROM burn_stats"""
         ).fetchone()
-        total = from_satoshi_float(
-            to_satoshi(prev["tb"] if prev else 0) + to_satoshi(burned)
+        prev_sat = (
+            int(prev["tb_sat"])
+            if prev and prev["tb_sat"]
+            else int(to_satoshi(prev["tb"] if prev else 0))
         )
+        total_sat = prev_sat + burned_sat
+        total = from_satoshi_float(total_sat)
         self.conn.execute(
-            """INSERT OR REPLACE INTO burn_stats (block_height, burned_amount, total_burned)
-               VALUES (?,?,?)""",
-            (block_height, burned, total),
+            """INSERT OR REPLACE INTO burn_stats
+               (block_height, burned_amount, burned_amount_satoshi,
+                total_burned, total_burned_satoshi)
+               VALUES (?,?,?,?,?)""",
+            (block_height, burned, burned_sat, total, total_sat),
         )
 
     def record_burn(self, block_height: int, burned_amount: float) -> None:
@@ -1926,28 +1973,44 @@ class Database:
             self.conn.commit()
 
     def get_total_burned(self) -> float:
-        from runtime.amount import money_abs
+        from runtime.amount import from_satoshi_float, money_abs
 
         with self.lock:
             row = self.conn.execute(
-                "SELECT COALESCE(MAX(total_burned),0) as tb FROM burn_stats"
+                """SELECT total_burned, total_burned_satoshi FROM burn_stats
+                   ORDER BY block_height DESC LIMIT 1"""
             ).fetchone()
-            return money_abs(row["tb"] if row else 0, field="total_burned")
+            if row is None:
+                return 0.0
+            if row["total_burned_satoshi"] is not None:
+                return from_satoshi_float(int(row["total_burned_satoshi"]))
+            return money_abs(row["total_burned"] or 0, field="total_burned")
 
     def get_burn_stats(self) -> Dict:
-        from runtime.amount import money_abs
+        from runtime.amount import from_satoshi_float, money_abs, to_satoshi
 
         with self.lock:
             row = self.conn.execute(
                 """SELECT COUNT(*) as blocks_with_burn,
                           COALESCE(SUM(burned_amount),0) as total,
+                          COALESCE(SUM(burned_amount_satoshi),0) as total_sat,
                           COALESCE(AVG(burned_amount),0) as avg_per_block
                    FROM burn_stats"""
             ).fetchone()
+            blocks = int(row["blocks_with_burn"])
+            if row["total_sat"] and int(row["total_sat"]) > 0:
+                total_sat = int(row["total_sat"])
+                total = from_satoshi_float(total_sat)
+                avg = (total / blocks) if blocks else 0.0
+            else:
+                total = money_abs(row["total"] or 0, field="total_burned")
+                avg = money_abs(row["avg_per_block"] or 0, field="avg_per_block")
+                total_sat = int(to_satoshi(total))
             return {
-                "total_burned": money_abs(row["total"] or 0, field="total_burned"),
-                "avg_per_block": money_abs(row["avg_per_block"] or 0, field="avg_per_block"),
-                "blocks_with_burn": int(row["blocks_with_burn"]),
+                "total_burned": total,
+                "total_burned_satoshi": total_sat,
+                "avg_per_block": avg,
+                "blocks_with_burn": blocks,
             }
 
     # ── Мост (Cross-chain) ───────────────────────────────────────────────────
@@ -3260,14 +3323,17 @@ class Database:
 
     def get_cached_total_burned(self) -> Optional[float]:
         """Poll path: last burn_stats row only. None if the table is empty."""
-        from runtime.amount import money_abs
+        from runtime.amount import from_satoshi_float, money_abs
 
         with self.lock:
             row = self.conn.execute(
-                "SELECT total_burned FROM burn_stats ORDER BY block_height DESC LIMIT 1"
+                """SELECT total_burned, total_burned_satoshi FROM burn_stats
+                   ORDER BY block_height DESC LIMIT 1"""
             ).fetchone()
             if row is None:
                 return None
+            if row["total_burned_satoshi"] is not None:
+                return from_satoshi_float(int(row["total_burned_satoshi"]))
             return money_abs(row["total_burned"] if row else 0, field="total_burned")
 
     def get_total_supply(self) -> float:

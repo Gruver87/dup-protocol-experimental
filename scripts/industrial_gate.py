@@ -310,6 +310,13 @@ def _check_p2p_hardening() -> tuple[list[str], list[str]]:
         errors.append("rocks_store validators must dual-write stake_satoshi")
     if "price_satoshi" not in rocks_store_py:
         errors.append("rocks_store NFT paths must dual-write price_satoshi")
+    if "burned_amount_satoshi" not in rocks_store_py or "total_burned_satoshi" not in rocks_store_py:
+        errors.append("rocks_store burn ledger must dual-write satoshi")
+    if (
+        "_backfill_burn_satoshi" not in db_py
+        or '("burn_stats", "burned_amount_satoshi"' not in db_py
+    ):
+        errors.append("burn_stats must dual-write burned/total satoshi with backfill")
     rocks_bridge = rocks_store_py
     if '"amount_satoshi"' not in rocks_bridge or "balance_delta_satoshi(recipient" not in rocks_bridge:
         errors.append("rocks_store bridge paths must dual-write amount_satoshi / satoshi credit")

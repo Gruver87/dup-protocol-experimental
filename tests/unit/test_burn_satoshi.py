@@ -1,0 +1,75 @@
+"""Burn ledger dual-write burned_amount_satoshi / total_burned_satoshi."""
+
+from __future__ import annotations
+
+import os
+import sys
+import tempfile
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from runtime.amount import to_satoshi
+from storage.database import Database
+
+
+def _db():
+    fd, path = tempfile.mkstemp(suffix=".db")
+    os.close(fd)
+    db = Database(path)
+    db.initialize()
+    return db, path
+
+
+def test_record_burn_writes_satoshi():
+    db, path = _db()
+    try:
+        db.record_burn(1, 1.5)
+        db.record_burn(2, 0.5)
+        assert db.get_total_burned() == 2.0
+        stats = db.get_burn_stats()
+        assert stats["total_burned_satoshi"] == int(to_satoshi(2.0))
+        assert stats["blocks_with_burn"] == 2
+        row = db.conn.execute(
+            "SELECT burned_amount_satoshi, total_burned_satoshi "
+            "FROM burn_stats WHERE block_height=2"
+        ).fetchone()
+        assert int(row["burned_amount_satoshi"]) == int(to_satoshi(0.5))
+        assert int(row["total_burned_satoshi"]) == int(to_satoshi(2.0))
+        cached = db.get_cached_total_burned()
+        assert cached == 2.0
+    finally:
+        db.close()
+        os.remove(path)
+
+
+def test_burn_satoshi_backfill_from_legacy_float():
+    db, path = _db()
+    try:
+        db.conn.execute(
+            "INSERT INTO burn_stats (block_height, burned_amount, burned_amount_satoshi, "
+            "total_burned, total_burned_satoshi) VALUES (10, 3.25, NULL, 3.25, NULL)"
+        )
+        db.conn.commit()
+        db._backfill_burn_satoshi()
+        row = db.conn.execute(
+            "SELECT burned_amount_satoshi, total_burned_satoshi "
+            "FROM burn_stats WHERE block_height=10"
+        ).fetchone()
+        assert int(row["burned_amount_satoshi"]) == int(to_satoshi(3.25))
+        assert int(row["total_burned_satoshi"]) == int(to_satoshi(3.25))
+    finally:
+        db.close()
+        os.remove(path)
+
+
+def test_source_needles_burn_satoshi():
+    db_py = (ROOT / "storage" / "database.py").read_text(encoding="utf-8")
+    assert "_backfill_burn_satoshi" in db_py
+    assert '("burn_stats", "burned_amount_satoshi"' in db_py
+    assert "total_burned_satoshi" in db_py
+    rocks = (ROOT / "storage" / "rocks_store.py").read_text(encoding="utf-8")
+    assert "burned_amount_satoshi" in rocks
+    assert "total_burned_satoshi" in rocks
