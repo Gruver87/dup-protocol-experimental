@@ -159,6 +159,11 @@ class Database:
             ("lightning_payments", "amount_satoshi", "INTEGER"),
             ("lightning_payments", "fee_satoshi", "INTEGER"),
             ("lightning_htlcs", "amount_satoshi", "INTEGER"),
+            ("nft_tokens", "price_satoshi", "INTEGER"),
+            ("nft_offers", "price_satoshi", "INTEGER"),
+            ("nft_sales", "price_satoshi", "INTEGER"),
+            ("lightning_channel_states", "balance1_satoshi", "INTEGER"),
+            ("lightning_channel_states", "balance2_satoshi", "INTEGER"),
             ("plasma_blocks", "merkle_root", "TEXT NOT NULL DEFAULT ''"),
             ("plasma_blocks", "tx_root",     "TEXT NOT NULL DEFAULT ''"),
         ]
@@ -232,6 +237,16 @@ class Database:
                     (("amount", "amount_satoshi"), ("fee", "fee_satoshi")),
                 ),
                 ("lightning_htlcs", (("amount", "amount_satoshi"),)),
+                ("nft_tokens", (("price", "price_satoshi"),)),
+                ("nft_offers", (("price", "price_satoshi"),)),
+                ("nft_sales", (("price", "price_satoshi"),)),
+                (
+                    "lightning_channel_states",
+                    (
+                        ("balance1", "balance1_satoshi"),
+                        ("balance2", "balance2_satoshi"),
+                    ),
+                ),
             )
             for table, pairs in specs:
                 cols = {
@@ -2566,17 +2581,22 @@ class Database:
         return row
 
     def save_lightning_channel_state(self, st: Dict) -> None:
+        b1, b1_sat = self._abs_sat(st["balance1"], field="balance1")
+        b2, b2_sat = self._abs_sat(st["balance2"], field="balance2")
         with self.lock:
             self.conn.execute(
                 """INSERT OR REPLACE INTO lightning_channel_states
-                   (channel_id, version, balance1, balance2, state_hash,
+                   (channel_id, version, balance1, balance1_satoshi,
+                    balance2, balance2_satoshi, state_hash,
                     sig_node1, sig_node2, updated_at)
-                   VALUES (?,?,?,?,?,?,?,?)""",
+                   VALUES (?,?,?,?,?,?,?,?,?,?)""",
                 (
                     st["channel_id"],
                     int(st["version"]),
-                    money_abs(st["balance1"], field="balance1"),
-                    money_abs(st["balance2"], field="balance2"),
+                    b1,
+                    b1_sat,
+                    b2,
+                    b2_sat,
                     st["state_hash"],
                     st.get("sig_node1", ""),
                     st.get("sig_node2", ""),
@@ -2595,8 +2615,8 @@ class Database:
             if not row:
                 return None
             out = dict(row)
-            out["balance1"] = money_abs(out.get("balance1"), field="balance1")
-            out["balance2"] = money_abs(out.get("balance2"), field="balance2")
+            Database._overlay_sat(out, "balance1", "balance1_satoshi")
+            Database._overlay_sat(out, "balance2", "balance2_satoshi")
             return out
 
     # ── Plasma L2 (Wave 40 persistence) ─────────────────────────────────────
@@ -3030,12 +3050,13 @@ class Database:
     # ── NFT marketplace (Wave 46 persistence) ─────────────────────────────────
 
     def save_nft_token(self, token: Dict) -> None:
+        price, price_sat = self._abs_sat(token.get("price", 0), field="price")
         with self.lock:
             self.conn.execute(
                 """INSERT OR REPLACE INTO nft_tokens
                    (token_id, name, description, image_url, owner, creator,
-                    price, for_sale, created_at, metadata)
-                   VALUES (?,?,?,?,?,?,?,?,?,?)""",
+                    price, price_satoshi, for_sale, created_at, metadata)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
                 (
                     token["token_id"],
                     token.get("name", ""),
@@ -3043,7 +3064,8 @@ class Database:
                     token.get("image_url", ""),
                     token.get("owner", ""),
                     token.get("creator", ""),
-                    money_abs(token.get("price", 0), field="price"),
+                    price,
+                    price_sat,
                     1 if token.get("for_sale") else 0,
                     int(token.get("created_at", 0)),
                     json.dumps(token.get("metadata") or {}),
@@ -3057,32 +3079,38 @@ class Database:
             out = []
             for r in rows:
                 meta = self._loads_json(r["metadata"] or "{}", context="nft_token_meta", default={})
-                out.append({
+                row = {
                     "token_id": r["token_id"],
                     "name": r["name"],
                     "description": r["description"],
                     "image_url": r["image_url"],
                     "owner": r["owner"],
                     "creator": r["creator"],
-                    "price": money_abs(r["price"], field="price"),
+                    "price": r["price"],
+                    "price_satoshi": r["price_satoshi"] if "price_satoshi" in r.keys() else None,
                     "for_sale": bool(r["for_sale"]),
                     "created_at": r["created_at"],
                     "metadata": meta,
-                })
+                }
+                Database._overlay_sat(row, "price", "price_satoshi")
+                out.append(row)
             return out
 
     def save_nft_offer(self, offer: Dict) -> None:
+        price, price_sat = self._abs_sat(offer.get("price", 0), field="price")
         with self.lock:
             payload = {k: v for k, v in offer.items() if k != "offer_id"}
             self.conn.execute(
                 """INSERT OR REPLACE INTO nft_offers
-                   (offer_id, token_id, bidder, price, expires_at, status, created_at, payload)
-                   VALUES (?,?,?,?,?,?,?,?)""",
+                   (offer_id, token_id, bidder, price, price_satoshi, expires_at,
+                    status, created_at, payload)
+                   VALUES (?,?,?,?,?,?,?,?,?)""",
                 (
                     offer["offer_id"],
                     offer.get("token_id", ""),
                     offer.get("bidder", ""),
-                    money_abs(offer.get("price", 0), field="price"),
+                    price,
+                    price_sat,
                     int(offer.get("expires_at", 0)),
                     offer.get("status", "pending"),
                     int(offer.get("created_at", 0)),
@@ -3098,7 +3126,9 @@ class Database:
             for r in rows:
                 payload = self._loads_json(r["payload"] or "{}", context="nft_offer", default={})
                 row = {"offer_id": r["offer_id"], **(payload if isinstance(payload, dict) else {})}
-                row["price"] = money_abs(r["price"], field="price")
+                row["price"] = r["price"]
+                row["price_satoshi"] = r["price_satoshi"] if "price_satoshi" in r.keys() else None
+                Database._overlay_sat(row, "price", "price_satoshi")
                 out.append(row)
             return out
 
@@ -3108,7 +3138,9 @@ class Database:
             payload = {k: v for k, v in auction.items() if k != "auction_id"}
             for field in ("start_price", "reserve_price", "current_bid"):
                 if field in payload and payload[field] is not None:
-                    payload[field] = money_abs(payload[field], field=field)
+                    abs_v, sat_v = self._abs_sat(payload[field], field=field)
+                    payload[field] = abs_v
+                    payload[f"{field}_satoshi"] = sat_v
             self.conn.execute(
                 """INSERT OR REPLACE INTO nft_auctions
                    (auction_id, token_id, seller, status, ends_at, payload, created_at)
@@ -3134,21 +3166,23 @@ class Database:
                 row = {"auction_id": r["auction_id"], **(payload if isinstance(payload, dict) else {})}
                 for field in ("start_price", "reserve_price", "current_bid"):
                     if field in row and row[field] is not None:
-                        row[field] = money_abs(row[field], field=field)
+                        Database._overlay_sat(row, field, f"{field}_satoshi")
                 out.append(row)
             return out
 
     def save_nft_sale(self, sale: Dict) -> None:
+        price, price_sat = self._abs_sat(sale.get("price", 0), field="price")
         with self.lock:
             self.conn.execute(
                 """INSERT INTO nft_sales
-                   (token_id, from_addr, to_addr, price, sale_type, created_at)
-                   VALUES (?,?,?,?,?,?)""",
+                   (token_id, from_addr, to_addr, price, price_satoshi, sale_type, created_at)
+                   VALUES (?,?,?,?,?,?,?)""",
                 (
                     sale.get("token_id", ""),
                     sale.get("from", sale.get("from_addr", "")),
                     sale.get("to", sale.get("to_addr", "")),
-                    money_abs(sale.get("price", 0), field="price"),
+                    price,
+                    price_sat,
                     sale.get("type", sale.get("sale_type", "buy")),
                     int(sale.get("timestamp", sale.get("created_at", 0))),
                 ),
@@ -3156,22 +3190,33 @@ class Database:
             self.conn.commit()
 
     def get_nft_sales(self, limit: int = 100) -> List[Dict]:
+        from runtime.amount import to_satoshi
+
         with self.lock:
             rows = self.conn.execute(
                 "SELECT * FROM nft_sales ORDER BY created_at DESC LIMIT ?",
                 (int(limit),),
             ).fetchall()
-            return [
-                {
-                    "token_id": r["token_id"],
-                    "from": r["from_addr"],
-                    "to": r["to_addr"],
-                    "price": money_abs(r["price"], field="price"),
-                    "type": r["sale_type"],
-                    "timestamp": r["created_at"],
-                }
-                for r in rows
-            ]
+            out: List[Dict] = []
+            for r in rows:
+                price = money_abs(r["price"], field="price")
+                price_sat = (
+                    int(r["price_satoshi"])
+                    if ("price_satoshi" in r.keys() and r["price_satoshi"] is not None)
+                    else int(to_satoshi(price))
+                )
+                out.append(
+                    {
+                        "token_id": r["token_id"],
+                        "from": r["from_addr"],
+                        "to": r["to_addr"],
+                        "price": price,
+                        "price_satoshi": price_sat,
+                        "type": r["sale_type"],
+                        "timestamp": r["created_at"],
+                    }
+                )
+            return out
 
     # ── Метаданные (токеномика, конфиг) ─────────────────────────────────────
 

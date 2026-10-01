@@ -2665,16 +2665,23 @@ class RocksChainStore:
                 meta = {}
         row["metadata"] = meta if isinstance(meta, dict) else {}
         row["for_sale"] = bool(row.get("for_sale"))
-        from runtime.amount import money_abs
-        row["price"] = money_abs(row.get("price", 0), field="price")
+        from runtime.amount import money_abs, to_satoshi
+
+        abs_price = money_abs(row.get("price", 0), field="price")
+        row["price"] = abs_price
+        if row.get("price_satoshi") is None:
+            row["price_satoshi"] = int(to_satoshi(abs_price))
+        else:
+            row["price_satoshi"] = int(row["price_satoshi"])
         return row
 
     def save_nft_token(self, token: Dict) -> None:
-        from runtime.amount import money_abs
+        from runtime.amount import money_abs, to_satoshi
 
         tid = str(token.get("token_id", "") or "")
         if not tid:
             return
+        price = money_abs(token.get("price", 0), field="price")
         row = {
             "token_id": tid,
             "name": token.get("name", ""),
@@ -2682,7 +2689,8 @@ class RocksChainStore:
             "image_url": token.get("image_url", ""),
             "owner": token.get("owner", ""),
             "creator": token.get("creator", ""),
-            "price": money_abs(token.get("price", 0), field="price"),
+            "price": price,
+            "price_satoshi": int(to_satoshi(price)),
             "for_sale": bool(token.get("for_sale")),
             "created_at": int(token.get("created_at", 0) or 0),
             "metadata": token.get("metadata") or {},
@@ -2703,23 +2711,30 @@ class RocksChainStore:
         return out
 
     def _decode_nft_offer(self, raw: bytes) -> Optional[Dict]:
-        from runtime.amount import money_abs
+        from runtime.amount import money_abs, to_satoshi
 
         row = self._loads_json_or_none(raw, context="nft_offer")
         if row is None:
             return None
-        row["price"] = money_abs(row.get("price", 0), field="price")
+        price = money_abs(row.get("price", 0), field="price")
+        row["price"] = price
+        if row.get("price_satoshi") is None:
+            row["price_satoshi"] = int(to_satoshi(price))
+        else:
+            row["price_satoshi"] = int(row["price_satoshi"])
         return row
 
     def save_nft_offer(self, offer: Dict) -> None:
-        from runtime.amount import money_abs
+        from runtime.amount import money_abs, to_satoshi
 
         oid = str(offer.get("offer_id", "") or "")
         if not oid:
             return
         row = dict(offer)
         row["offer_id"] = oid
-        row["price"] = money_abs(row.get("price", 0), field="price")
+        price = money_abs(row.get("price", 0), field="price")
+        row["price"] = price
+        row["price_satoshi"] = int(to_satoshi(price))
         row["expires_at"] = int(row.get("expires_at", 0) or 0)
         row["created_at"] = int(row.get("created_at", 0) or 0)
         self._raw_put(
@@ -2738,18 +2753,24 @@ class RocksChainStore:
         return out
 
     def _decode_nft_auction(self, raw: bytes) -> Optional[Dict]:
-        from runtime.amount import money_abs
+        from runtime.amount import money_abs, to_satoshi
 
         row = self._loads_json_or_none(raw, context="nft_auction")
         if row is None:
             return None
         for field in ("start_price", "reserve_price", "current_bid"):
             if field in row and row[field] is not None:
-                row[field] = money_abs(row[field], field=field)
+                abs_v = money_abs(row[field], field=field)
+                row[field] = abs_v
+                sat_key = f"{field}_satoshi"
+                if row.get(sat_key) is None:
+                    row[sat_key] = int(to_satoshi(abs_v))
+                else:
+                    row[sat_key] = int(row[sat_key])
         return row
 
     def save_nft_auction(self, auction: Dict) -> None:
-        from runtime.amount import money_abs
+        from runtime.amount import money_abs, to_satoshi
 
         aid = str(auction.get("auction_id", "") or "")
         if not aid:
@@ -2760,7 +2781,9 @@ class RocksChainStore:
         row["created_at"] = int(row.get("created_at", 0) or 0)
         for field in ("start_price", "reserve_price", "current_bid"):
             if field in row and row[field] is not None:
-                row[field] = money_abs(row[field], field=field)
+                abs_v = money_abs(row[field], field=field)
+                row[field] = abs_v
+                row[f"{field}_satoshi"] = int(to_satoshi(abs_v))
         self._raw_put(
             kc.key_nft_auction(aid),
             json.dumps(row, ensure_ascii=False).encode("utf-8"),
@@ -2777,34 +2800,43 @@ class RocksChainStore:
         return out
 
     def _decode_nft_sale(self, raw: bytes) -> Optional[Dict]:
-        from runtime.amount import money_abs
+        from runtime.amount import money_abs, to_satoshi
 
         row = self._loads_json_or_none(raw, context="nft_sale")
         if row is None:
             return None
+        price = money_abs(row.get("price", 0), field="price")
+        price_sat = (
+            int(row["price_satoshi"])
+            if row.get("price_satoshi") is not None
+            else int(to_satoshi(price))
+        )
         return {
             "token_id": row.get("token_id", ""),
             "from": row.get("from", row.get("from_addr", "")),
             "to": row.get("to", row.get("to_addr", "")),
-            "price": money_abs(row.get("price", 0), field="price"),
+            "price": price,
+            "price_satoshi": price_sat,
             "type": row.get("type", row.get("sale_type", "buy")),
             "timestamp": int(row.get("timestamp", row.get("created_at", 0)) or 0),
         }
 
     def save_nft_sale(self, sale: Dict) -> None:
-        from runtime.amount import money_abs
+        from runtime.amount import money_abs, to_satoshi
 
         created_at = int(sale.get("timestamp", sale.get("created_at", 0)) or time.time())
         seq = int(sale.get("id", 0) or 0)
         if seq <= 0:
             seq = int(self.get_meta("nft_sale_seq", 0) or 0) + 1
             self.set_meta("nft_sale_seq", seq)
+        price = money_abs(sale.get("price", 0), field="price")
         row = {
             "id": seq,
             "token_id": sale.get("token_id", ""),
             "from": sale.get("from", sale.get("from_addr", "")),
             "to": sale.get("to", sale.get("to_addr", "")),
-            "price": money_abs(sale.get("price", 0), field="price"),
+            "price": price,
+            "price_satoshi": int(to_satoshi(price)),
             "type": sale.get("type", sale.get("sale_type", "buy")),
             "timestamp": created_at,
             "created_at": created_at,

@@ -119,9 +119,96 @@ def test_crypto_will_amount_satoshi():
         os.remove(path)
 
 
+def test_nft_and_channel_state_price_satoshi():
+    db, path = _db()
+    try:
+        db.save_nft_token(
+            {
+                "token_id": "t1",
+                "name": "n",
+                "description": "",
+                "image_url": "",
+                "owner": "0xo",
+                "creator": "0xc",
+                "price": 3.5,
+                "for_sale": True,
+                "created_at": 1,
+                "metadata": {},
+            }
+        )
+        tok = db.get_nft_tokens()[0]
+        assert tok["price_satoshi"] == int(to_satoshi(3.5))
+        db.save_nft_offer(
+            {
+                "offer_id": "o1",
+                "token_id": "t1",
+                "bidder": "0xb",
+                "price": 2.25,
+                "expires_at": 9,
+                "status": "pending",
+                "created_at": 2,
+            }
+        )
+        off = db.get_nft_offers()[0]
+        assert off["price_satoshi"] == int(to_satoshi(2.25))
+        db.save_nft_auction(
+            {
+                "auction_id": "a1",
+                "token_id": "t1",
+                "seller": "0xo",
+                "start_price": 1.0,
+                "reserve_price": 2.0,
+                "current_bid": 1.5,
+                "status": "active",
+                "ends_at": 99,
+                "created_at": 3,
+            }
+        )
+        auc = db.get_nft_auctions()[0]
+        assert auc["start_price_satoshi"] == int(to_satoshi(1.0))
+        assert auc["reserve_price_satoshi"] == int(to_satoshi(2.0))
+        assert auc["current_bid_satoshi"] == int(to_satoshi(1.5))
+        db.save_nft_sale(
+            {
+                "token_id": "t1",
+                "from": "0xo",
+                "to": "0xb",
+                "price": 3.5,
+                "type": "buy",
+                "timestamp": 4,
+            }
+        )
+        sale = db.get_nft_sales()[0]
+        assert sale["price_satoshi"] == int(to_satoshi(3.5))
+        db.save_lightning_channel_state(
+            {
+                "channel_id": "c1",
+                "version": 1,
+                "balance1": 7.0,
+                "balance2": 3.0,
+                "state_hash": "h",
+                "sig_node1": "",
+                "sig_node2": "",
+                "updated_at": 5,
+            }
+        )
+        st = db.get_lightning_channel_state("c1")
+        assert st is not None
+        assert st["balance1_satoshi"] == int(to_satoshi(7.0))
+        assert st["balance2_satoshi"] == int(to_satoshi(3.0))
+    finally:
+        db.close()
+        os.remove(path)
+
+
 def test_source_needles_feature_amount_satoshi():
     src = (ROOT / "storage" / "database.py").read_text(encoding="utf-8")
     assert "_backfill_feature_amount_satoshi" in src
     assert '("plasma_deposits", "amount_satoshi"' in src
     assert '("lightning_channels", "capacity_satoshi"' in src
     assert '("crypto_wills", "amount_satoshi"' in src
+    assert '("nft_tokens", "price_satoshi"' in src
+    assert '("lightning_channel_states", "balance1_satoshi"' in src
+    rocks = (ROOT / "storage" / "rocks_store.py").read_text(encoding="utf-8")
+    assert "price_satoshi" in rocks
+    assert 'f"{field}_satoshi"' in rocks

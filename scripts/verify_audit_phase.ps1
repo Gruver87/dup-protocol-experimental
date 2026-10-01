@@ -288,6 +288,9 @@ function Verify-PhaseG {
     Assert-FileContains "storage/database.py" "amount_satoshi" "G bridge amount_satoshi"
     Assert-FileContains "storage/database.py" "_backfill_feature_amount_satoshi" "G feature sprout satoshi backfill"
     Assert-FileContains "storage/database.py" "capacity_satoshi" "G lightning capacity_satoshi"
+    Assert-FileContains "storage/database.py" "price_satoshi" "G NFT price_satoshi"
+    Assert-FileContains "storage/database.py" "balance1_satoshi" "G lightning channel_state balance1_satoshi"
+    Assert-FileContains "storage/rocks_store.py" "price_satoshi" "G rocks NFT price_satoshi"
     Run-Pytest "G unit: pool spend + wasm fee + state credit + stake/bridge/feature satoshi" @(
         "tests/unit/test_devnet_pool_spend.py"
         "tests/unit/test_wave42_wasm_relayer.py"

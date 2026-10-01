@@ -299,13 +299,18 @@ def _check_p2p_hardening() -> tuple[list[str], list[str]]:
         or '("plasma_deposits", "amount_satoshi"' not in db_py
         or '("crypto_wills", "amount_satoshi"' not in db_py
         or '("lightning_channels", "capacity_satoshi"' not in db_py
+        or '("nft_tokens", "price_satoshi"' not in db_py
+        or '("lightning_channel_states", "balance1_satoshi"' not in db_py
     ):
-        errors.append("feature sprouts must dual-write plasma/lightning/will satoshi columns")
-    if "stake_satoshi" not in (ROOT / "storage" / "rocks_store.py").read_text(
-        encoding="utf-8"
-    ):
+        errors.append(
+            "feature sprouts must dual-write plasma/lightning/will/nft/channel_state satoshi"
+        )
+    rocks_store_py = (ROOT / "storage" / "rocks_store.py").read_text(encoding="utf-8")
+    if "stake_satoshi" not in rocks_store_py:
         errors.append("rocks_store validators must dual-write stake_satoshi")
-    rocks_bridge = (ROOT / "storage" / "rocks_store.py").read_text(encoding="utf-8")
+    if "price_satoshi" not in rocks_store_py:
+        errors.append("rocks_store NFT paths must dual-write price_satoshi")
+    rocks_bridge = rocks_store_py
     if '"amount_satoshi"' not in rocks_bridge or "balance_delta_satoshi(recipient" not in rocks_bridge:
         errors.append("rocks_store bridge paths must dual-write amount_satoshi / satoshi credit")
     if not (ROOT / "api" / "market_feed.py").is_file():

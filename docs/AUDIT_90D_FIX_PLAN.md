@@ -93,7 +93,7 @@
 - Docs honesty matches code  
 - No claim of soak unless pack exists  
 
-**Current focus:** feature sprouts (plasma/lightning/will) dual-write *_satoshi on SQLite persist. Firm kickoff shelf. E4 soak operator-only.
+**Current focus:** NFT + lightning channel_state dual-write *_satoshi (SQLite + Rocks NFT). Firm kickoff shelf. E4 soak operator-only.
 
 ---
 
