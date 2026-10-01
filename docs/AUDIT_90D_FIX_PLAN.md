@@ -110,7 +110,7 @@
 - Docs honesty matches code  
 - No claim of soak unless pack exists  
 
-**Current focus:** AI/MEV sprout harden + lab (`scripts/ai_lab.py`, `docs/sprouts/AI_LAB_PROFILE.md`) — ModelPort fail-closed, satoshi profit, off-node anomaly helper. Prod `feature_ai_*=false`. **Not** consensus / **not** soak / **not** firm PASS. Prior: thin SDK v0 (`sdk/dup_sdk`); Phase 5 [`phase5reverify2`](evidence/runs/phase5reverify2/). Next org = Phase 6 firm kickoff or E4 soak — operator-ordered only.
+**Current focus:** Phase 6 firm kickoff **prep** — [`EXTERNAL_AUDIT_ENGAGEMENT.md`](EXTERNAL_AUDIT_ENGAGEMENT.md) · [`FIRM_KICKOFF_CHECKLIST.md`](FIRM_KICKOFF_CHECKLIST.md) · pack [`phase6prep1`](evidence/runs/phase6prep1/). Experimental tip recorded `a978328`. **Not** firm PASS / **not** pen-test / **not** soak. Next human = NDA + schedule firm (2 tracker items still pending).
 
 ---
 
@@ -120,7 +120,7 @@
 |------|--------|--------|
 | H1 | `verify_audit_engagement_prep.ps1` / Phase H | Done — automated checklist live-eval PASS |
 | H2 | Human firm items remain pending | Honest — pen-test + third-party L1 audit still open |
-| H3 | Firm kickoff (NDA / schedule / evidence URLs) | Shelf — org only |
+| H3 | Firm kickoff (NDA / schedule / evidence URLs) | Shelf — org only · checklist [`FIRM_KICKOFF_CHECKLIST.md`](FIRM_KICKOFF_CHECKLIST.md) · pack [`phase6prep1`](evidence/runs/phase6prep1/) |
 
 **Not** firm audit PASS. **Not** soak.
 

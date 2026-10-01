@@ -26,13 +26,16 @@ Prefer the **pin** for firm scope. Experimental packs (libp2p / LR lab / EVM STR
 | Tree | Ref | SHA (object) |
 |------|-----|----------------|
 | Industrial pin | tag `v1.3.1339-tip-v2-industrial` | `3e91a5922277916636102aeacf111a16ac21b476` |
-| Experimental (this repo, tip at 2026-10-01 re-verify) | `main` | `98cd3ef` (record again at firm kickoff via `git rev-parse HEAD`) |
+| Experimental (this repo, Phase 6 prep refresh 2026-10-01) | `main` | `a9783285e82b3317b402ca4dcef746b441c66ed6` |
+
+Re-record Experimental SHA at firm kickoff: `git rev-parse HEAD`. Prep pack: [`evidence/runs/phase6prep1/`](evidence/runs/phase6prep1/). Human checklist: [`FIRM_KICKOFF_CHECKLIST.md`](FIRM_KICKOFF_CHECKLIST.md). Firm one-pager: [`AUDIT_ENGAGEMENT_BRIEF.md`](AUDIT_ENGAGEMENT_BRIEF.md).
 
 ### Evidence pack IDs to list in the engagement letter
 
 - Tip / industrial mesh: pin soak + Hybrid tip-v2 pack as labeled in [`EVIDENCE_MATRIX.md`](EVIDENCE_MATRIX.md)
 - Experimental (optional, label R&D): `ind48pass1`, `lp2pstrict1`, `evmstrict1`, `mempool48pass1`, `lrstrict1` (lab only)
 - Host lab re-verify (optional): `phase5reverify2` (oracle/shard/bridge OFF — **not** soak)
+- Phase 6 prep refresh: `phase6prep1` (**not** firm PASS)
 
 Operator self-check:
 
@@ -74,6 +77,10 @@ Operator self-check:
 - [ ] Ceremony dry-run completed; live ceremony still gated  
 - [ ] Contact: security@ / founder channel for findings  
 - [ ] NDA + scope signed; remote mesh access or sealed docker compose  
+
+Step-by-step human box: [`FIRM_KICKOFF_CHECKLIST.md`](FIRM_KICKOFF_CHECKLIST.md).  
+Copy-paste outreach draft: [`FIRM_OUTREACH_LETTER.md`](FIRM_OUTREACH_LETTER.md).  
+Print handoff: `.\scripts\print_firm_handoff.ps1`.  
 
 ---
 

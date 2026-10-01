@@ -21,7 +21,7 @@ This page is the **15-minute path**. Claims below map to **on-disk evidence pack
 | Tree | Role | What you can claim today |
 |------|------|--------------------------|
 | **Industrial pin** ([`dup-protocol`](https://github.com/Gruver87/dup-protocol)) | DUP Protocol audit-freeze · tag [`v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/dup-protocol/releases/tag/v1.3.1339-tip-v2-industrial) | Tip-v2 48h soak PASS · Phase 4 binder READY for **firm** engagement · **not** public mainnet |
-| **experimental** (this repo) | DUP Protocol R&D sandbox · libp2p / Long-Range / EVM depth / mempool Rust | Phases **1–5 closed** with packaged 48h evidence · next = **Phase 6 org** (external audit, ceremony live, secrets rotate) |
+| **experimental** (this repo) | DUP Protocol R&D sandbox · libp2p / Long-Range / EVM depth / mempool Rust | Phases **1–5 closed** with packaged 48h evidence · Phase 6 **prep** on disk (`phase6prep1`); firm kickoff / pen-test / L1 audit PDF still **org-open** |
 
 Hybrid stays freeze-safe. Experimental absorbs transport / Long-Range / EVM-depth risk. Do **not** conflate the two.
 
@@ -36,7 +36,7 @@ Hybrid stays freeze-safe. Experimental absorbs transport / Long-Range / EVM-dept
 | ABS ledger persist satoshi dual-write (AUDIT Phase G) | **Code+gate** — SQLite/Rocks twins for stake/bridge/sprouts/NFT/burn/tx+receipts; Phase G PASS; **not** a new soak |
 | Industrial R&D ceiling for this sandbox | **Reached** for Phases 1–5 — see [INDUSTRIAL_MAX_SCAN](INDUSTRIAL_MAX_SCAN_2026-09-20.md) |
 | Public audited mainnet / listed token / BLS prod | **Not claimed** |
-| External firm security audit PDF | **Pending** (Phase 6) |
+| External firm security audit PDF | **Pending** (Phase 6) — prep: [`FIRM_KICKOFF_CHECKLIST.md`](FIRM_KICKOFF_CHECKLIST.md) · outreach draft [`FIRM_OUTREACH_LETTER.md`](FIRM_OUTREACH_LETTER.md) · pack [`phase6prep1`](evidence/runs/phase6prep1/) · **not** firm PASS |
 
 **Bottom line for funds / ПВТ:** ready for **technical diligence on an industrial private mesh / R&D L1**. Not ready to claim **public audited mainnet**.
 

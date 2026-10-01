@@ -1,13 +1,15 @@
-# Security Policy — Experimental
+# Security Policy — DUP Protocol Experimental
 
 ## Supported versions
 
 | Version | Supported |
 |---------|-----------|
-| Latest `rd-X.Y.Z` tag on `main` | Yes (R&D snapshot) |
-| Hybrid `v1.3.*-industrial` tags | **Other repo** — [Ultimate Hybrid](https://github.com/Gruver87/dup-protocol) |
+| Latest `rd-X.Y.Z` / `main` on this repo | Yes (R&D snapshot) |
+| Industrial `v1.3.*-industrial` tags | **Other repo** — [`dup-protocol`](https://github.com/Gruver87/dup-protocol) |
 
 This repository is an **R&D sandbox** (libp2p / Long-Range / EVM depth). It is **not** a launched public mainnet, **not** the audit pin, and has **not** completed an independent external security audit.
+
+Firm engagement prep: [`docs/EXTERNAL_AUDIT_ENGAGEMENT.md`](docs/EXTERNAL_AUDIT_ENGAGEMENT.md) · [`docs/FIRM_KICKOFF_CHECKLIST.md`](docs/FIRM_KICKOFF_CHECKLIST.md).
 
 ## Reporting a vulnerability
 
@@ -16,7 +18,7 @@ This repository is an **R&D sandbox** (libp2p / Long-Range / EVM depth). It is *
    - [Open a private vulnerability report](https://github.com/Gruver87/dup-protocol-experimental/security/advisories/new)
    - Or contact the repository owner **Gruver87** via GitHub
 3. Include: affected tag/commit, reproduction steps, impact, and whether a fix is proposed.
-4. If the issue is in the industrial mesh / soak path, report it on **Hybrid** as well — do not assume Experimental is the pin.
+4. If the issue is in the industrial mesh / soak path, report it on **[`dup-protocol`](https://github.com/Gruver87/dup-protocol)** as well — do not assume Experimental is the pin.
 
 CI “Security checks” = dependency / supply-chain gates — **not** an independent external audit.
 
@@ -35,12 +37,13 @@ CI “Security checks” = dependency / supply-chain gates — **not** an indepe
 ## Cryptography
 
 Transaction ECDSA uses **`cryptography`** (OpenSSL), not `python-ecdsa`.
-Production-profile Hybrid requires Rust/PyO3 `abs_native`. Experimental libp2p is **opt-in** (`FEATURE_LIBP2P` / Cargo `libp2p`) and is **not** a drop-in for mesh mTLS.
+Production-profile requires Rust/PyO3 `abs_native` when `ABS_REQUIRE_NATIVE_CRYPTO` / prod mesh JSON says so.
 
 ## P2P
 
-- Default industrial transport remains **TCP+TLS**.
-- rust-libp2p labs must not disable TLS verification on the TCP+TLS path.
+- **Experimental prod mesh (`778888`)** default transport: **rust-libp2p Noise** (ADR 0020).
+- **Industrial pin** remains **TCP+TLS**.
+- Never disable TLS verification on HTTPS/API client paths.
 - Rate-limit inbound; semantic validation; soft-refuse (not hard bans as default).
 
 ## Pre-push check
@@ -54,7 +57,7 @@ python scripts/check_secrets.py
 - Dependabot: [`.github/dependabot.yml`](.github/dependabot.yml)
 - SBOM artifact on GitHub Release: `sbom-on-release.yml`
 - Release process: [docs/RELEASING.md](docs/RELEASING.md)
-- **Never** publish Experimental `abs_native` wheels to PyPI (would collide with Hybrid).
+- **Never** publish Experimental `abs_native` wheels to PyPI (would collide with the pin).
 
 ## If a secret was committed
 

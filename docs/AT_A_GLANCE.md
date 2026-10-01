@@ -67,7 +67,8 @@ Full map: [ARCHITECTURE § R&D execution chain](ARCHITECTURE.md#rd-execution-cha
 ## Next click
 
 - **Funds / investors / ПВТ** → [DILIGENCE_BRIEF.md](DILIGENCE_BRIEF.md) (15 min) · [FUND_READINESS.md](FUND_READINESS.md)
-- **Next click** → [EXECUTION_ORDER.md](EXECUTION_ORDER.md) — Phases 1–5 closed (+ host re-verify [`phase5reverify2`](evidence/runs/phase5reverify2/)); next Phase 6 org · **AUDIT 90D A–H:** [AUDIT_90D_FIX_PLAN.md](AUDIT_90D_FIX_PLAN.md) · `.\scripts\verify_audit_90d_all.ps1`
+- **Next click** → **Phase 6 firm kickoff** — [FIRM_KICKOFF_CHECKLIST.md](FIRM_KICKOFF_CHECKLIST.md) · [EXTERNAL_AUDIT_ENGAGEMENT.md](EXTERNAL_AUDIT_ENGAGEMENT.md) · prep pack [`phase6prep1`](evidence/runs/phase6prep1/) · `.\scripts\verify_audit_engagement_prep.ps1` (**not** firm PASS)
+- **Pipeline** → [EXECUTION_ORDER.md](EXECUTION_ORDER.md) — Phases 1–5 closed (+ [`phase5reverify2`](evidence/runs/phase5reverify2/)); **AUDIT 90D A–H:** [AUDIT_90D_FIX_PLAN.md](AUDIT_90D_FIX_PLAN.md) · `.\scripts\verify_audit_90d_all.ps1`
 - **Thin operator SDK v0** → [`sdk/README.md`](../sdk/README.md) (`sdk/dup_sdk`) — status/health/balance_satoshi/tx submit; `python scripts/dup_sdk_lab.py`. **Not** mainnet / **not** pin / **not** wallet custody
 - **AI/MEV lab sprouts** → [`sprouts/AI_LAB_PROFILE.md`](sprouts/AI_LAB_PROFILE.md) — `python scripts/ai_lab.py` · `python scripts/ai_ops_anomaly.py`. Prod flags stay **false**. **Not** consensus / **not** soak
 - Hybrid pin (do not break): [`dup-protocol`](https://github.com/Gruver87/dup-protocol)

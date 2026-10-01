@@ -25,7 +25,10 @@ $required = @(
     "docs/adr/0023-absolute-vm-opcode-map.md",
     "docs/DEMO_RUNBOOK.md",
     "docs/CEREMONY_DRY_RUN.md",
-    "docs/INCIDENT_RESPONSE.md"
+    "docs/INCIDENT_RESPONSE.md",
+    "docs/FIRM_KICKOFF_CHECKLIST.md",
+    "docs/AUDIT_ENGAGEMENT_BRIEF.md",
+    "docs/FIRM_OUTREACH_LETTER.md"
 )
 foreach ($rel in $required) {
     if (-not (Test-Path $rel)) {

@@ -1,12 +1,17 @@
-# Audit engagement brief — Absolute Blockchain Ultimate Hybrid
+# Audit engagement brief — DUP Protocol (firm one-pager)
 
-**One-pager for external security firms.**  
-**Product:** Absolute Blockchain Ultimate Hybrid (Python + Rust L1)  
-**Repo:** https://github.com/Gruver87/dup-protocol  
+**Org:** DUP Labs · **Product:** DUP Protocol  
+**Author:** Uladzimir Dabranski (D.U.P.)  
+**Primary audit pin:** https://github.com/Gruver87/dup-protocol  
 **Pin tag:** `v1.3.1339-tip-v2-industrial`  
 **Pin commit:** `git rev-list -n 1 v1.3.1339-tip-v2-industrial`  
-**Date:** 2026-08-07  
-**Owner:** Gruver87 (Uladzimir Dabranski)
+**R&D sandbox (optional appendix):** https://github.com/Gruver87/dup-protocol-experimental  
+**Date (prep refresh):** 2026-10-01  
+**Owner:** Gruver87
+
+**Honesty:** This brief is for **firm kickoff**. It is **not** an audit report and **not** a soak claim. Prefer the **pin** for scope; Experimental packs are R&D evidence — label them as such.
+
+Formerly: Absolute Blockchain Ultimate Hybrid (historical alias in sealed packs).
 
 ---
 
@@ -14,13 +19,13 @@
 
 Prod-profile chain **`778888`** (3-node Docker mesh, tip encoding v2 `b_satoshi`, RocksDB, native crypto required, bridge **OFF**).
 
-Full scope letter: [AUDIT_SCOPE.md](AUDIT_SCOPE.md) · threat model: [THREAT_MODEL.md](THREAT_MODEL.md) · status: [AUDITS.md](AUDITS.md).
+Full scope: [AUDIT_SCOPE.md](AUDIT_SCOPE.md) · threat model: [THREAT_MODEL.md](THREAT_MODEL.md) · status: [AUDITS.md](AUDITS.md) · letter: [EXTERNAL_AUDIT_ENGAGEMENT.md](EXTERNAL_AUDIT_ENGAGEMENT.md) · human checklist: [FIRM_KICKOFF_CHECKLIST.md](FIRM_KICKOFF_CHECKLIST.md).
 
 ### In scope (summary)
 
 1. Consensus tip path (import, tip-safety enforce, Path A catch-up, fork reconcile)  
-2. State / money (satoshi storage + tip v2 apply / fees / gas / reward)  
-3. P2P TLS/mTLS mesh honesty (rate limits, soft-refuse, state_root solicit)  
+2. State / money (satoshi storage + tip v2 apply / fees / gas / reward; ABS ledger persist dual-write)  
+3. P2P mesh honesty (pin: TCP+TLS; Experimental default: libp2p Noise — label transport per tree)  
 4. API / RPC (JWT admin, API keys, mempool-only contract deploy in prod)  
 5. RocksDB prod path + DR rehearsal scripts  
 6. `abs_native` hot-path crypto (`ABS_REQUIRE_NATIVE_CRYPTO`)  
@@ -31,9 +36,9 @@ Full scope letter: [AUDIT_SCOPE.md](AUDIT_SCOPE.md) · threat model: [THREAT_MOD
 | Item | Why |
 |------|-----|
 | Bridge ON / L1 lock-mint | Disabled until separate cutover |
-| Sharding / L2 / ZK / PQ / Lightning / Plasma / WASM | R&D; FEATURE_* off on prod |
+| Sharding / L2 / ZK / PQ / Lightning / Plasma / WASM / AI forge | R&D; FEATURE_* off on prod |
 | Full Ethereum client compatibility | EVM subset only |
-| Tip proof / Long-Range / libp2p rewrite | Not claimed |
+| Tip proof / Long-Range on prod JSON | Not claimed (`feature_long_range=false`) |
 | Public mainnet ops / listing / legal | Organizational |
 | `finality_quorum_live=true` marketing | Quorum not live-proven |
 
@@ -41,22 +46,22 @@ Full scope letter: [AUDIT_SCOPE.md](AUDIT_SCOPE.md) · threat model: [THREAT_MOD
 
 ## Evidence pack (start here)
 
-| Artifact | Path |
-|----------|------|
-| Static audit zip | `logs/audit_pack_20260807.zip` (operator-local; regenerate: `.\scripts\export_audit_pack.ps1`) |
-| Tip-v2 **48h soak PASS** | `docs/evidence/runs/375d14f/` (`passed=true`, fail=0, mesh_warn=0, Aug 5–7 2026) |
-| Phase 3 ops dry-run PASS | `docs/evidence/runs/phase3-da25c34/` |
+| Artifact | Path / note |
+|----------|-------------|
+| Industrial freeze | pin tag `v1.3.1339-tip-v2-industrial` |
+| Tip-v2 **48h soak PASS** (Hybrid/pin tree) | `docs/evidence/runs/375d14f/` (or pin equivalent) |
 | Phase 4 binder READY | `docs/evidence/runs/phase4-691329c/` |
+| Experimental R&D packs (optional, label R&D) | `ind48pass1`, `lp2pstrict1`, `evmstrict1`, `mempool48pass1`, `lrstrict1` |
+| Phase 6 prep refresh | [`evidence/runs/phase6prep1/`](evidence/runs/phase6prep1/) |
 | Ledger | [EVIDENCE_MATRIX.md](EVIDENCE_MATRIX.md) |
-| Industrial runbook | [INDUSTRIAL_HARDEN_RUNBOOK.md](INDUSTRIAL_HARDEN_RUNBOOK.md) |
-
-**Honesty:** Jul float-tip 48h PASS is separate/historical. Aug 2–4 tip-v2 soak FAIL is historical only (superseded by Aug 5–7 PASS). Do **not** treat `soak_report_tipv2_48h.json` (no `_rerun`) as current claim.
 
 ---
 
-## Reproduce locally (Windows)
+## Reproduce locally (Windows) — **pin** preferred
 
 ```powershell
+git clone https://github.com/Gruver87/dup-protocol.git
+cd dup-protocol
 git fetch --tags
 git checkout v1.3.1339-tip-v2-industrial
 pip install -r requirements.txt
@@ -67,16 +72,24 @@ python scripts/bridge_off_audit_gate.py
 .\scripts\export_audit_pack.ps1
 ```
 
-Optional live mesh (operator machine): `.\scripts\docker_prod_3node.ps1 -KeepVolumes` then `.\scripts\probe_prod_mesh.ps1 -Quick`.
+Optional live mesh: `.\scripts\docker_prod_3node.ps1 -KeepVolumes` then `.\scripts\probe_prod_mesh.ps1 -Quick`.
+
+Experimental appendix (not a substitute for pin scope):
+
+```powershell
+git clone https://github.com/Gruver87/dup-protocol-experimental.git
+cd dup-protocol-experimental
+.\scripts\verify_audit_engagement_prep.ps1
+```
 
 ---
 
 ## Deliverables we need from you
 
 1. Written report with severity ratings  
-2. Reproduction notes against **this tag**  
+2. Reproduction notes against **the pin tag**  
 3. Explicit statement that tip-v2 + satoshi apply path were in the reviewed build  
-4. PDF under agreed path → we place at `audits/<firm>/report.pdf`
+4. PDF under agreed path → `audits/<firm>/report.pdf` (pin repo preferred)
 
 ---
 
@@ -84,9 +97,9 @@ Optional live mesh (operator machine): `.\scripts\docker_prod_3node.ps1 -KeepVol
 
 - “Audited” / “mainnet-ready” / listed ABS  
 - Closing tracker items *External penetration test* and *Third-party L1/SC audit*  
-- Public testnet DNS/TLS go-live (Phase 5)
+- Public testnet DNS/TLS go-live as security proof  
 
-Tracker: `python scripts/external_audit_tracker.py --list` (currently **6/8**; 2 firm-owned open).
+Tracker (Experimental tree): `python scripts/external_audit_tracker.py --list` — **6/8** automated; **2** firm-owned open.
 
 ---
 
