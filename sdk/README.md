@@ -1,6 +1,6 @@
-# DUP Protocol thin operator SDK (experimental v0)
+# DUP Protocol thin operator SDK (experimental v0.1)
 
-**Package:** `sdk/dup_sdk`  
+**Package:** `sdk/dup_sdk` · **Version:** 0.1.1  
 **Audience:** operators / diligence / scripts on **dup-protocol-experimental**  
 **Not:** public audited mainnet · industrial pin official SDK · wallet custody · full geth
 
@@ -18,12 +18,29 @@ python -c "from sdk.dup_sdk import Client, HONESTY; print(HONESTY)"
 ```python
 from sdk.dup_sdk import Client
 
-c = Client("http://127.0.0.1:18180", api_key=None)  # TLS verify always on
+# TLS verify always on. Auth optional for public GETs; required for many POSTs / eth_* on prod mesh.
+c = Client(
+    "http://127.0.0.1:18180",
+    api_key=None,           # X-API-Key (RPC_API_KEYS)
+    bearer_token=None,      # Authorization: Bearer <admin JWT or RPC key>
+)
 print(c.health_live())
 print(c.status_probe())
 print(c.get_balance_satoshi("0x..."))
-print(c.get_block_number())
+print(c.get_block_number())  # may 401 without bearer/api_key on jwt_enforce mesh
 ```
+
+### Auth from env (preferred)
+
+```powershell
+$env:DUP_SDK_BASE_URL = "http://127.0.0.1:18180"
+$env:DUP_SDK_API_KEY = "<rpc-key>"          # or RPC_API_KEYS
+$env:DUP_SDK_BEARER = "<admin-jwt-or-key>"  # or DUP_SDK_JWT / ABS_ADMIN_JWT
+# Mint admin JWT (needs JWT_SECRET): python scripts/mint_admin_jwt.py
+python -c "from sdk.dup_sdk import Client; c=Client.from_env(); print(c.auth_configured(), c.get_block_number())"
+```
+
+Never hardcode secrets in source. Placeholder strings (`changeme`, `secret`, …) are refused.
 
 ## Money honesty
 
@@ -56,10 +73,12 @@ python scripts/dup_sdk_lab.py
 python scripts/dup_sdk_lab.py --base-url http://127.0.0.1:18180
 ```
 
-Offline self-check always runs. Live mesh is optional — **not** a soak claim.
+Offline self-check always runs. Live mesh is optional — **not** a soak claim.  
+If `DUP_SDK_BEARER` / `RPC_API_KEYS` are set, lab retries `eth_blockNumber` with auth.
 
 ## Related
 
 - Node HTTP: `api/http.py`
+- JWT mint: `scripts/mint_admin_jwt.py`
 - AUDIT money cascade: `docs/AUDIT_90D_FIX_PLAN.md` Phase G
 - Pin (do not confuse): https://github.com/Gruver87/dup-protocol

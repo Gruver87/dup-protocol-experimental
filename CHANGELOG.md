@@ -15,6 +15,8 @@ Canonical language for this repository is **English**. Older inherited entries b
 
 ### Experimental R&D
 
+- **Thin operator SDK v0.1.1 (2026-10-01):** `bearer_token` / `Client.from_env()` (`DUP_SDK_BEARER` / `DUP_SDK_API_KEY` / `RPC_API_KEYS`); placeholder secrets refused. Fixes prod-mesh eth_* auth wiring without inventing tokens. **Not** wallet custody / **not** mainnet / **not** PyPI.
+
 - **Phase 6 firm kickoff prep (2026-10-01):** pack [`docs/evidence/runs/phase6prep1/`](docs/evidence/runs/phase6prep1/) — SHA `a978328` recorded; [`FIRM_KICKOFF_CHECKLIST.md`](docs/FIRM_KICKOFF_CHECKLIST.md); outreach draft [`FIRM_OUTREACH_LETTER.md`](docs/FIRM_OUTREACH_LETTER.md); `.\scripts\print_firm_handoff.ps1`; DUP-branded [`AUDIT_ENGAGEMENT_BRIEF.md`](docs/AUDIT_ENGAGEMENT_BRIEF.md); SECURITY.md honesty (Experimental Noise vs pin TLS). **Not** firm PASS / **not** pen-test / **not** soak. Human tracker items still pending (2/8).
 - **AI/MEV sprout harden (2026-10-01):** optional `ModelPort` (`features/ai_ports.py`); satoshi-honest AI profit + validator stake; off-node `scripts/ai_ops_anomaly.py`; lab `scripts/ai_lab.py` + [`docs/sprouts/AI_LAB_PROFILE.md`](docs/sprouts/AI_LAB_PROFILE.md). Prod `feature_ai_agents` / `feature_ai_validator` / `feature_mev` stay **false**. **Not** consensus-wired / **not** soak / **not** mainnet.
 - **Thin operator SDK v0 (2026-10-01):** `sdk/dup_sdk` — Python client for status/health/balance_satoshi/block/receipt/submit_signed_tx; TLS verify on; float-only money → `MoneyRefuse`. Units `tests/unit/test_dup_sdk.py`; lab `python scripts/dup_sdk_lab.py`. **Not** mainnet / **not** industrial pin SDK / **not** wallet custody / **not** PyPI.

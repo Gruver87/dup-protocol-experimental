@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""dup_sdk lab — offline self-check; optional live mesh probe.
+"""dup_sdk lab - offline self-check; optional live mesh probe.
 
 NOT soak / NOT mainnet / NOT firm audit PASS.
 """
@@ -7,6 +7,7 @@ NOT soak / NOT mainnet / NOT firm audit PASS.
 from __future__ import annotations
 
 import argparse
+import os
 import socket
 import sys
 from pathlib import Path
@@ -49,7 +50,37 @@ def offline_self_check() -> None:
         raise AssertionError("expected verify_tls refuse")
     except ValueError:
         pass
+    try:
+        Client("http://127.0.0.1:9", bearer_token="changeme")
+        raise AssertionError("expected placeholder bearer refuse")
+    except ValueError:
+        pass
+    # from_env without URL must refuse
+    os.environ.pop("DUP_SDK_BASE_URL", None)
+    os.environ.pop("ABS_SDK_BASE_URL", None)
+    try:
+        Client.from_env()
+        raise AssertionError("expected from_env missing base refuse")
+    except ValueError:
+        pass
+    os.environ["DUP_SDK_BASE_URL"] = "http://127.0.0.1:18180"
+    os.environ["DUP_SDK_BEARER"] = "lab-test-token-not-for-prod"
+    c = Client.from_env()
+    assert c.auth_configured() is True
+    assert c.bearer_token == "lab-test-token-not-for-prod"
+    os.environ.pop("DUP_SDK_BEARER", None)
+    os.environ.pop("DUP_SDK_BASE_URL", None)
     print("OK: offline self-check", HONESTY, f"v{__version__}")
+
+
+def _client_for_live(base_url: str) -> Client:
+    """Prefer env auth when present; never print secret values."""
+    os.environ.setdefault("DUP_SDK_BASE_URL", base_url)
+    try:
+        c = Client.from_env(base_url=base_url)
+    except ValueError:
+        c = Client(base_url)
+    return c
 
 
 def live_probe(base_url: str) -> None:
@@ -57,14 +88,19 @@ def live_probe(base_url: str) -> None:
     host = parsed.hostname or "127.0.0.1"
     port = int(parsed.port or (443 if parsed.scheme == "https" else 80))
     if not _port_open(host, port):
-        print(f"SKIP: live probe — {host}:{port} not open")
+        print(f"SKIP: live probe - {host}:{port} not open")
         return
-    c = Client(base_url)
+    c = _client_for_live(base_url)
+    print(
+        "INFO: auth_configured=",
+        c.auth_configured(),
+        "(set DUP_SDK_BEARER / DUP_SDK_API_KEY / RPC_API_KEYS for eth_*)",
+    )
     live = c.health_live()
-    print("OK: health_live", live.get("live", live.get("ok", live)))
+    print("OK: health_live", live.get("live", live.get("ok", live.get("status", live))))
     try:
         ready = c.health_ready()
-        print("OK: health_ready", ready.get("ready", ready))
+        print("OK: health_ready", ready.get("ready", ready.get("status", ready)))
     except Exception as exc:
         print(f"WARN: health_ready: {exc}")
     try:
@@ -77,6 +113,18 @@ def live_probe(base_url: str) -> None:
         print("OK: block_number", tip)
     except Exception as exc:
         print(f"WARN: block_number: {exc}")
+        msg = str(exc).lower()
+        if "jwt required" in msg or "401" in msg:
+            print(
+                "HINT: HTTP POST / on prod mesh needs admin JWT "
+                "(X-API-Key alone is not enough when jwt_enforce_admin). "
+                "Mint: python scripts/mint_admin_jwt.py  then "
+                "$env:DUP_SDK_BEARER = <token>"
+            )
+        elif not c.auth_configured():
+            print(
+                "HINT: set DUP_SDK_BEARER / DUP_SDK_API_KEY / RPC_API_KEYS for eth_*"
+            )
     print("honesty: live probe is NOT a soak claim")
 
 
@@ -88,20 +136,19 @@ def main() -> int:
         help="optional node base URL for live probe (e.g. http://127.0.0.1:18180)",
     )
     args = ap.parse_args()
-    print("dup_sdk_lab — NOT soak / NOT mainnet / NOT firm PASS")
+    print("dup_sdk_lab - NOT soak / NOT mainnet / NOT firm PASS")
     offline_self_check()
     if args.base_url.strip():
         live_probe(args.base_url.strip())
     else:
-        # default mesh ports if listening
         for port in (18180, 18181, 18182):
             url = f"http://127.0.0.1:{port}"
             if _port_open("127.0.0.1", port):
-                print(f"INFO: port {port} open — probing {url}")
+                print(f"INFO: port {port} open - probing {url}")
                 live_probe(url)
                 break
         else:
-            print("SKIP: no live mesh ports 18180–18182")
+            print("SKIP: no live mesh ports 18180-18182")
     print("RESULT: PASS dup_sdk_lab")
     return 0
 

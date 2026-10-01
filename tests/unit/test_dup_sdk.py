@@ -233,3 +233,48 @@ def test_http_error_surface():
         with pytest.raises(HttpError) as ei:
             c.health_live()
         assert ei.value.status == 503
+
+def test_bearer_and_api_key_headers():
+    c = Client(
+        "http://127.0.0.1:18180",
+        api_key="rpc-key-abc",
+        bearer_token="jwt-or-key-xyz",
+    )
+    assert c.auth_configured() is True
+    seen = {}
+
+    def fake_urlopen(req, timeout=None, context=None):
+        seen["Authorization"] = req.get_header("Authorization")
+        seen["X-API-Key"] = req.headers.get("X-api-key") or req.headers.get("X-API-Key")
+        return _FakeResp({"jsonrpc": "2.0", "id": 1, "result": "0x2a"})
+
+    with mock.patch("urllib.request.urlopen", fake_urlopen):
+        assert c.get_block_number() == 42
+    assert seen["Authorization"] == "Bearer jwt-or-key-xyz"
+    assert seen["X-API-Key"] == "rpc-key-abc"
+
+
+def test_placeholder_bearer_refused():
+    with pytest.raises(ValueError, match="placeholder"):
+        Client("http://127.0.0.1:18180", bearer_token="changeme")
+
+
+def test_from_env_loads_auth(monkeypatch):
+    monkeypatch.setenv("DUP_SDK_BASE_URL", "http://127.0.0.1:18180")
+    monkeypatch.setenv("DUP_SDK_API_KEY", "k1")
+    monkeypatch.setenv("DUP_SDK_BEARER", "b1")
+    c = Client.from_env()
+    assert c.api_key == "k1"
+    assert c.bearer_token == "b1"
+    assert c.auth_configured() is True
+
+
+def test_from_env_rpc_api_keys_first(monkeypatch):
+    monkeypatch.setenv("DUP_SDK_BASE_URL", "http://127.0.0.1:18180")
+    monkeypatch.delenv("DUP_SDK_API_KEY", raising=False)
+    monkeypatch.delenv("DUP_SDK_BEARER", raising=False)
+    monkeypatch.delenv("DUP_SDK_JWT", raising=False)
+    monkeypatch.delenv("ABS_ADMIN_JWT", raising=False)
+    monkeypatch.setenv("RPC_API_KEYS", "first-key,second-key")
+    c = Client.from_env()
+    assert c.api_key == "first-key"

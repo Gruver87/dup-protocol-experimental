@@ -18,6 +18,34 @@ from .amount import (
 from .errors import HttpError, MoneyRefuse, RpcError
 from .types import BalanceInfo, JsonDict, ReceiptInfo, TxSubmitResult
 
+_PLACEHOLDER_SECRETS = frozenset(
+    {
+        "",
+        "changeme",
+        "secret",
+        "jwt_secret",
+        "your-jwt-secret",
+        "placeholder",
+        "xxx",
+        "todo",
+        "tbd",
+    }
+)
+
+
+def _clean_secret(value: Optional[str]) -> Optional[str]:
+    """Strip and refuse empty / obvious placeholders (fail-closed DX)."""
+    if value is None:
+        return None
+    s = str(value).strip()
+    if not s:
+        return None
+    if s.lower() in _PLACEHOLDER_SECRETS:
+        raise ValueError(
+            "placeholder secret refused (set a real JWT / RPC key via env or mint)"
+        )
+    return s
+
 
 class Client:
     """Thin operator client (TLS verify on; satoshi-honest money).
@@ -28,7 +56,11 @@ class Client:
         Node HTTP base, e.g. ``http://127.0.0.1:18180`` (REST + JSON-RPC share host;
         JSON-RPC uses ``rpc_path``, default ``/``).
     api_key:
-        Optional ``X-API-Key`` for RPC/REST auth.
+        Optional ``X-API-Key`` for RPC auth (``RPC_API_KEYS``).
+    bearer_token:
+        Optional ``Authorization: Bearer …`` — admin JWT **or** RPC API key
+        (node accepts Bearer for both JWT-enforced HTTP POSTs and RPC key auth).
+        Prefer env / ceremony mint — never hardcode in source.
     timeout:
         Socket timeout seconds.
     verify_tls:
@@ -42,6 +74,7 @@ class Client:
         base_url: str,
         *,
         api_key: Optional[str] = None,
+        bearer_token: Optional[str] = None,
         timeout: float = 30.0,
         verify_tls: bool = True,
         rpc_path: str = "/",
@@ -51,11 +84,67 @@ class Client:
                 "verify_tls=False is refused (dup_sdk fail-closed; no insecure TLS)"
             )
         self.base_url = (base_url or "").rstrip("/") + "/"
-        self.api_key = (api_key or "").strip() or None
+        self.api_key = _clean_secret(api_key)
+        self.bearer_token = _clean_secret(bearer_token)
         self.timeout = float(timeout)
         self.rpc_path = rpc_path if rpc_path.startswith("/") else f"/{rpc_path}"
         self._ssl_ctx = ssl.create_default_context()
         self._rpc_id = 0
+
+    @classmethod
+    def from_env(
+        cls,
+        *,
+        base_url: Optional[str] = None,
+        timeout: float = 30.0,
+        rpc_path: str = "/",
+    ) -> "Client":
+        """Build a client from operator env (no secrets in source).
+
+        Env (first match wins per field):
+        - base: ``DUP_SDK_BASE_URL`` / ``ABS_SDK_BASE_URL`` / ``base_url`` arg
+        - api key: ``DUP_SDK_API_KEY`` / first entry of ``RPC_API_KEYS``
+        - bearer: ``DUP_SDK_BEARER`` / ``DUP_SDK_JWT`` / ``ABS_ADMIN_JWT``
+        """
+        import os
+
+        url = (
+            (base_url or "").strip()
+            or os.environ.get("DUP_SDK_BASE_URL", "").strip()
+            or os.environ.get("ABS_SDK_BASE_URL", "").strip()
+        )
+        if not url:
+            raise ValueError(
+                "base_url required (or set DUP_SDK_BASE_URL / ABS_SDK_BASE_URL)"
+            )
+        api_key = os.environ.get("DUP_SDK_API_KEY", "").strip()
+        if not api_key:
+            rpc_keys = os.environ.get("RPC_API_KEYS", "").strip()
+            if rpc_keys:
+                api_key = rpc_keys.split(",")[0].strip()
+        bearer = (
+            os.environ.get("DUP_SDK_BEARER", "").strip()
+            or os.environ.get("DUP_SDK_JWT", "").strip()
+            or os.environ.get("ABS_ADMIN_JWT", "").strip()
+        )
+        return cls(
+            url,
+            api_key=api_key or None,
+            bearer_token=bearer or None,
+            timeout=timeout,
+            rpc_path=rpc_path,
+        )
+
+    def set_bearer_token(self, token: Optional[str]) -> None:
+        """Attach or clear Bearer token (JWT or RPC key). Does not log the value."""
+        self.bearer_token = _clean_secret(token)
+
+    def set_api_key(self, api_key: Optional[str]) -> None:
+        """Attach or clear X-API-Key. Does not log the value."""
+        self.api_key = _clean_secret(api_key)
+
+    def auth_configured(self) -> bool:
+        return bool(self.api_key or self.bearer_token)
 
     # ── transport ─────────────────────────────────────────────────────────
 
@@ -65,6 +154,8 @@ class Client:
             headers["Content-Type"] = content_type
         if self.api_key:
             headers["X-API-Key"] = self.api_key
+        if self.bearer_token:
+            headers["Authorization"] = f"Bearer {self.bearer_token}"
         return headers
 
     def _url(self, path: str) -> str:
