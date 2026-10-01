@@ -110,7 +110,7 @@
 - Docs honesty matches code  
 - No claim of soak unless pack exists  
 
-**Current focus:** Phase 5 host re-verify [`phase5reverify2`](evidence/runs/phase5reverify2/) PASS (2026-10-01). AUDIT A–H code/prep done. Next = Phase 6 org (firm kickoff) or E4 soak — operator-ordered only.
+**Current focus:** Thin operator SDK v0 lab (`sdk/dup_sdk`, `python scripts/dup_sdk_lab.py`) — diligence/DX after AUDIT A–H. **Not** mainnet / **not** pin / **not** firm PASS. Prior: Phase 5 host re-verify [`phase5reverify2`](evidence/runs/phase5reverify2/) PASS. Next org = Phase 6 firm kickoff or E4 soak — operator-ordered only.
 
 ---
 
