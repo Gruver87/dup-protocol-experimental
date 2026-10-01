@@ -37,7 +37,7 @@
 
 1. First `start_soak_evm_mesh_48h_strict.ps1 -SkipRebuild` → **blocked** by transient `harness roots mismatch` during docker recreate race.  
 2. Retry path: `evm_pre_48h_harness` **PASS** · `prepare_48h_soak` **READY** · `start_soak_prod_mesh_48h_strict.ps1 -SkipPreflight` → **STARTED** PID **15476** (log `logs/soak_48h_evm_strict.log`, report `logs/soak_report_48h_evm_strict.json`).  
-3. **Not yet PASS** — claim only after ~48h with `passed=true` / `hard_fails=0`. Keep PC awake; no docker rebuild until done. Check: `.\scripts\check_soak.ps1`
+3. **Not yet PASS** — claim only after ~48h with a **new** `passed=true` report. Stale prior report from 2026-09-28 (`evmstrict1`) was archived to `logs/soak_report_48h_evm_strict.PRIOR_evmstrict1_2026-09-28.json` so `check_soak` cannot paint green early. Keep PC awake; no docker rebuild until done. Check: `.\scripts\check_soak.ps1`
 
 ## Pin audit pack
 
