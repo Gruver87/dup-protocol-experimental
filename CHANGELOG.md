@@ -15,6 +15,7 @@ Canonical language for this repository is **English**. Older inherited entries b
 
 ### Experimental R&D
 
+- **Pre-fund diligence pack (2026-10-01):** [`docs/DILIGENCE_SNAPSHOT_2026-10-01.md`](docs/DILIGENCE_SNAPSHOT_2026-10-01.md) · NDA outline · firm calendar stub · pin audit zip · probe OK · adversarial 401/CORS PASS · STRICT 48h **IN_PROGRESS** (PID started; **not** PASS yet). Tracker stays **6/8**.
 - **GitHub face sync (2026-10-01):** README / REPO_PROFILE / EVIDENCE_MATRIX list Phase 6 prep, thin SDK, AI/NFT labs, critical-path audit scan. **Not** firm PASS / **not** soak.
 - **CI fix: FakeQueryFacade.get_balance_satoshi (2026-10-01):** `eth_getBalance` on missing account no longer -32603 in `evm_rpc_lab` / Experimental R&D (returns `0x0` wei). **Not** soak.
 - **Full critical-path audit scan (2026-10-01):** [`docs/AUDIT_FULL_SCAN_2026-10-01.md`](docs/AUDIT_FULL_SCAN_2026-10-01.md) + `python scripts/audit_critical_paths.py`. Fixed: `apply_store_delta_satoshi` default **fail-closed** (`allow_float_fallback=False`); NFT auction/offer settle satoshi-honest; prod CORS resolver never emits `*`. Related units **41 passed**; honesty self-check **PASS**. **Not** soak / **not** mesh L1 acceptance / **not** tip-v2 change.

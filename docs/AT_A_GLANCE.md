@@ -73,6 +73,7 @@ Full map: [ARCHITECTURE § R&D execution chain](ARCHITECTURE.md#rd-execution-cha
 - **AI/MEV lab sprouts** → [`sprouts/AI_LAB_PROFILE.md`](sprouts/AI_LAB_PROFILE.md) — `python scripts/ai_lab.py` · `python scripts/ai_ops_anomaly.py`. Prod flags stay **false**. **Not** consensus / **not** soak
 - **NFT marketplace lab** → [`sprouts/NFT_LAB_PROFILE.md`](sprouts/NFT_LAB_PROFILE.md) — `python scripts/nft_lab.py`; SDK `get_nft_*`. Prod `feature_nft=false`. **Not** ERC-721 / **not** soak
 - **Critical-path audit scan** → [`AUDIT_FULL_SCAN_2026-10-01.md`](AUDIT_FULL_SCAN_2026-10-01.md) · `python scripts/audit_critical_paths.py` (**not** soak / **not** mesh PASS)
+- **Pre-fund diligence snapshot** → [`DILIGENCE_SNAPSHOT_2026-10-01.md`](DILIGENCE_SNAPSHOT_2026-10-01.md) · NDA outline · firm calendar stub (**not** firm PASS)
 - Hybrid pin (do not break): [`dup-protocol`](https://github.com/Gruver87/dup-protocol)
 - Contribute: [CONTRIBUTING](../CONTRIBUTING.md)
 - GitHub About: [REPO_PROFILE](../.github/REPO_PROFILE.md)
