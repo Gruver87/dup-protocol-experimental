@@ -110,7 +110,7 @@
 - Docs honesty matches code  
 - No claim of soak unless pack exists  
 
-**Current focus:** Phase G money cascade ✅. Phase H engagement prep scripts PASS (2 human firm items still pending — honest). Firm kickoff shelf. E4 soak operator-only.
+**Current focus:** Phase 5 host re-verify [`phase5reverify2`](evidence/runs/phase5reverify2/) PASS (2026-10-01). AUDIT A–H code/prep done. Next = Phase 6 org (firm kickoff) or E4 soak — operator-ordered only.
 
 ---
 

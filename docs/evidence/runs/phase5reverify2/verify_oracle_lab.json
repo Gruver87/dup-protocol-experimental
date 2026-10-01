@@ -1,0 +1,31 @@
+﻿{
+    "honesty":  [
+                    "NOT soak",
+                    "NOT feature_oracles on prod 778888",
+                    "aux SQLite lab only"
+                ],
+    "total":  3,
+    "elapsed_sec":  6.2,
+    "passed":  3,
+    "started":  "2026-10-01T21:40:08.7655857+02:00",
+    "phase":  "5.2-oracle-lab",
+    "ok":  true,
+    "steps":  [
+                  {
+                      "ok":  true,
+                      "name":  "oracle_lab.py",
+                      "exit_code":  0
+                  },
+                  {
+                      "ok":  true,
+                      "name":  "pytest_wave39_oracle",
+                      "exit_code":  0
+                  },
+                  {
+                      "ok":  true,
+                      "name":  "prod_mesh_feature_oracles_false",
+                      "exit_code":  0
+                  }
+              ],
+    "fail_count":  0
+}
