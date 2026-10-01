@@ -48,6 +48,12 @@ def test_nft_mint_rolls_back_memory_on_uow_failure():
         def get_balance(self, _a):
             return 100.0
 
+        def get_balance_satoshi(self, _a):
+            return 100_000_000
+
+        def balance_delta_satoshi(self, _a, _d):
+            return None
+
         def update_balance(self, _a, _d):
             return 0.0
 

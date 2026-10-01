@@ -246,6 +246,18 @@ def _check_p2p_hardening() -> tuple[list[str], list[str]]:
         encoding="utf-8"
     ):
         errors.append("runtime.amount must expose apply_store_delta_satoshi")
+    nft_py = (ROOT / "features" / "nft.py").read_text(encoding="utf-8")
+    if "allow_float_fallback=False" not in nft_py:
+        errors.append("nft money path must refuse float fallback (allow_float_fallback=False)")
+    for rel in (
+        "features/plasma.py",
+        "features/lightning.py",
+        "features/crypto_will.py",
+        "dynamic_sharding.py",
+    ):
+        src = (ROOT / rel).read_text(encoding="utf-8")
+        if "allow_float_fallback=False" not in src:
+            errors.append(f"{rel} must refuse float money fallback")
     if "get_balance(addr) * 1_000_000" in (
         ROOT / "execution" / "evm_adapter.py"
     ).read_text(encoding="utf-8"):

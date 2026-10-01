@@ -90,7 +90,7 @@ class CryptoWillManager:
         return float(from_satoshi_float(self._balance_sat(addr)))
 
     def _debit(self, addr: str, amount: float) -> bool:
-        from runtime.amount import from_satoshi_float, to_satoshi, try_debit_satoshi
+        from runtime.amount import apply_store_delta_satoshi, to_satoshi, try_debit_satoshi
 
         try:
             need = int(to_satoshi(amount))
@@ -99,16 +99,14 @@ class CryptoWillManager:
             return False
         if need <= 0:
             return False
-        if self.db and hasattr(self.db, "balance_delta_satoshi"):
-            self.db.balance_delta_satoshi(addr, -need)
-            return True
-        if self.db and hasattr(self.db, "update_balance"):
-            self.db.update_balance(addr, -from_satoshi_float(need))
-            return True
-        return False
+        return bool(
+            apply_store_delta_satoshi(
+                self.db, addr, -need, allow_float_fallback=False
+            )
+        )
 
     def _credit(self, addr: str, amount: float) -> bool:
-        from runtime.amount import from_satoshi_float, to_satoshi
+        from runtime.amount import apply_store_delta_satoshi, to_satoshi
 
         try:
             add = int(to_satoshi(amount))
@@ -116,15 +114,11 @@ class CryptoWillManager:
             return False
         if add <= 0:
             return False
-        if self.db and hasattr(self.db, "balance_delta_satoshi"):
-            self.db.balance_delta_satoshi(addr, add)
+        if apply_store_delta_satoshi(
+            self.db, addr, add, allow_float_fallback=False
+        ):
             return True
-        if self.db and hasattr(self.db, "update_balance"):
-            self.db.update_balance(addr, from_satoshi_float(add))
-            return True
-        if self.blockchain and hasattr(self.blockchain, "update_balance"):
-            self.blockchain.update_balance(addr, from_satoshi_float(add))
-            return True
+        # blockchain.update_balance float path refused
         return False
 
     def _load_from_db(self) -> None:

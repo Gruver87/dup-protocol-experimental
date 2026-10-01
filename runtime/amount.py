@@ -268,12 +268,18 @@ def from_satoshi_float(satoshi: int) -> float:
     return float(from_satoshi(satoshi))
 
 
-def apply_store_delta_satoshi(store: Any, address: str, delta_sat: int) -> bool:
+def apply_store_delta_satoshi(
+    store: Any,
+    address: str,
+    delta_sat: int,
+    *,
+    allow_float_fallback: bool = True,
+) -> bool:
     """Apply integer satoshi delta on a storage/db handle.
 
-    Prefer ``balance_delta_satoshi``; fall back to float ``update_balance`` /
-    ``balance_delta`` only when the satoshi method is absent. Returns False if
-    no write path exists.
+    Prefer ``balance_delta_satoshi``. Float ``update_balance`` / ``balance_delta``
+    only when ``allow_float_fallback=True`` (legacy / incomplete fakes). Feature
+    sprouts (NFT/plasma/lightning) pass ``allow_float_fallback=False``.
     """
     if store is None or not address:
         return False
@@ -283,6 +289,8 @@ def apply_store_delta_satoshi(store: Any, address: str, delta_sat: int) -> bool:
     if hasattr(store, "balance_delta_satoshi"):
         store.balance_delta_satoshi(address, delta)
         return True
+    if not allow_float_fallback:
+        return False
     if hasattr(store, "balance_delta"):
         store.balance_delta(address, from_satoshi_float(delta))
         return True

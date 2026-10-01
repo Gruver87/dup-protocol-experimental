@@ -166,7 +166,7 @@ class NFTMarketplace:
         return float(from_satoshi_float(self._balance_sat(addr)))
 
     def _debit(self, addr: str, amount: float) -> bool:
-        from runtime.amount import from_satoshi_float, to_satoshi, try_debit_satoshi
+        from runtime.amount import apply_store_delta_satoshi, to_satoshi, try_debit_satoshi
 
         if not self._has_balance_backend():
             return False
@@ -177,14 +177,14 @@ class NFTMarketplace:
             return False
         if need <= 0:
             return False
-        if hasattr(self.db, "balance_delta_satoshi"):
-            self.db.balance_delta_satoshi(addr, -need)
-        else:
-            self.db.update_balance(addr, -from_satoshi_float(need))
-        return True
+        return bool(
+            apply_store_delta_satoshi(
+                self.db, addr, -need, allow_float_fallback=False
+            )
+        )
 
     def _credit(self, addr: str, amount: float) -> bool:
-        from runtime.amount import from_satoshi_float, to_satoshi
+        from runtime.amount import apply_store_delta_satoshi, to_satoshi
 
         if not self._has_balance_backend():
             return False
@@ -194,14 +194,14 @@ class NFTMarketplace:
             return False
         if add <= 0:
             return False
-        if hasattr(self.db, "balance_delta_satoshi"):
-            self.db.balance_delta_satoshi(addr, add)
-        else:
-            self.db.update_balance(addr, from_satoshi_float(add))
-        return True
+        return bool(
+            apply_store_delta_satoshi(
+                self.db, addr, add, allow_float_fallback=False
+            )
+        )
 
     def _settle_sale(self, buyer: str, seller: str, creator: str, price: float) -> bool:
-        from runtime.amount import from_satoshi_float, to_satoshi, try_debit_satoshi
+        from runtime.amount import apply_store_delta_satoshi, to_satoshi, try_debit_satoshi
 
         if not self._has_balance_backend():
             return False
@@ -214,16 +214,18 @@ class NFTMarketplace:
             return False
         royalty_sat = (price_sat * int(self.ROYALTY * 10_000)) // 10_000
         seller_sat = price_sat - royalty_sat
-        if hasattr(self.db, "balance_delta_satoshi"):
-            self.db.balance_delta_satoshi(buyer, -price_sat)
-            self.db.balance_delta_satoshi(seller, seller_sat)
-            if creator != seller and royalty_sat > 0:
-                self.db.balance_delta_satoshi(creator, royalty_sat)
-        else:
-            self.db.update_balance(buyer, -from_satoshi_float(price_sat))
-            self.db.update_balance(seller, from_satoshi_float(seller_sat))
-            if creator != seller and royalty_sat > 0:
-                self.db.update_balance(creator, from_satoshi_float(royalty_sat))
+        ok = apply_store_delta_satoshi(
+            self.db, buyer, -price_sat, allow_float_fallback=False
+        ) and apply_store_delta_satoshi(
+            self.db, seller, seller_sat, allow_float_fallback=False
+        )
+        if not ok:
+            return False
+        if creator != seller and royalty_sat > 0:
+            if not apply_store_delta_satoshi(
+                self.db, creator, royalty_sat, allow_float_fallback=False
+            ):
+                return False
         return True
 
     def _load_genesis_collection(self):

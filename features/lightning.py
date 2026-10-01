@@ -279,7 +279,7 @@ class LightningNetwork:
         capacity: float,
         node_balance: Optional[float] = None,
     ) -> Optional[str]:
-        from runtime.amount import from_satoshi_float, to_satoshi
+        from runtime.amount import apply_store_delta_satoshi, to_satoshi
 
         if capacity < self.MIN_CHANNEL or capacity > self.MAX_CHANNEL:
             return None
@@ -295,10 +295,10 @@ class LightningNetwork:
             bal_sat = int(to_satoshi(self.db.get_balance(self.node_address)))
         if bal_sat < cap_sat:
             return None
-        if hasattr(self.db, "balance_delta_satoshi"):
-            self.db.balance_delta_satoshi(self.node_address, -cap_sat)
-        else:
-            self.db.update_balance(self.node_address, -from_satoshi_float(cap_sat))
+        if not apply_store_delta_satoshi(
+            self.db, self.node_address, -cap_sat, allow_float_fallback=False
+        ):
+            return None
         channel_id = native.sha256_hex(
             f"{self.node_address}{peer_address}{capacity}{time.time()}".encode()
         )[:16]
@@ -344,7 +344,7 @@ class LightningNetwork:
         return verify_state(payload, sig, node_pubkey)
 
     def close_channel(self, channel_id: str) -> bool:
-        from runtime.amount import from_satoshi_float, to_satoshi
+        from runtime.amount import apply_store_delta_satoshi, to_satoshi
 
         ch = self.channels.get(channel_id)
         if not ch or ch.status != "open":
@@ -356,12 +356,15 @@ class LightningNetwork:
             b2 = int(to_satoshi(ch.balance2))
         except (TypeError, ValueError):
             return False
-        if hasattr(self.db, "balance_delta_satoshi"):
-            self.db.balance_delta_satoshi(ch.node1, b1)
-            self.db.balance_delta_satoshi(ch.node2, b2)
-        else:
-            self.db.update_balance(ch.node1, from_satoshi_float(b1))
-            self.db.update_balance(ch.node2, from_satoshi_float(b2))
+        if not (
+            apply_store_delta_satoshi(
+                self.db, ch.node1, b1, allow_float_fallback=False
+            )
+            and apply_store_delta_satoshi(
+                self.db, ch.node2, b2, allow_float_fallback=False
+            )
+        ):
+            return False
         ch.status = "closed"
         ch.state_version += 1
         self._persist_channel(ch)

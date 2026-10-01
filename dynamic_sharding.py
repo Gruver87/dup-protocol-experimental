@@ -257,7 +257,7 @@ class ShardingManager:
         return from_shard, tx_id
 
     def _debit_cross_shard_source(self, tx: CrossShardTransaction) -> bool:
-        from runtime.amount import from_satoshi_float, to_satoshi
+        from runtime.amount import apply_store_delta_satoshi, to_satoshi
 
         if not self._validate_cross_shard_tx(tx):
             return False
@@ -267,11 +267,11 @@ class ShardingManager:
             return False
         if need <= 0:
             return False
-        if hasattr(self._db, "balance_delta_satoshi"):
-            self._db.balance_delta_satoshi(tx.from_addr, -need)
-        else:
-            self._db.update_balance(tx.from_addr, -from_satoshi_float(need))
-        return True
+        return bool(
+            apply_store_delta_satoshi(
+                self._db, tx.from_addr, -need, allow_float_fallback=False
+            )
+        )
 
     def _gossip_cross_shard(self, tx_id: str) -> None:
         if not self._gossip_fn:
@@ -314,22 +314,19 @@ class ShardingManager:
             amount_raw = payload.get("amount", 0)
             to_addr = payload.get("to_addr", "")
             try:
-                from runtime.amount import from_satoshi_float, to_satoshi
+                from runtime.amount import apply_store_delta_satoshi, from_satoshi_float, to_satoshi
 
                 amount_sat = int(to_satoshi(amount_raw))
             except (TypeError, ValueError):
                 return False
             if amount_sat <= 0 or not to_addr:
                 return False
-            if not self._db or not (
-                hasattr(self._db, "balance_delta_satoshi")
-                or hasattr(self._db, "update_balance")
+            if not self._db or not hasattr(self._db, "balance_delta_satoshi"):
+                return False
+            if not apply_store_delta_satoshi(
+                self._db, to_addr, amount_sat, allow_float_fallback=False
             ):
                 return False
-            if hasattr(self._db, "balance_delta_satoshi"):
-                self._db.balance_delta_satoshi(to_addr, amount_sat)
-            else:
-                self._db.update_balance(to_addr, from_satoshi_float(amount_sat))
             amount = from_satoshi_float(amount_sat)
             cross_tx = existing or CrossShardTransaction(
                 tx_id=tx_id,
@@ -405,7 +402,7 @@ class ShardingManager:
         for tx_id in self.pending_cross_txs[:]:
             tx = self.cross_shard_txs[tx_id]
             if self._validate_cross_shard_tx(tx):
-                from runtime.amount import from_satoshi_float, to_satoshi
+                from runtime.amount import apply_store_delta_satoshi, to_satoshi
 
                 try:
                     amount_sat = int(to_satoshi(tx.amount))
@@ -413,13 +410,17 @@ class ShardingManager:
                     tx.status = "failed"
                     self.pending_cross_txs.remove(tx_id)
                     continue
-                if hasattr(self._db, "balance_delta_satoshi"):
-                    self._db.balance_delta_satoshi(tx.from_addr, -amount_sat)
-                    self._db.balance_delta_satoshi(tx.to_addr, amount_sat)
-                else:
-                    amt = from_satoshi_float(amount_sat)
-                    self._db.update_balance(tx.from_addr, -amt)
-                    self._db.update_balance(tx.to_addr, amt)
+                if not (
+                    apply_store_delta_satoshi(
+                        self._db, tx.from_addr, -amount_sat, allow_float_fallback=False
+                    )
+                    and apply_store_delta_satoshi(
+                        self._db, tx.to_addr, amount_sat, allow_float_fallback=False
+                    )
+                ):
+                    tx.status = "failed"
+                    self.pending_cross_txs.remove(tx_id)
+                    continue
                 tx.status = "confirmed"
                 tx.confirmed_at = time.time()
                 self.pending_cross_txs.remove(tx_id)

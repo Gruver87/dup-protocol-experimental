@@ -103,7 +103,7 @@ class PlasmaChain:
         return float(from_satoshi_float(self._l1_balance_sat(addr)))
 
     def _debit_l1(self, addr: str, amount: float) -> bool:
-        from runtime.amount import from_satoshi_float, to_satoshi, try_debit_satoshi
+        from runtime.amount import apply_store_delta_satoshi, to_satoshi, try_debit_satoshi
 
         try:
             need = int(to_satoshi(amount))
@@ -112,16 +112,15 @@ class PlasmaChain:
             return False
         if need <= 0:
             return False
-        if self.db and hasattr(self.db, "balance_delta_satoshi"):
-            self.db.balance_delta_satoshi(addr, -need)
-            return True
-        if self.db and hasattr(self.db, "update_balance"):
-            self.db.update_balance(addr, -from_satoshi_float(need))
-            return True
-        return False
+        # Refuse float update_balance fallback — require satoshi write path.
+        return bool(
+            apply_store_delta_satoshi(
+                self.db, addr, -need, allow_float_fallback=False
+            )
+        )
 
     def _credit_l1(self, addr: str, amount: float) -> bool:
-        from runtime.amount import from_satoshi_float, to_satoshi
+        from runtime.amount import apply_store_delta_satoshi, to_satoshi
 
         try:
             add = int(to_satoshi(amount))
@@ -129,15 +128,11 @@ class PlasmaChain:
             return False
         if add <= 0:
             return False
-        if self.db and hasattr(self.db, "balance_delta_satoshi"):
-            self.db.balance_delta_satoshi(addr, add)
+        if apply_store_delta_satoshi(
+            self.db, addr, add, allow_float_fallback=False
+        ):
             return True
-        if self.db and hasattr(self.db, "update_balance"):
-            self.db.update_balance(addr, from_satoshi_float(add))
-            return True
-        if self.root_chain and hasattr(self.root_chain, "update_balance"):
-            self.root_chain.update_balance(addr, from_satoshi_float(add))
-            return True
+        # root_chain float update_balance is not a satoshi path — refuse.
         return False
 
     def _load_from_db(self) -> None:

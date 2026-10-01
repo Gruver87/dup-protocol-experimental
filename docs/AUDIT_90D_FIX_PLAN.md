@@ -93,7 +93,7 @@
 - Docs honesty matches code  
 - No claim of soak unless pack exists  
 
-**Current focus:** Residual float writes on EVM/cross-shard/faucet prefer `apply_store_delta_satoshi` / `balance_delta_satoshi`. Remaining without soak: firm audit kickoff (org) · **E4 soak** (operator) · feature-sprout float fallbacks (NFT/plasma/lightning when satoshi method absent).
+**Current focus:** Feature sprouts (NFT/plasma/lightning/crypto_will + dynamic_sharding) refuse float `update_balance` when `balance_delta_satoshi` is absent (`allow_float_fallback=False`). Remaining without soak: firm audit kickoff (org) · **E4 soak** (operator).
 
 ---
 

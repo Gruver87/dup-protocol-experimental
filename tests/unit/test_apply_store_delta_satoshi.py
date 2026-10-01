@@ -33,3 +33,14 @@ def test_apply_store_delta_satoshi_falls_back_to_update_balance():
     store = _FloatStore()
     assert apply_store_delta_satoshi(store, "0xb", int(to_satoshi(2.5))) is True
     assert store.deltas and store.deltas[0][0] == "0xb"
+
+
+def test_apply_store_delta_satoshi_refuses_float_when_disallowed():
+    store = _FloatStore()
+    assert (
+        apply_store_delta_satoshi(
+            store, "0xc", 1000, allow_float_fallback=False
+        )
+        is False
+    )
+    assert store.deltas == []
