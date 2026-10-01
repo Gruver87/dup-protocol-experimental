@@ -93,7 +93,7 @@
 - Docs honesty matches code  
 - No claim of soak unless pack exists  
 
-**Current focus:** Phase H — engagement prep + live automated audit evaluate (6/8). Remaining: **2 human firm items** + E4 tip soak (operator).
+**Current focus:** Sealed ridge_decision_off in bridgeoff1 (gate WARN cleared). Remaining: **2 human firm items** + E4 tip soak (operator). Mesh probe OK this host (not soak).
 
 ---
 
