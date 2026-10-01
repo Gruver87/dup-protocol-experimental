@@ -1184,13 +1184,15 @@ class RocksChainStore:
     # ── validators ────────────────────────────────────────────────────────
 
     def save_validator(self, address: str, stake: float) -> None:
-        from runtime.amount import money_abs
+        from runtime.amount import money_abs, to_satoshi
 
         with self._write_lock:
             addr = SqliteDatabase._normalize_address(address)
+            stake_abs = money_abs(stake, field="stake")
             row = {
                 "address": addr,
-                "stake": money_abs(stake, field="stake"),
+                "stake": stake_abs,
+                "stake_satoshi": int(to_satoshi(stake_abs)),
                 "active": 1,
                 "slashed": 0,
                 "joined_at": int(time.time()),
@@ -1198,6 +1200,8 @@ class RocksChainStore:
             self._raw_put(kc.key_validator(addr), json.dumps(row).encode("utf-8"))
 
     def get_validators(self, active_only: bool = True) -> List[Dict]:
+        from runtime.amount import to_satoshi
+
         rows = self._scan_prefix(kc.prefix_validators())
         out: List[Dict] = []
         for _key, value in rows:
@@ -1214,6 +1218,10 @@ class RocksChainStore:
                 continue
             if active_only and not int(row.get("active", 1)):
                 continue
+            if row.get("stake_satoshi") is None:
+                row["stake_satoshi"] = int(to_satoshi(row.get("stake") or 0))
+            else:
+                row["stake_satoshi"] = int(row["stake_satoshi"])
             out.append(row)
         return out
 

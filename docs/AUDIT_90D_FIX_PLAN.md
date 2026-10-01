@@ -93,7 +93,7 @@
 - Docs honesty matches code  
 - No claim of soak unless pack exists  
 
-**Current focus:** Sealed ridge_decision_off in bridgeoff1 (gate WARN cleared). Remaining: **2 human firm items** + E4 tip soak (operator). Mesh probe OK this host (not soak).
+**Current focus:** validators dual-write stake_satoshi (SQLite+Rocks). Firm kickoff still shelf. E4 tip soak operator-only. Pre-soak self-check PASS on this host (not soak).
 
 ---
 

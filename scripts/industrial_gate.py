@@ -284,6 +284,15 @@ def _check_p2p_hardening() -> tuple[list[str], list[str]]:
         errors.append("StateService._credit_sat must refuse float fallback")
     if "update_balance(address, abs_delta)" in ss:
         errors.append("StateService must not float-fallback credit via update_balance")
+    db_py = (ROOT / "storage" / "database.py").read_text(encoding="utf-8")
+    if "stake_satoshi" not in db_py or "_backfill_validator_stake_satoshi" not in db_py:
+        errors.append("validators must dual-write stake_satoshi with backfill")
+    if '("validators", "stake_satoshi"' not in db_py:
+        errors.append("database migration must add validators.stake_satoshi")
+    if "stake_satoshi" not in (ROOT / "storage" / "rocks_store.py").read_text(
+        encoding="utf-8"
+    ):
+        errors.append("rocks_store validators must dual-write stake_satoshi")
     if not (ROOT / "api" / "market_feed.py").is_file():
         errors.append("api/market_feed.py missing (ops market snapshot)")
     else:

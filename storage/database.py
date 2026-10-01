@@ -125,6 +125,7 @@ class Database:
             ("accounts", "code",    "TEXT DEFAULT ''"),
             ("accounts", "storage", "TEXT DEFAULT ''"),
             ("accounts", "balance_satoshi", "INTEGER"),
+            ("validators", "stake_satoshi", "INTEGER"),
             ("plasma_blocks", "merkle_root", "TEXT NOT NULL DEFAULT ''"),
             ("plasma_blocks", "tx_root",     "TEXT NOT NULL DEFAULT ''"),
         ]
@@ -171,6 +172,35 @@ class Database:
         self._backfill_tx_receipts_v48()
         self._backfill_proposer_audit_v49()
         self._backfill_balance_satoshi_v80()
+        self._backfill_validator_stake_satoshi()
+
+    def _backfill_validator_stake_satoshi(self) -> None:
+        """Populate validators.stake_satoshi from float stake where NULL (idempotent)."""
+        try:
+            from runtime.amount import to_satoshi
+
+            cols = {
+                row[1]
+                for row in self.conn.execute("PRAGMA table_info(validators)").fetchall()
+            }
+            if "stake_satoshi" not in cols:
+                return
+            rows = self.conn.execute(
+                "SELECT address, stake FROM validators WHERE stake_satoshi IS NULL"
+            ).fetchall()
+            for r in rows:
+                sat = int(to_satoshi(r["stake"] or 0))
+                self.conn.execute(
+                    "UPDATE validators SET stake_satoshi=? WHERE address=?",
+                    (sat, r["address"]),
+                )
+            if rows:
+                print(
+                    f"[DB] Migration: backfilled stake_satoshi for {len(rows)} validator(s)"
+                )
+                self.conn.commit()
+        except Exception as e:
+            print(f"[DB] stake_satoshi backfill warning: {e}")
 
     def _backfill_balance_satoshi_v80(self) -> None:
         """Populate balance_satoshi from float balance where NULL (idempotent)."""
@@ -1680,25 +1710,38 @@ class Database:
     # ── Валидаторы ───────────────────────────────────────────────────────────
 
     def save_validator(self, address: str, stake: float) -> None:
-        from runtime.amount import money_abs
+        from runtime.amount import money_abs, to_satoshi
 
         stake_abs = money_abs(stake, field="stake")
+        stake_sat = int(to_satoshi(stake_abs))
         with self.lock:
             self.conn.execute(
-                """INSERT INTO validators (address, stake, joined_at)
-                   VALUES (?,?,?)
-                   ON CONFLICT(address) DO UPDATE SET stake=excluded.stake""",
-                (address, stake_abs, int(time.time())),
+                """INSERT INTO validators (address, stake, stake_satoshi, joined_at)
+                   VALUES (?,?,?,?)
+                   ON CONFLICT(address) DO UPDATE SET
+                     stake=excluded.stake,
+                     stake_satoshi=excluded.stake_satoshi""",
+                (address, stake_abs, stake_sat, int(time.time())),
             )
             self.conn.commit()
 
     def get_validators(self, active_only: bool = True) -> List[Dict]:
+        from runtime.amount import to_satoshi
+
         with self.lock:
             query = "SELECT * FROM validators"
             if active_only:
                 query += " WHERE active=1 AND slashed=0"
             rows = self.conn.execute(query).fetchall()
-            return [dict(r) for r in rows]
+            out: List[Dict] = []
+            for r in rows:
+                row = dict(r)
+                if row.get("stake_satoshi") is None:
+                    row["stake_satoshi"] = int(to_satoshi(row.get("stake") or 0))
+                else:
+                    row["stake_satoshi"] = int(row["stake_satoshi"])
+                out.append(row)
+            return out
 
     def slash_validator(self, address: str) -> None:
         with self.lock:
