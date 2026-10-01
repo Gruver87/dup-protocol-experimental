@@ -93,7 +93,7 @@
 - Docs honesty matches code  
 - No claim of soak unless pack exists  
 
-**Current focus:** Phase G — StateService._credit_sat + dev-signer fund refuse float fallback. Remaining without soak: **firm audit kickoff (org)** · E4 tip soak (operator-ordered only).
+**Current focus:** Phase H — engagement prep + live automated audit evaluate (6/8). Remaining: **2 human firm items** + E4 tip soak (operator).
 
 ---
 
@@ -106,7 +106,8 @@
 .\scripts\verify_audit_phase.ps1 -Phase D
 .\scripts\verify_audit_phase.ps1 -Phase E
 .\scripts\verify_audit_phase.ps1 -Phase F
-.\scripts\verify_audit_phase.ps1 -Phase G          # post A–F: refuse float money fallback
+.\scripts\verify_audit_phase.ps1 -Phase G
+.\scripts\verify_audit_phase.ps1 -Phase H          # engagement prep (NOT firm PASS)
 .\scripts\verify_audit_phase.ps1 -Phase All          # + industrial_gate
 .\scripts\verify_audit_phase.ps1 -Phase E -MeshProbe # optional live probe (NOT soak)
 ```

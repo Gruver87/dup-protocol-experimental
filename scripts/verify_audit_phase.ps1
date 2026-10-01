@@ -9,13 +9,14 @@
 #   .\scripts\verify_audit_phase.ps1 -Phase E
 #   .\scripts\verify_audit_phase.ps1 -Phase F
 #   .\scripts\verify_audit_phase.ps1 -Phase G
+#   .\scripts\verify_audit_phase.ps1 -Phase H
 #   .\scripts\verify_audit_phase.ps1 -Phase All
 #   .\scripts\verify_audit_phase.ps1 -Phase All -SkipGate
 #
 # Optional mesh (Phase E only, operator-owned):
 #   .\scripts\verify_audit_phase.ps1 -Phase E -MeshProbe
 param(
-    [ValidateSet("A", "B", "C", "D", "E", "F", "G", "All")]
+    [ValidateSet("A", "B", "C", "D", "E", "F", "G", "H", "All")]
     [string]$Phase = "All",
     [switch]$SkipGate,
     [switch]$MeshProbe
@@ -288,11 +289,30 @@ function Verify-PhaseG {
     )
 }
 
+function Verify-PhaseH {
+    Write-Host ""
+    Write-Host "======== PHASE H - External audit engagement prep ========" -ForegroundColor Magenta
+    Write-Host "  NOT firm audit PASS / NOT soak" -ForegroundColor DarkGray
+    Step "H engagement prep script"
+    if (-not (Test-Path "scripts/verify_audit_engagement_prep.ps1")) {
+        Write-Host "FAIL: verify_audit_engagement_prep.ps1 missing" -ForegroundColor Red
+        $script:fail++
+        return
+    }
+    & ".\scripts\verify_audit_engagement_prep.ps1"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "FAIL: engagement prep" -ForegroundColor Red
+        $script:fail++
+    } else {
+        Write-Host "OK: engagement prep" -ForegroundColor Green
+    }
+}
+
 Write-Host "AUDIT 90D phase self-check (dup-protocol-experimental)" -ForegroundColor Cyan
 Write-Host "  Phase=$Phase  SkipGate=$SkipGate  MeshProbe=$MeshProbe" -ForegroundColor DarkGray
 Write-Host "  NOT soak / NOT mainnet claim" -ForegroundColor DarkGray
 
-$phases = if ($Phase -eq "All") { @("A", "B", "C", "D", "E", "F", "G") } else { @($Phase) }
+$phases = if ($Phase -eq "All") { @("A", "B", "C", "D", "E", "F", "G", "H") } else { @($Phase) }
 foreach ($p in $phases) {
     switch ($p) {
         "A" { Verify-PhaseA }
@@ -302,6 +322,7 @@ foreach ($p in $phases) {
         "E" { Verify-PhaseE }
         "F" { Verify-PhaseF }
         "G" { Verify-PhaseG }
+        "H" { Verify-PhaseH }
     }
 }
 

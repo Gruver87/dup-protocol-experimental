@@ -21,6 +21,25 @@
 
 Prefer the **pin** for firm scope. Experimental packs (libp2p / LR lab / EVM STRICT) are R&D evidence — label them as such.
 
+### Recorded pins (prep — not an audit report)
+
+| Tree | Ref | SHA (object) |
+|------|-----|----------------|
+| Industrial pin | tag `v1.3.1339-tip-v2-industrial` | `3e91a5922277916636102aeacf111a16ac21b476` |
+| Experimental (this repo, tip at prep) | `main` | record at kickoff via `git rev-parse HEAD` |
+
+### Evidence pack IDs to list in the engagement letter
+
+- Tip / industrial mesh: pin soak + Hybrid tip-v2 pack as labeled in [`EVIDENCE_MATRIX.md`](EVIDENCE_MATRIX.md)
+- Experimental (optional, label R&D): `ind48pass1`, `lp2pstrict1`, `evmstrict1`, `mempool48pass1`, `lrstrict1` (lab only)
+
+Operator self-check:
+
+```powershell
+.\scripts\verify_audit_engagement_prep.ps1
+.\scripts\verify_audit_phase.ps1 -Phase H
+```
+
 ---
 
 ## In-scope (suggested)
