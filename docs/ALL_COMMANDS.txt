@@ -1,34 +1,37 @@
 # =============================================================================
-# ABSOLUTE BLOCKCHAIN — ПОЛНЫЙ СПРАВОЧНИК КОМАНД (репозиторий, БЕЗ секретов)
+# DUP PROTOCOL / DUP LABS — ПОЛНЫЙ СПРАВОЧНИК КОМАНД (репозиторий, БЕЗ секретов)
 # =============================================================================
 # Автор:     Uladzimir Dabranski (Gruver87) · D.U.P.
-# Обновлено: 2026-09-13 (B1/B2/Phase3 closed — sync surface)
-
+# Обновлено: 2026-10-01
+# Brand:     DUP Labs (org) · DUP Protocol (product)
+# Formerly:  Absolute Blockchain (локальные папки Desktop могут ещё называться Absolute_*)
+#
 # ДВА РЕПОЗИТОРИЯ (не путать):
-#   HYBRID  — audit-pin, TCP+TLS mesh
+#   PIN (industrial) — audit-freeze, TCP+TLS mesh, tag v1.3.1339-tip-v2-industrial
 #             C:\Users\vovun\Desktop\Absolute_Blockchain_Ultimate_Hybrid
-#             https://github.com/Gruver87/dup-protocol  (master)
-
-#   EXPERIMENTAL — R&D: libp2p, Long-Range lab, council NFT, EVM depth
+#             https://github.com/Gruver87/dup-protocol  (branch master)
+#
+#   EXPERIMENTAL — R&D sandbox: libp2p, Long-Range lab, council NFT, EVM depth, SDK, AI sprouts
 #             C:\Users\vovun\Desktop\Absolute_Blockchain_Experimental
-#             https://github.com/Gruver87/dup-protocol-experimental  (main)
-
-# Личная копия (Desktop, не в git): Absolute_Blockchain_All_Commands_FIXED.txt
-# Краткая шпаргалка: docs/COMMANDS_REFERENCE.md
-# Секреты: только .env · secrets/README.md
+#             https://github.com/Gruver87/dup-protocol-experimental  (branch main)
+#
+# Репозиторная копия БЕЗ секретов: docs/ALL_COMMANDS.txt (в каждом репо)
+# Краткая шпаргалка:               docs/COMMANDS_REFERENCE.md
+#
+# Личная Desktop-копия: Absolute_Blockchain_All_Commands_FIXED.txt (не в git).
+# Секреты: только .env · secrets/README.md — Part 24 = ИМЕНА переменных only.
 # =============================================================================
 #
 # ЧЕСТНОСТЬ (всегда):
 #   · Gate green ≠ public mainnet
 #   · Prod mesh 778888 = industrial PROFILE, не публичный mainnet
 #   · Bridge на live mesh: OFF (ADR 0010 cutover отдельно)
-#   · libp2p 48h — PASS: docs/evidence/runs/3c801b87/ (B1)
-#   · Long-Range lab 48h — PASS: docs/evidence/runs/lr48pass1/ (B2; not BLS/prod)
-#   · Phase 3 mesh 48h — PASS: docs/evidence/runs/evm48pass1/ (not EVM-only)
-#   · Phase 4 ADR 0021 closed (adr0021gaudit1); Phase 5 labs closed; Waves A-G honesty DX
-#   · Next: soak ONLY if ordered · .\scripts\verify_wave_g.ps1 · verify_pre_soak.ps1
+#   · Phases 1–5 CLOSED (libp2p/LR/EVM/mempool STRICT packs на диске) — см. EVIDENCE_MATRIX
+#   · Phase 6 = org firm kickoff (prep on disk: phase6prep1) — NOT firm PASS
+#   · Thin SDK v0.1.1 / AI sprouts = lab DX — NOT consensus / NOT pin SDK
+#   · External audit / pen-test — 2 human tracker items still pending
 #   · Council NFT (87) — lab/staging 778889, НЕ security guarantee L1
-#   · External audit — org blocker (см. MAINNET_GAP_ANALYSIS.md)
+#   · 48h soak claim ONLY with pack + hard_fails=0 (do not invent)
 #
 # PowerShell: только .\scripts\...  (не «pytest» без cd в репо)
 # Команды вводить БЕЗ хвостов из отчётов (→ OK, → 99 passed).
@@ -70,6 +73,10 @@
 #   ЧАСТЬ  30   L1 Integration Gate (обязательный порядок)
 #   ЧАСТЬ  31   Experimental R&D (libp2p, LR, EVM labs)
 #   ЧАСТЬ  32   Gruver87 Council NFT (ADR 0022, chain 778889)
+#   ЧАСТЬ  33   AUDIT 90D A–H (money honesty + engagement prep)
+#   ЧАСТЬ  34   Phase 6 firm kickoff (org) — NOT firm PASS
+#   ЧАСТЬ  35   Thin operator SDK v0.1 (dup_sdk)
+#   ЧАСТЬ  36   AI / MEV sprouts lab (flags OFF on prod)
 # =============================================================================
 
 
@@ -331,8 +338,13 @@ python scripts/verify_experimental_rd.py
 .\scripts\prepare_48h_soak.ps1
 python scripts/soak_preflight.py
 .\scripts\soak_monitor.ps1 -ProdMesh -Hours 7
-.\scripts\start_soak_prod_mesh_48h.ps1          # operator: libp2p 48h — явная команда
-.\scripts\health_watch.ps1 -ProdMesh -DurationMin 120   # 2h smoke pre-48h
+.\scripts\verify_pre_soak.ps1
+.\scripts\verify_pre_soak.ps1 -SkipPrepare
+.\scripts\start_soak_prod_mesh_48h.ps1                 # operator: default 48h — явная команда
+.\scripts\start_soak_prod_mesh_48h_strict.ps1          # STRICT libp2p mesh — operator-ordered only
+.\scripts\start_soak_evm_mesh_48h_strict.ps1           # STRICT EVM mesh — operator-ordered only
+.\scripts\start_mempool_validation_soak.ps1            # mempool+validation STRICT — operator-ordered only
+.\scripts\health_watch.ps1 -ProdMesh -DurationMin 120  # 2h smoke pre-48h
 
 .\scripts\prod_mesh_failover.ps1
 .\scripts\prod_mesh_resilience_suite.ps1
@@ -434,8 +446,14 @@ python scripts/verify_full_blockchain.py
 # GITHUB_TOKEN=               # gh CLI / git push (scope: repo)
 # BRIDGE_ORACLE_SECRET=       # HMAC bridge oracle
 # ETH_RPC_URL=                # bridge L1 probe (Infura/Alchemy)
-# RPC_API_KEYS=               # X-API-Key на prod RPC :18545
+# RPC_API_KEYS=               # X-API-Key на prod RPC :18545–:18548
 # RPC_API_KEY_REQUIRED=true
+# DUP_SDK_BASE_URL=           # sdk Client.from_env (e.g. http://127.0.0.1:18180)
+# DUP_SDK_API_KEY=            # optional; else first RPC_API_KEYS entry
+# DUP_SDK_BEARER=             # admin JWT or RPC key as Bearer (eth_* / JWT POSTs)
+# DUP_SDK_JWT=                # alias of DUP_SDK_BEARER
+# ABS_ADMIN_JWT=              # optional alias for minted admin JWT
+# ABS_ALLOW_DEV_ADMIN_JWT=1   # lab-only: allow /auth/token mint outside prod
 # GENESIS_CEREMONY_HASH=      # prod docker pin
 # VALIDATORS_MANIFEST_PATH=data/validators.manifest.json
 # DEPLOYMENT_MODE=prod|staging|dev
@@ -452,8 +470,8 @@ ECOSYSTEM_POOL=0xecosystem000000000000000000000000000001
 TREASURY_POOL=0xtreasury00000000000000000000000000001
 
 GITHUB_USERNAME=Gruver87
-GITHUB_REPO_HYBRID=Absolute_Blockchain_Ultimate_Hybrid
-GITHUB_REPO_EXPERIMENTAL=experimental
+GITHUB_REPO_HYBRID=dup-protocol
+GITHUB_REPO_EXPERIMENTAL=dup-protocol-experimental
 CONTACT_EMAIL=gruverpetrov@gmail.com
 
 # Чеклист:
@@ -489,6 +507,10 @@ git push origin master
 #   docs/EXECUTION_ORDER.md    [EXP] blockers B1–B3
 #   docs/sprouts/              deployment profiles A–F
 #   scripts/industrial_gate.py [GATE]
+#   sdk/dup_sdk/               [EXP] thin operator SDK v0.1
+#   docs/AUDIT_90D_FIX_PLAN.md AUDIT A–H
+#   docs/FIRM_KICKOFF_CHECKLIST.md  Phase 6 org
+#   docs/sprouts/AI_LAB_PROFILE.md  AI/MEV lab
 
 
 # =============================================================================
@@ -511,11 +533,19 @@ python scripts/verify_parallel_rd_batch.py
 docker compose -p abs-staging-app -f docker-compose.staging.app.yml up -d --build
 python scripts/guarantor_council_manifest_gen.py
 python scripts/guarantor_council_staging_ceremony.py --dry-run
-# JWT_SECRET: load from local .env Part 24 (Experimental staging only; >=32 bytes)
+# $env:JWT_SECRET = "<из .env staging>"
 python scripts/guarantor_council_staging_ceremony.py --base-url http://127.0.0.1:19080
 
 # D) Evidence pack
 .\scripts\export_audit_pack.ps1 -Json
+
+# E) [EXP] AUDIT 90D + Phase 6 prep + SDK + AI lab
+.\scripts\verify_audit_90d_all.ps1 -SkipGate
+.\scripts\verify_audit_engagement_prep.ps1
+.\scripts\print_firm_handoff.ps1
+python scripts/dup_sdk_lab.py
+python scripts/ai_lab.py
+python scripts/ai_ops_anomaly.py --offline-only
 
 
 # =============================================================================
@@ -530,7 +560,7 @@ python scripts/guarantor_council_staging_ceremony.py --base-url http://127.0.0.1
 # | feature_nft=true на 778888        | industrial_gate FAIL                |
 # | feature_long_range=true prod JSON | ADR 0017 lab only                   |
 # | «87 NFT гаранты L1»               | council governance only (ADR 0022)  |
-# | Claim libp2p 48h без evidence     | PASS pack: docs/evidence/runs/3c801b87/ |
+# | Claim libp2p 48h без evidence     | см. EVIDENCE_MATRIX (35104db0 FAIL) |
 # | Extended API :8081 отдельный      | :8081 = node2 REST                  |
 #
 
@@ -563,7 +593,9 @@ python scripts/guarantor_council_staging_ceremony.py --base-url http://127.0.0.1
 # | Long-Range lab                 | EXPERIMENTAL  |
 # | Council 87 NFT                 | EXPERIMENTAL  |
 # | EVM depth labs                 | EXPERIMENTAL  |
-# | TCP+TLS mTLS prod reference    | HYBRID        |
+# | Thin SDK / AI sprouts / AUDIT 90D | EXPERIMENTAL |
+# | Firm audit engagement (pin scope)| PIN (dup-protocol) |
+# | TCP+TLS mTLS prod reference    | PIN (Hybrid folder) |
 # | Port fixes back to audit pin   | merge Hybrid  |
 #
 # Не смешивать: Long-Range + audit pin mesh · NFT on 778888
@@ -602,7 +634,8 @@ python scripts/package_libp2p_evidence.py
 
 # Execution order / blockers:
 #   docs/EXECUTION_ORDER.md
-#   B1/B2/Phase3 CLOSED (3c801b87, lr48pass1, evm48pass1) · B3/Phase4 ADR 0021 NEXT
+#   B1/B2/B3 CLOSED · Phases 1–5 closed · next Phase 6 org (firm)
+#   STRICT packs: lp2pstrict1 · lrstrict1 · evmstrict1 · mempool48pass1
 
 
 # =============================================================================
@@ -633,7 +666,7 @@ Invoke-RestMethod http://127.0.0.1:19080/council/manifest?summary=1
 Invoke-RestMethod http://127.0.0.1:19080/council/stats
 Invoke-RestMethod http://127.0.0.1:19080/nft/stats
 
-# Genesis mint ceremony (admin JWT from local .env when jwt_enforce_admin=true):
+# Genesis mint ceremony (admin JWT = JWT_SECRET из staging .env):
 python scripts/mint_admin_jwt.py
 python scripts/guarantor_council_staging_ceremony.py --dry-run
 python scripts/guarantor_council_staging_ceremony.py --base-url http://127.0.0.1:19080
@@ -647,9 +680,127 @@ python -m pytest tests/unit/test_council_nft.py -q
 # [HONEST] Not claimed: mainnet council · signed on-chain gov · 48h council soak
 
 
+
+# =============================================================================
+# ЧАСТЬ 33: AUDIT 90D A–H [GATE] [HONEST]
+# =============================================================================
+# Money honesty + engagement prep. NOT soak / NOT firm PASS / NOT mainnet.
+# Docs: docs/AUDIT_90D_FIX_PLAN.md · docs/EXTERNAL_AUDIT_ENGAGEMENT.md
+
+cd C:\Users\vovun\Desktop\Absolute_Blockchain_Experimental
+
+# Единый прогон A–H (+ industrial_gate внутри -Phase All):
+.\scripts\verify_audit_90d_all.ps1
+.\scripts\verify_audit_90d_all.ps1 -SkipGate
+
+# По фазам:
+.\scripts\verify_audit_phase.ps1 -Phase A
+.\scripts\verify_audit_phase.ps1 -Phase G          # satoshi dual-write / money refuse
+.\scripts\verify_audit_phase.ps1 -Phase H          # engagement prep
+.\scripts\verify_audit_phase.ps1 -Phase All
+
+# Phase 5 host re-verify (oracle/shard/bridge OFF — NOT soak):
+.\scripts\verify_oracle_lab.ps1 -SkipGate
+.\scripts\verify_cross_shard_lab.ps1 -SkipGate
+.\scripts\verify_bridge_off_lab.ps1
+# Pack: docs/evidence/runs/phase5reverify2/
+
+# Money / industrial honesty helpers:
+.\scripts\verify_adr0021_wire_satoshi.ps1
+.\scripts\verify_persist_fail_closed.ps1
+.\scripts\verify_native_f64_hygiene.ps1
+.\scripts\verify_industrial_high_honesty.ps1
+
+
+# =============================================================================
+# ЧАСТЬ 34: PHASE 6 FIRM KICKOFF [ORG] [HONEST]
+# =============================================================================
+# Automated prep PASS ≠ firm audit PDF. Tracker expect 6/8; 2 human pending.
+
+cd C:\Users\vovun\Desktop\Absolute_Blockchain_Experimental
+
+.\scripts\verify_audit_engagement_prep.ps1
+.\scripts\print_firm_handoff.ps1
+python scripts/external_audit_tracker.py --list
+python scripts/external_audit_tracker.py --show-automated
+
+# Docs (fill brackets / NDA — human only):
+#   docs/FIRM_KICKOFF_CHECKLIST.md
+#   docs/FIRM_OUTREACH_LETTER.md
+#   docs/AUDIT_ENGAGEMENT_BRIEF.md
+#   docs/EXTERNAL_AUDIT_ENGAGEMENT.md
+#   docs/evidence/runs/phase6prep1/
+
+# Primary firm scope = PIN tag (not Experimental as «audited»):
+#   https://github.com/Gruver87/dup-protocol
+#   tag: v1.3.1339-tip-v2-industrial
+
+# Record tip SHA at kickoff:
+git rev-parse HEAD
+
+# After REAL firm evidence only (https URL + real note — no TBD):
+# python scripts/external_audit_tracker.py --set "External penetration test scheduled" --note "..." --evidence-url "https://..."
+# python scripts/external_audit_tracker.py --set "Third-party smart-contract / L1 security audit completed" --note "..." --evidence-url "https://..."
+
+
+# =============================================================================
+# ЧАСТЬ 35: THIN OPERATOR SDK v0.1 [LAB] [EXP]
+# =============================================================================
+# sdk/dup_sdk — status/health/balance_satoshi/tx submit. NOT pin SDK / NOT PyPI / NOT wallet.
+
+cd C:\Users\vovun\Desktop\Absolute_Blockchain_Experimental
+$env:PYTHONPATH = "$PWD;$env:PYTHONPATH"
+
+python -c "from sdk.dup_sdk import Client, HONESTY, __version__; print(__version__, HONESTY)"
+python -m pytest tests/unit/test_dup_sdk.py -q
+python scripts/dup_sdk_lab.py
+python scripts/dup_sdk_lab.py --base-url http://127.0.0.1:18180
+
+# Auth for eth_* on prod mesh (jwt_enforce_admin): need ADMIN JWT, not only X-API-Key
+# Values ONLY in .env / session — never paste secrets into this file:
+#   $env:DUP_SDK_BASE_URL = "http://127.0.0.1:18180"
+#   $env:DUP_SDK_API_KEY  = "<from RPC_API_KEYS>"
+#   $env:DUP_SDK_BEARER   = (python scripts/mint_admin_jwt.py)   # needs JWT_SECRET
+#   python -c "from sdk.dup_sdk import Client; c=Client.from_env(); print(c.auth_configured()); print(c.get_block_number())"
+
+# Docs: sdk/README.md
+
+
+# =============================================================================
+# ЧАСТЬ 36: AI / MEV SPROUTS LAB [LAB] [EXP]
+# =============================================================================
+# feature_ai_agents / feature_ai_validator / feature_mev MUST stay false on prod 778888 JSON.
+# NOT consensus-wired / NOT soak / NOT mainnet.
+
+cd C:\Users\vovun\Desktop\Absolute_Blockchain_Experimental
+
+python scripts/ai_lab.py
+python scripts/ai_ops_anomaly.py --offline-only
+python scripts/ai_ops_anomaly.py
+python -m pytest tests/unit/test_ai_sprout_harden.py tests/unit/test_wave43_ai_agents.py -q
+
+# Profile: docs/sprouts/AI_LAB_PROFILE.md
+# Code: features/ai_manager.py · ai_ports.py · ai_validator.py · ai_ops.py · mev_analyzer.py
+
+
+# =============================================================================
+# EVIDENCE PACKS (quick map — claim ONLY if pack says passed=true)
+# =============================================================================
+# [EXP] docs/evidence/runs/
+#   3c801b87 / lp2pstrict1     libp2p 48h / STRICT
+#   lr48pass1 / lrstrict1      Long-Range lab / STRICT
+#   evm48pass1 / evmstrict1    EVM mesh / STRICT
+#   mempool48pass1             mempool+validation STRICT
+#   ind48pass1                 industrial tip 48h
+#   phase5reverify2            oracle/shard/bridge-OFF host re-verify (NOT soak)
+#   phase6prep1                firm kickoff PREP (NOT firm PASS)
+# [PIN] tip-v2: see Hybrid/pin EVIDENCE_MATRIX · tag v1.3.1339-tip-v2-industrial
+
+
 # =============================================================================
 # КОНЕЦ СПРАВОЧНИКА
-#   Hybrid: audit pin · Experimental: R&D + council + libp2p
-#   Обновлять после major ADR / gate / evidence changes
+#   PIN: dup-protocol · Experimental: dup-protocol-experimental
+#   Brand: DUP Labs / DUP Protocol · Author D.U.P.
+#   Обновлять после major ADR / gate / evidence / SDK / audit-prep changes
 #   Бэкап перед большим edit: Absolute_Blockchain_All_Commands_FIXED.bak_YYYYMMDD.txt
 # =============================================================================

@@ -15,6 +15,7 @@ Canonical language for this repository is **English**. Older inherited entries b
 
 ### Experimental R&D
 
+- **Commands face sync (2026-10-01):** `docs/ALL_COMMANDS.txt` (+ Desktop `Absolute_Blockchain_All_Commands_FIXED.txt`) — Parts 33–36: AUDIT 90D, Phase 6 firm prep, `dup_sdk` v0.1.1, AI/MEV labs; GitHub URLs → `dup-protocol` / `dup-protocol-experimental`. **Not** soak / **not** firm PASS.
 - **Thin operator SDK v0.1.1 (2026-10-01):** `bearer_token` / `Client.from_env()` (`DUP_SDK_BEARER` / `DUP_SDK_API_KEY` / `RPC_API_KEYS`); placeholder secrets refused. Fixes prod-mesh eth_* auth wiring without inventing tokens. **Not** wallet custody / **not** mainnet / **not** PyPI.
 
 - **Phase 6 firm kickoff prep (2026-10-01):** pack [`docs/evidence/runs/phase6prep1/`](docs/evidence/runs/phase6prep1/) — SHA `a978328` recorded; [`FIRM_KICKOFF_CHECKLIST.md`](docs/FIRM_KICKOFF_CHECKLIST.md); outreach draft [`FIRM_OUTREACH_LETTER.md`](docs/FIRM_OUTREACH_LETTER.md); `.\scripts\print_firm_handoff.ps1`; DUP-branded [`AUDIT_ENGAGEMENT_BRIEF.md`](docs/AUDIT_ENGAGEMENT_BRIEF.md); SECURITY.md honesty (Experimental Noise vs pin TLS). **Not** firm PASS / **not** pen-test / **not** soak. Human tracker items still pending (2/8).
