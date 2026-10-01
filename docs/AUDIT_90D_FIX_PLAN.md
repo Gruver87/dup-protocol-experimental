@@ -48,7 +48,7 @@
 | C2 | Cross-shard migration: `balance_satoshi` wire; refuse float-only credit | Done |
 | C3 | `InboundEnvelope.amount_satoshi` + mismatch refuse | Done |
 | C4 | P2P `validator_register` requires `stake_satoshi` | Done |
-| C1 | Broader StoragePort float display wrappers | Deferred (ports already have `get_balance_satoshi`; callers remain) |
+| C1 | Broader StoragePort float display wrappers | Done (2026-10-01) — QueryFacade + REST/RPC prefer `get_balance_satoshi`; display ABS from sat |
 
 ---
 
@@ -81,8 +81,8 @@
 | Step | Action | Status |
 |------|--------|--------|
 | F1 | ADR: Absolute-VM forever **or** Yellow Paper + revm | Done decision — **Absolute-VM kept** ([ADR 0023](adr/0023-absolute-vm-opcode-map.md)); YP+revm remains future optional |
-| F2 | Real ZK circuits or strip module from explorer entirely | Later |
-| F3 | External firm audit engagement | Later (org Phase 6) |
+| F2 | Real ZK circuits or strip module from explorer entirely | Done strip — explorer ZK generate UI removed; honesty panel only |
+| F3 | External firm audit engagement | Checklist shipped — [EXTERNAL_AUDIT_ENGAGEMENT.md](EXTERNAL_AUDIT_ENGAGEMENT.md); firm kickoff is org |
 
 ---
 
@@ -93,4 +93,21 @@
 - Docs honesty matches code  
 - No claim of soak unless pack exists  
 
-**Current focus:** Phases A–F1 closed for this audit wave. Next = operator-ordered org (E4 soak / F2–F3) or residual C1 call-site sweep.
+**Current focus:** Code/docs wave C1+F2+F3 checklist closed without soak. Remaining: **E4 soak** (operator) · firm audit kickoff (org) · residual float call-sites outside QueryFacade/REST wallet surfaces.
+
+---
+
+## Operator self-check (per phase)
+
+```powershell
+.\scripts\verify_audit_phase.ps1 -Phase A
+.\scripts\verify_audit_phase.ps1 -Phase B
+.\scripts\verify_audit_phase.ps1 -Phase C
+.\scripts\verify_audit_phase.ps1 -Phase D
+.\scripts\verify_audit_phase.ps1 -Phase E
+.\scripts\verify_audit_phase.ps1 -Phase F
+.\scripts\verify_audit_phase.ps1 -Phase All          # + industrial_gate
+.\scripts\verify_audit_phase.ps1 -Phase E -MeshProbe # optional live probe (NOT soak)
+```
+
+`-SkipGate` skips `industrial_gate.py`. Unit/needle checks only — **not** a 48h soak claim.

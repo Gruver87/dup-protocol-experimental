@@ -567,46 +567,22 @@
     </div>
   </div>
 
-  <!-- ZK PROOFS -->
+  <!-- ZK PROOFS (Phase F2: stripped interactive theater — honesty panel only) -->
   <div id="sec-zk" class="section">
     <div style="margin-bottom:12px;padding:10px 14px;border:1px solid var(--yellow);border-radius:8px;font-size:12px">
-      <b>DEMO / R&amp;D</b> — Range proofs refused (hash theater removed). Knowledge/balance are educational Fiat–Shamir only — not audited ZK.
+      <b>NOT CLAIMED for diligence</b> — Absolute has <b>no audited ZK circuits</b>.
+      Range proofs are <code>NotImplemented</code> (hash theater removed).
+      Educational Fiat–Shamir (knowledge/balance) is <b>disabled in this explorer UI</b>
+      so demos cannot paint “ZK ready”. Lab/API surfaces remain refuse-closed under prod where gated.
     </div>
-    <div class="grid2">
-      <div class="card">
-        <h3>Zero-Knowledge Proof Demo</h3>
-        <div class="form-row"><label>Proof Type</label>
-          <select id="zk-type" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:6px;width:100%">
-            <option value="knowledge">Knowledge Proof (know a secret)</option>
-            <option value="range" disabled>Range Proof (REFUSED — not ZK)</option>
-            <option value="balance">Balance Proof (R&amp;D only)</option>
-          </select>
-        </div>
-        <div class="form-row"><label>Secret value</label><input id="zk-secret" type="number" value="42" /></div>
-        <button class="btn btn-green" onclick="runZK()" style="width:100%">Generate ZK Proof</button>
-        <div id="zk-result" style="margin-top:12px;font-family:monospace;font-size:12px;color:var(--green)"></div>
-      </div>
-      <div class="card">
-        <h3>ZK System Info</h3>
-        <table><tbody id="zk-info-table"></tbody></table>
-      </div>
-    </div>
-    <div class="grid2" style="margin-top:16px">
-      <div class="card">
-        <h3>Range Proof</h3>
-        <div class="form-row"><label>Value</label><input id="zk-range-val" type="number" value="42"/></div>
-        <div class="form-row"><label>Min</label><input id="zk-range-min" type="number" value="0"/></div>
-        <div class="form-row"><label>Max</label><input id="zk-range-max" type="number" value="100"/></div>
-        <button class="btn btn-blue" onclick="proveRange()" style="width:100%">Prove Range</button>
-        <div id="zk-range-result" style="margin-top:10px;font-size:12px"></div>
-      </div>
-      <div class="card">
-        <h3>ZK Transaction</h3>
-        <div class="form-row"><label>Sender Address</label><input id="zk-tx-sender" placeholder="0xabc..."/></div>
-        <div class="form-row"><label>Amount (hidden)</label><input id="zk-tx-amount" type="number" value="10"/></div>
-        <button class="btn btn-blue" onclick="createZKTx()" style="width:100%">Create ZK Transaction</button>
-        <div id="zk-tx-result" style="margin-top:10px;font-family:monospace;font-size:11px"></div>
-      </div>
+    <div class="card">
+      <h3>ZK status (read-only)</h3>
+      <p style="font-size:13px;color:var(--gray);margin:0 0 12px">
+        Prefer Ops Console + <code>docs/EXTERNAL_AUDIT_ENGAGEMENT.md</code> for fund / ПВТ review.
+        Do not generate “proofs” from this page.
+      </p>
+      <table><tbody id="zk-info-table"></tbody></table>
+      <div id="zk-result" style="margin-top:12px;font-family:monospace;font-size:12px;color:var(--yellow)"></div>
     </div>
   </div>
 
@@ -2710,24 +2686,37 @@ async function loadTruthLayer() {
   }
 }
 
-// ── ZK Proofs ─────────────────────────────────────────────────────────────────
+// ── ZK Proofs (explorer UI stripped — honesty only) ───────────────────────────
 async function loadZKInfo() {
   const data = await get('/zk/info');
-  if (!data) return;
   const t = document.getElementById('zk-info-table');
+  const el = document.getElementById('zk-result');
+  if (el) {
+    el.textContent = 'Explorer ZK demo controls removed (Phase F2). No generate/proof UI.';
+  }
+  if (!data || !t) return;
   t.innerHTML = Object.entries(data).map(([k,v]) =>
     `<tr><td style="color:var(--gray)">${k}</td><td>${JSON.stringify(v)}</td></tr>`).join('');
 }
 
 async function runZK() {
-  const type = document.getElementById('zk-type').value;
-  const secret = parseInt(document.getElementById('zk-secret').value)||42;
-  const r = await post('/zk/prove', {type, secret, value: secret, min:0, max:100, balance:secret, threshold:10});
   const el = document.getElementById('zk-result');
-  if (r && !r.error) {
-    el.innerHTML = `<div class="badge badge-green">VALID PROOF</div><pre style="margin-top:8px;font-size:11px;overflow:auto">${JSON.stringify(r, null, 2)}</pre>`;
-  } else {
-    el.innerHTML = `<span style="color:var(--red)">${r?.error||'Failed'}</span>`;
+  if (el) {
+    el.innerHTML = '<span style="color:var(--yellow)">REFUSED: explorer ZK generate UI removed — not audited ZK</span>';
+  }
+}
+
+async function proveRange() {
+  const el = document.getElementById('zk-range-result') || document.getElementById('zk-result');
+  if (el) {
+    el.innerHTML = '<span style="color:var(--yellow)">REFUSED: range proof theater removed</span>';
+  }
+}
+
+async function createZKTx() {
+  const el = document.getElementById('zk-tx-result') || document.getElementById('zk-result');
+  if (el) {
+    el.innerHTML = '<span style="color:var(--yellow)">REFUSED: ZK tx demo removed from explorer</span>';
   }
 }
 
@@ -4293,25 +4282,6 @@ async function loadContracts() {
   el.innerHTML = Array.isArray(contracts)
     ? `<table><thead><tr><th>Address/Name</th></tr></thead><tbody>${contracts.map(c=>`<tr><td class="hash">${c}</td></tr>`).join('')}</tbody></table>`
     : `<pre style="font-size:11px">${JSON.stringify(contracts, null, 2)}</pre>`;
-}
-
-// ── ZK Extended ────────────────────────────────────────────────────────────────
-async function proveRange() {
-  const value = parseInt(document.getElementById('zk-range-val').value)||42;
-  const min_value = parseInt(document.getElementById('zk-range-min').value)||0;
-  const max_value = parseInt(document.getElementById('zk-range-max').value)||100;
-  const r = await post('/zk/prove/range', {value, min_value, max_value});
-  document.getElementById('zk-range-result').innerHTML = r
-    ? `<div class="badge badge-${r.valid?'green':'red'}">${r.valid?'Valid':'Invalid'}</div> Range: ${r.range||`[${min_value}, ${max_value}]`}`
-    : '<span style="color:var(--red)">Failed</span>';
-}
-async function createZKTx() {
-  const sender = document.getElementById('zk-tx-sender').value;
-  const amount = parseInt(document.getElementById('zk-tx-amount').value)||10;
-  const r = await post('/zk/create-tx', {sender, amount});
-  document.getElementById('zk-tx-result').innerHTML = r?.success
-    ? `<div class="badge badge-green">TX Created!</div><div style="word-break:break-all">${r.tx}</div>`
-    : `<span style="color:var(--red)">${r?.error||'Failed'}</span>`;
 }
 
 // ── Bridge Extended ────────────────────────────────────────────────────────────

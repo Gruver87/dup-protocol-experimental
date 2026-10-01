@@ -1416,9 +1416,15 @@ class JSONRPCHandler(BaseHTTPRequestHandler):
         # ── Аккаунты ──────────────────────────────────────────────────────
         if method == "eth_getBalance":
             address = params[0] if params else ""
-            balance = bc.get_balance(address)
+            q = self.__class__.query_facade or getattr(bc, "query_facade", None)
             try:
-                return hex(int(to_satoshi(balance or 0)) * WEI_PER_SATOSHI)
+                if q is not None and hasattr(q, "get_balance_satoshi"):
+                    balance_sat = int(q.get_balance_satoshi(address) or 0)
+                elif hasattr(bc, "get_balance_satoshi"):
+                    balance_sat = int(bc.get_balance_satoshi(address) or 0)
+                else:
+                    balance_sat = int(to_satoshi(bc.get_balance(address) or 0))
+                return hex(balance_sat * WEI_PER_SATOSHI)
             except (TypeError, ValueError) as exc:
                 raise ValueError("unparseable balance") from exc
 
@@ -3022,13 +3028,20 @@ class RESTHandler(BaseHTTPRequestHandler):
                             "transactions": txs,
                         })
                     else:
-                        balance = bc.get_balance(addr)
+                        from runtime.amount import from_satoshi_float
+
+                        if hasattr(bc, "get_balance_satoshi"):
+                            balance_sat = int(bc.get_balance_satoshi(addr) or 0)
+                        else:
+                            balance_sat = int(to_satoshi(bc.get_balance(addr) or 0))
+                        balance = float(from_satoshi_float(balance_sat))
                         nonce = db.get_nonce(addr)
                         txs = db.get_transactions_by_address(addr, limit=50)
                         account = db.get_account(addr)
                         self._json({
                             "address": addr,
                             "balance": balance,
+                            "balance_satoshi": balance_sat,
                             "balance_formatted": f"{balance:.6f} {cfg.coin_symbol}",
                             "nonce": nonce,
                             "is_contract": bool(account and account.get("code")),
@@ -4456,13 +4469,23 @@ class RESTHandler(BaseHTTPRequestHandler):
 
             # ── Wallet balance ────────────────────────────────────────────────
             elif path.startswith("/wallet/balance"):
+                from runtime.amount import from_satoshi_float
+
                 addr = qs.get("address", [""])[0]
                 if not addr and "/" in path[16:]:
                     addr = path.split("/wallet/balance/")[-1]
                 if addr and bc:
-                    balance = bc.get_balance(addr) if hasattr(bc, "get_balance") else 0
-                    self._json({"address": addr, "balance": balance,
-                                "symbol": cfg.coin_symbol if cfg else "ABS"})
+                    if hasattr(bc, "get_balance_satoshi"):
+                        balance_sat = int(bc.get_balance_satoshi(addr) or 0)
+                    else:
+                        balance_sat = int(to_satoshi(bc.get_balance(addr) or 0))
+                    balance = float(from_satoshi_float(balance_sat))
+                    self._json({
+                        "address": addr,
+                        "balance": balance,
+                        "balance_satoshi": balance_sat,
+                        "symbol": cfg.coin_symbol if cfg else "ABS",
+                    })
                 else:
                     self._error(400, "address parameter required")
 
@@ -4747,9 +4770,17 @@ class RESTHandler(BaseHTTPRequestHandler):
                 ))
 
             elif path == "/wallet/status":
+                from runtime.amount import from_satoshi_float
+
                 w = self.__class__.wallet
                 addr = w.address if w else None
-                balance = bc.get_balance(addr) if addr else 0.0
+                balance_sat = 0
+                if addr and bc is not None:
+                    if hasattr(bc, "get_balance_satoshi"):
+                        balance_sat = int(bc.get_balance_satoshi(addr) or 0)
+                    elif hasattr(bc, "get_balance"):
+                        balance_sat = int(to_satoshi(bc.get_balance(addr) or 0))
+                balance = float(from_satoshi_float(balance_sat))
                 self._json({
                     "signing_enabled": w is not None,
                     "address": addr,
@@ -4757,6 +4788,7 @@ class RESTHandler(BaseHTTPRequestHandler):
                     "founder_address": getattr(cfg, "founder_address", ""),
                     "miner_address": cfg.miner_address,
                     "balance": balance,
+                    "balance_satoshi": balance_sat,
                     "balance_formatted": f"{balance:.6f} {cfg.coin_symbol}",
                     "hint": (
                         "Set WALLET_PRIVATE_KEY in .env — this wallet mines blocks and signs txs. "
@@ -5147,7 +5179,9 @@ class RESTHandler(BaseHTTPRequestHandler):
                 shard_id = sh.get_shard_for_address(addr) if sh and hasattr(sh, "get_shard_for_address") else None
                 balance_sat = 0
                 try:
-                    if bc and hasattr(bc, "get_balance"):
+                    if bc and hasattr(bc, "get_balance_satoshi"):
+                        balance_sat = int(bc.get_balance_satoshi(addr) or 0)
+                    elif bc and hasattr(bc, "get_balance"):
                         balance_sat = int(to_satoshi(money_abs(bc.get_balance(addr), field="balance")))
                     elif sh and hasattr(sh, "get_shard_balance"):
                         balance_sat = int(

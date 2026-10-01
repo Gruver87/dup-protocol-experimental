@@ -233,6 +233,15 @@ def _check_p2p_hardening() -> tuple[list[str], list[str]]:
         errors.append("CEREMONY_DRY_RUN.md missing (Phase E2)")
     if not (ROOT / "docs" / "INVESTOR_DECK_SKELETON.md").is_file():
         errors.append("INVESTOR_DECK_SKELETON.md missing (Phase E3)")
+    if not (ROOT / "docs" / "EXTERNAL_AUDIT_ENGAGEMENT.md").is_file():
+        errors.append("EXTERNAL_AUDIT_ENGAGEMENT.md missing (Phase F3 checklist)")
+    explorer_html = (ROOT / "web" / "explorer" / "index.html").read_text(encoding="utf-8")
+    if "Generate ZK Proof" in explorer_html or "onclick=\"runZK()\"" in explorer_html:
+        errors.append("explorer must not expose Generate ZK Proof UI (Phase F2 strip)")
+    if "NOT CLAIMED for diligence" not in explorer_html and "no audited ZK" not in explorer_html.lower():
+        errors.append("explorer ZK section must disclose not claimed / no audited ZK")
+    if "get_balance_satoshi" not in (ROOT / "api" / "query_facade.py").read_text(encoding="utf-8"):
+        errors.append("QueryFacade must expose get_balance_satoshi (Phase C1)")
     if not (ROOT / "api" / "market_feed.py").is_file():
         errors.append("api/market_feed.py missing (ops market snapshot)")
     else:

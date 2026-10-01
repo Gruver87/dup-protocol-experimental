@@ -6,7 +6,7 @@ from __future__ import annotations
 import json
 from typing import Any, Dict, List, Optional, Sequence
 
-from runtime.amount import WEI_PER_SATOSHI, abs_to_wei, to_satoshi
+from runtime.amount import WEI_PER_SATOSHI, abs_to_wei
 from api.eth_format import (
     format_block,
     format_block_tx_count,
@@ -227,9 +227,9 @@ class RpcService:
                 address = params[0] if params else ""
                 if not address:
                     raise ValueError("invalid address")
-            balance = q.get_balance(address)
+            balance_sat = q.get_balance_satoshi(address)
             try:
-                return hex(int(to_satoshi(balance or 0)) * WEI_PER_SATOSHI)
+                return hex(int(balance_sat) * WEI_PER_SATOSHI)
             except (TypeError, ValueError) as exc:
                 raise ValueError("unparseable balance") from exc
 
