@@ -273,14 +273,14 @@ def apply_store_delta_satoshi(
     address: str,
     delta_sat: int,
     *,
-    allow_float_fallback: bool = True,
+    allow_float_fallback: bool = False,
 ) -> bool:
     """Apply integer satoshi delta on a storage/db handle.
 
     Prefer ``balance_delta_satoshi``. Float ``update_balance`` / ``balance_delta``
-    only when ``allow_float_fallback=True`` (legacy / incomplete fakes). Feature
-    sprouts, EVM money paths, faucet, and cross-shard debit pass
-    ``allow_float_fallback=False``.
+    only when ``allow_float_fallback=True`` (legacy / incomplete fakes / unit
+    harnesses). Default is fail-closed ``False`` — callers that need float
+    fallback must opt in explicitly.
     """
     if store is None or not address:
         return False

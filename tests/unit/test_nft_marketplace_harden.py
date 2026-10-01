@@ -110,3 +110,35 @@ def test_sdk_nft_read_helpers_mocked():
         tok = c.get_nft_token("t")
         assert tok["price_satoshi"] == 2_000_000
         assert c.get_nft_listings() == []
+
+
+def test_auction_refuses_dust_float_and_settles_satoshi():
+    tmp = tempfile.mkdtemp()
+    db = Database(os.path.join(tmp, "n3.db"))
+    db.initialize()
+    seller = "0x" + "e" * 40
+    bidder = "0x" + "f" * 40
+    db.set_balance(seller, 500.0)
+    db.set_balance(bidder, 500.0)
+    m = NFTMarketplace(db=db)
+    m.tokens.clear()
+    m.mint("t3", "n", "d", "i", seller, price_satoshi=0)
+    assert m.create_auction("t3", seller, start_price=1.25) is None
+    aid = m.create_auction(
+        "t3",
+        seller,
+        start_price_satoshi=int(to_satoshi(10)),
+        reserve_price_satoshi=int(to_satoshi(10)),
+    )
+    assert aid
+    assert m.auctions[aid]["start_price_satoshi"] == int(to_satoshi(10))
+    bad = m.place_bid(aid, bidder, amount=10.5)
+    assert bad["success"] is False
+    ok = m.place_bid(aid, bidder, amount_satoshi=int(to_satoshi(15)))
+    assert ok["success"] is True
+    assert ok["current_bid_satoshi"] == int(to_satoshi(15))
+    fin = m.finalize_auction(aid)
+    assert fin["success"] is True
+    assert fin["price_satoshi"] == int(to_satoshi(15))
+    assert m.get_token("t3")["owner"] == bidder
+    db.close()
