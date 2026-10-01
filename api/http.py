@@ -7171,8 +7171,10 @@ class RESTHandler(BaseHTTPRequestHandler):
                 if amount <= 0 or amount > 1000:
                     self._error(400, "amount must be 0 < amount <= 1000"); return
                 amount_sat = int(to_satoshi(amount))
-                if not apply_store_delta_satoshi(db, address, amount_sat):
-                    db.update_balance(address, amount)
+                if not apply_store_delta_satoshi(
+                    db, address, amount_sat, allow_float_fallback=False
+                ):
+                    self._error(503, "satoshi_store_required"); return
                 bal_sat = (
                     int(db.get_balance_satoshi(address) or 0)
                     if hasattr(db, "get_balance_satoshi")

@@ -262,6 +262,14 @@ def _check_p2p_hardening() -> tuple[list[str], list[str]]:
         ROOT / "execution" / "evm_adapter.py"
     ).read_text(encoding="utf-8"):
         errors.append("evm_adapter must not use float*1e6 satoshi heuristic")
+    evm_py = (ROOT / "execution" / "evm_adapter.py").read_text(encoding="utf-8")
+    if "allow_float_fallback=False" not in evm_py:
+        errors.append("evm_adapter must refuse float money fallback")
+    if "wei_to_abs" in evm_py or "from_satoshi_float(have - need)" in evm_py:
+        errors.append("evm_adapter must not float-fallback transfer/writeback")
+    http_faucet = (ROOT / "api" / "http.py").read_text(encoding="utf-8")
+    if "satoshi_store_required" not in http_faucet:
+        errors.append("devnet faucet must refuse float update_balance fallback")
     if not (ROOT / "api" / "market_feed.py").is_file():
         errors.append("api/market_feed.py missing (ops market snapshot)")
     else:

@@ -279,7 +279,8 @@ def apply_store_delta_satoshi(
 
     Prefer ``balance_delta_satoshi``. Float ``update_balance`` / ``balance_delta``
     only when ``allow_float_fallback=True`` (legacy / incomplete fakes). Feature
-    sprouts (NFT/plasma/lightning) pass ``allow_float_fallback=False``.
+    sprouts, EVM money paths, faucet, and cross-shard debit pass
+    ``allow_float_fallback=False``.
     """
     if store is None or not address:
         return False

@@ -276,7 +276,11 @@ class CrossShardCoordinator:
 
         if db is None or not addr or not int(delta_sats):
             return False
-        return bool(apply_store_delta_satoshi(db, addr, int(delta_sats)))
+        return bool(
+            apply_store_delta_satoshi(
+                db, addr, int(delta_sats), allow_float_fallback=False
+            )
+        )
 
     def export_migration_debit(self, row: dict, db, owns_shard: Callable[[int], bool]) -> Optional[dict]:
         """Debit balance on source shard; return gossip payload for destination.

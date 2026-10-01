@@ -93,7 +93,7 @@
 - Docs honesty matches code  
 - No claim of soak unless pack exists  
 
-**Current focus:** Feature sprouts (NFT/plasma/lightning/crypto_will + dynamic_sharding) refuse float `update_balance` when `balance_delta_satoshi` is absent (`allow_float_fallback=False`). Remaining without soak: firm audit kickoff (org) · **E4 soak** (operator).
+**Current focus:** AUDIT 90D code track closed (EVM + sprouts refuse float money fallback). Remaining without soak: **firm audit kickoff (org)** · E4 tip soak (operator-ordered only).
 
 ---
 

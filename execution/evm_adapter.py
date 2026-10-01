@@ -103,21 +103,20 @@ class EVMAdapter:
     def _selfdestruct_contract(self, contract_addr: str, beneficiary: str) -> None:
         contract_addr = self._normalize_addr(contract_addr)
         beneficiary = self._normalize_addr(beneficiary)
-        from runtime.amount import account_balance_abs, account_satoshi, apply_store_delta_satoshi
+        from runtime.amount import account_satoshi, apply_store_delta_satoshi
 
         account = self.db.get_account(contract_addr) or {}
         sat = int(account_satoshi(account))
         if sat > 0:
-            if hasattr(self.db, "balance_delta_satoshi"):
-                self.db.balance_delta_satoshi(beneficiary, sat)
-                self.db.balance_delta_satoshi(contract_addr, -sat)
-            elif not (
-                apply_store_delta_satoshi(self.db, beneficiary, sat)
-                and apply_store_delta_satoshi(self.db, contract_addr, -sat)
+            if not (
+                apply_store_delta_satoshi(
+                    self.db, beneficiary, sat, allow_float_fallback=False
+                )
+                and apply_store_delta_satoshi(
+                    self.db, contract_addr, -sat, allow_float_fallback=False
+                )
             ):
-                balance = account_balance_abs(account)
-                self.db.update_balance(beneficiary, balance)
-                self.db.update_balance(contract_addr, -balance)
+                raise RuntimeError("satoshi_store_required_selfdestruct")
         self.db.save_account(
             contract_addr,
             balance=0.0,
@@ -389,7 +388,7 @@ class EVMAdapter:
     def _transfer_sat_fail_closed(
         self, from_addr: str, to_addr: str, sat: int
     ) -> Optional[str]:
-        from runtime.amount import apply_store_delta_satoshi, from_satoshi_float
+        from runtime.amount import apply_store_delta_satoshi
 
         need = int(sat or 0)
         if need <= 0:
@@ -399,14 +398,13 @@ class EVMAdapter:
         have = int(self.db.get_balance_satoshi(from_addr) or 0)
         if have < need:
             return "insufficient_call_value"
-        if apply_store_delta_satoshi(self.db, from_addr, -need) and apply_store_delta_satoshi(
-            self.db, to_addr, need
+        if apply_store_delta_satoshi(
+            self.db, from_addr, -need, allow_float_fallback=False
+        ) and apply_store_delta_satoshi(
+            self.db, to_addr, need, allow_float_fallback=False
         ):
             return None
-        to_have = int(self.db.get_balance_satoshi(to_addr) or 0)
-        self.db.set_balance(from_addr, from_satoshi_float(have - need))
-        self.db.set_balance(to_addr, from_satoshi_float(to_have + need))
-        return None
+        return "satoshi_store_required"
 
     def _refund_sat(self, from_addr: str, to_addr: str, sat: int) -> None:
         err = self._transfer_sat_fail_closed(from_addr, to_addr, sat)
@@ -873,7 +871,7 @@ class EVMAdapter:
                     continue
                 from_addr = self._normalize_addr(str(op.get("from") or ""))
                 to_addr = self._normalize_addr(str(op.get("to") or ""))
-                from runtime.amount import WEI_PER_SATOSHI, apply_store_delta_satoshi, from_satoshi_float
+                from runtime.amount import WEI_PER_SATOSHI, apply_store_delta_satoshi
 
                 sat_need = value_wei // WEI_PER_SATOSHI
                 if sat_need <= 0:
@@ -882,12 +880,14 @@ class EVMAdapter:
                 if have < sat_need:
                     raise RuntimeError("insufficient_writeback_value")
                 if not (
-                    apply_store_delta_satoshi(self.db, from_addr, -sat_need)
-                    and apply_store_delta_satoshi(self.db, to_addr, sat_need)
+                    apply_store_delta_satoshi(
+                        self.db, from_addr, -sat_need, allow_float_fallback=False
+                    )
+                    and apply_store_delta_satoshi(
+                        self.db, to_addr, sat_need, allow_float_fallback=False
+                    )
                 ):
-                    wei_to_abs = from_satoshi_float(sat_need)
-                    self.db.update_balance(from_addr, -wei_to_abs)
-                    self.db.update_balance(to_addr, wei_to_abs)
+                    raise RuntimeError("satoshi_store_required_writeback")
             elif kind == "append_logs":
                 addr = self._normalize_addr(str(op.get("address") or ""))
                 logs = list(op.get("logs") or [])
