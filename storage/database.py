@@ -166,6 +166,8 @@ class Database:
             ("lightning_channel_states", "balance2_satoshi", "INTEGER"),
             ("burn_stats", "burned_amount_satoshi", "INTEGER"),
             ("burn_stats", "total_burned_satoshi", "INTEGER"),
+            ("blocks", "total_burned_satoshi", "INTEGER"),
+            ("block_proposer_audit", "total_burned_satoshi", "INTEGER"),
             ("ai_agents", "total_profit_satoshi", "INTEGER"),
             ("mev_simulations", "profit_satoshi", "INTEGER"),
             ("plasma_blocks", "merkle_root", "TEXT NOT NULL DEFAULT ''"),
@@ -220,10 +222,11 @@ class Database:
         self._backfill_burn_satoshi()
 
     def _backfill_burn_satoshi(self) -> None:
-        """Backfill burn_stats satoshi twins from float ABS (idempotent)."""
+        """Backfill burn_stats / blocks / proposer_audit satoshi twins (idempotent)."""
         try:
             from runtime.amount import to_satoshi
 
+            # burn_stats: INTEGER PRIMARY KEY aliases rowid — use block_height.
             cols = {
                 row[1]
                 for row in self.conn.execute("PRAGMA table_info(burn_stats)").fetchall()
@@ -235,7 +238,6 @@ class Database:
             for abs_col, sat_col in pairs:
                 if sat_col not in cols or abs_col not in cols:
                     continue
-                # INTEGER PRIMARY KEY (block_height) aliases rowid — select PK explicitly.
                 rows = self.conn.execute(
                     f"SELECT block_height, {abs_col} FROM burn_stats "
                     f"WHERE {sat_col} IS NULL"
@@ -249,6 +251,29 @@ class Database:
                 if rows:
                     print(
                         f"[DB] Migration: backfilled burn_stats.{sat_col} for {len(rows)} row(s)"
+                    )
+
+            for table, pk in (("blocks", "height"), ("block_proposer_audit", "height")):
+                tcols = {
+                    row[1]
+                    for row in self.conn.execute(f"PRAGMA table_info({table})").fetchall()
+                }
+                if "total_burned_satoshi" not in tcols or "total_burned" not in tcols:
+                    continue
+                rows = self.conn.execute(
+                    f"SELECT {pk}, total_burned FROM {table} "
+                    f"WHERE total_burned_satoshi IS NULL"
+                ).fetchall()
+                for r in rows:
+                    sat = int(to_satoshi(r["total_burned"] or 0))
+                    self.conn.execute(
+                        f"UPDATE {table} SET total_burned_satoshi=? WHERE {pk}=?",
+                        (sat, r[pk]),
+                    )
+                if rows:
+                    print(
+                        f"[DB] Migration: backfilled {table}.total_burned_satoshi "
+                        f"for {len(rows)} row(s)"
                     )
             self.conn.commit()
         except Exception as e:
@@ -856,16 +881,18 @@ class Database:
                 ) from e
 
     def _insert_block(self, block: Dict) -> None:
-        from runtime.amount import money_abs
-
-        burned = money_abs(block.get("total_burned", 0.0), field="total_burned")
+        burned, burned_sat = self._abs_sat(
+            block.get("total_burned", 0.0), field="total_burned"
+        )
         stored = dict(block)
         stored["total_burned"] = burned
+        stored["total_burned_satoshi"] = burned_sat
         self.conn.execute(
             """INSERT OR REPLACE INTO blocks
                (height, hash, parent_hash, timestamp, miner,
-                tx_count, gas_used, total_burned, extra_data, data)
-               VALUES (?,?,?,?,?,?,?,?,?,?)""",
+                tx_count, gas_used, total_burned, total_burned_satoshi,
+                extra_data, data)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 block.get("height", block.get("number", 0)),
                 block.get("hash", block.get("block_hash", "")),
@@ -875,6 +902,7 @@ class Database:
                 block.get("tx_count", len(block.get("transactions", []))),
                 block.get("gas_used", 0),
                 burned,
+                burned_sat,
                 block.get("extra_data", ""),
                 json.dumps(stored),
             ),
@@ -882,23 +910,28 @@ class Database:
         self._insert_proposer_audit(stored)
 
     def _insert_proposer_audit(self, block: Dict) -> None:
-        from runtime.amount import money_abs
-
         height = int(block.get("height", block.get("number", 0)) or 0)
         block_hash = block.get("hash", block.get("block_hash", "")) or ""
         proposer = self._normalize_address(
             block.get("miner", block.get("proposer", "genesis")) or "genesis"
         )
+        burned, burned_sat = self._abs_sat(
+            block.get("total_burned", 0.0), field="total_burned"
+        )
+        if block.get("total_burned_satoshi") is not None:
+            burned_sat = int(block["total_burned_satoshi"])
         self.conn.execute(
             """INSERT OR REPLACE INTO block_proposer_audit
-               (height, block_hash, proposer, tx_count, total_burned, block_ts, recorded_at)
-               VALUES (?,?,?,?,?,?,?)""",
+               (height, block_hash, proposer, tx_count, total_burned,
+                total_burned_satoshi, block_ts, recorded_at)
+               VALUES (?,?,?,?,?,?,?,?)""",
             (
                 height,
                 block_hash,
                 proposer,
                 int(block.get("tx_count", len(block.get("transactions", []))) or 0),
-                money_abs(block.get("total_burned", 0.0), field="total_burned"),
+                burned,
+                burned_sat,
                 int(block.get("timestamp", int(time.time())) or 0),
                 int(time.time()),
             ),
@@ -1307,7 +1340,8 @@ class Database:
             except Exception as exc:
                 print(f"[DB] get_chain_metrics proposer_audit: {exc}")
             rows = self.conn.execute(
-                "SELECT height, timestamp, tx_count, total_burned FROM blocks "
+                "SELECT height, timestamp, tx_count, total_burned, total_burned_satoshi "
+                "FROM blocks "
                 "ORDER BY height DESC LIMIT ?",
                 (int(window),),
             ).fetchall()
@@ -1330,6 +1364,15 @@ class Database:
                     max(0, int(ordered[-1]["timestamp"]) - int(ordered[0]["timestamp"]))
                 )
             tps = (window_tx / max(window_elapsed, 1.0)) if window_elapsed > 0 else 0.0
+            burn_sats = 0
+            for r in rows:
+                if (
+                    "total_burned_satoshi" in r.keys()
+                    and r["total_burned_satoshi"] is not None
+                ):
+                    burn_sats += int(r["total_burned_satoshi"])
+                else:
+                    burn_sats += int(to_satoshi(r["total_burned"] or 0))
             return {
                 "height": tip,
                 "tx_count": int(tx_count),
@@ -1344,12 +1387,8 @@ class Database:
                 "window_tx_count": int(window_tx),
                 "window_elapsed_sec": round(window_elapsed, 2),
                 "tps": round(tps, 6),
-                "burn_last_window": round(
-                    from_satoshi_float(
-                        sum(to_satoshi(r["total_burned"] or 0) for r in rows)
-                    ),
-                    6,
-                ),
+                "burn_last_window": round(from_satoshi_float(burn_sats), 6),
+                "burn_last_window_satoshi": burn_sats,
                 "engine": self.engine,
             }
 
@@ -1359,8 +1398,6 @@ class Database:
         offset: int = 0,
         proposer: str = "",
     ) -> List[Dict]:
-        from runtime.amount import money_abs
-
         limit = max(1, min(int(limit), 200))
         offset = max(0, int(offset))
         with self.lock:
@@ -1378,18 +1415,25 @@ class Database:
                        ORDER BY height DESC LIMIT ? OFFSET ?""",
                     (limit, offset),
                 ).fetchall()
-            return [
-                {
+            out: List[Dict] = []
+            for r in rows:
+                row = {
                     "height": r["height"],
                     "block_hash": r["block_hash"],
                     "proposer": r["proposer"],
                     "tx_count": r["tx_count"],
-                    "total_burned": money_abs(r["total_burned"], field="total_burned"),
+                    "total_burned": r["total_burned"],
+                    "total_burned_satoshi": (
+                        r["total_burned_satoshi"]
+                        if "total_burned_satoshi" in r.keys()
+                        else None
+                    ),
                     "timestamp": r["block_ts"],
                     "recorded_at": r["recorded_at"],
                 }
-                for r in rows
-            ]
+                Database._overlay_sat(row, "total_burned", "total_burned_satoshi")
+                out.append(row)
+            return out
 
     def count_proposer_audit(
         self, proposer: str = ""

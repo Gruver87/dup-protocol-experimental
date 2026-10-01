@@ -591,14 +591,14 @@ class RocksChainStore:
     # ── blocks ────────────────────────────────────────────────────────────
 
     def _insert_block(self, block: Dict) -> None:
-        from runtime.amount import money_abs
+        from runtime.amount import money_abs, to_satoshi
 
         height = int(block.get("height", block.get("number", 0)) or 0)
         block_hash = block.get("hash", block.get("block_hash", "")) or ""
         stored = dict(block)
-        stored["total_burned"] = money_abs(
-            block.get("total_burned", 0.0), field="total_burned"
-        )
+        burned = money_abs(block.get("total_burned", 0.0), field="total_burned")
+        stored["total_burned"] = burned
+        stored["total_burned_satoshi"] = int(to_satoshi(burned))
         # v1.3.149: typed ABLK value when native pack_block_row is available.
         payload = self._pack_block_blob(stored)
         self._raw_put(kc.key_block_height(height), payload)
@@ -642,9 +642,15 @@ class RocksChainStore:
         return None
 
     def _insert_proposer_audit(self, block: Dict) -> None:
-        from runtime.amount import money_abs
+        from runtime.amount import money_abs, to_satoshi
 
         height = int(block.get("height", block.get("number", 0)) or 0)
+        burned = money_abs(block.get("total_burned", 0.0), field="total_burned")
+        burned_sat = (
+            int(block["total_burned_satoshi"])
+            if block.get("total_burned_satoshi") is not None
+            else int(to_satoshi(burned))
+        )
         audit = {
             "height": height,
             "block_hash": block.get("hash", block.get("block_hash", "")) or "",
@@ -652,7 +658,8 @@ class RocksChainStore:
                 block.get("miner", block.get("proposer", "genesis")) or "genesis"
             ),
             "tx_count": int(block.get("tx_count", len(block.get("transactions", []))) or 0),
-            "total_burned": money_abs(block.get("total_burned", 0.0), field="total_burned"),
+            "total_burned": burned,
+            "total_burned_satoshi": burned_sat,
             "block_ts": int(block.get("timestamp", int(time.time())) or 0),
             "recorded_at": int(time.time()),
         }
@@ -1147,7 +1154,7 @@ class RocksChainStore:
 
     def get_cached_total_burned(self) -> float | None:
         """O(1) prefix_last only. None if empty — never scan P_BURN on the poll path."""
-        from runtime.amount import money_abs
+        from runtime.amount import from_satoshi_float, money_abs
 
         engine = self._engine
         if engine is None or not hasattr(engine, "prefix_last"):
@@ -1163,6 +1170,8 @@ class RocksChainStore:
         row = self._loads_json_or_none(bytes(value), context="burn_total_cached")
         if row is None:
             return None
+        if row.get("total_burned_satoshi") is not None:
+            return from_satoshi_float(int(row["total_burned_satoshi"]))
         return money_abs(row.get("total_burned", 0.0), field="total_burned")
 
     def get_total_supply(self) -> float:
@@ -1718,14 +1727,21 @@ class RocksChainStore:
         return audit if isinstance(audit, dict) else None
 
     def _format_proposer_audit_row(self, audit: Dict) -> Dict:
-        from runtime.amount import money_abs
+        from runtime.amount import money_abs, to_satoshi
 
+        burned = money_abs(audit.get("total_burned", 0.0), field="total_burned")
+        burned_sat = (
+            int(audit["total_burned_satoshi"])
+            if audit.get("total_burned_satoshi") is not None
+            else int(to_satoshi(burned))
+        )
         return {
             "height": audit.get("height", 0),
             "block_hash": audit.get("block_hash", ""),
             "proposer": audit.get("proposer", ""),
             "tx_count": audit.get("tx_count", 0),
-            "total_burned": money_abs(audit.get("total_burned", 0.0), field="total_burned"),
+            "total_burned": burned,
+            "total_burned_satoshi": burned_sat,
             "timestamp": audit.get("block_ts", audit.get("timestamp", 0)),
             "recorded_at": audit.get("recorded_at", 0),
         }

@@ -295,6 +295,8 @@ function Verify-PhaseG {
     Assert-FileContains "storage/rocks_store.py" "price_satoshi" "G rocks NFT price_satoshi"
     Assert-FileContains "storage/database.py" "_backfill_burn_satoshi" "G burn satoshi backfill"
     Assert-FileContains "storage/database.py" "burned_amount_satoshi" "G burn burned_amount_satoshi"
+    Assert-FileContains "storage/database.py" '("blocks", "total_burned_satoshi"' "G blocks total_burned_satoshi"
+    Assert-FileContains "storage/database.py" '("block_proposer_audit", "total_burned_satoshi"' "G proposer_audit total_burned_satoshi"
     Assert-FileContains "storage/rocks_store.py" "total_burned_satoshi" "G rocks burn total_burned_satoshi"
     Run-Pytest "G unit: pool spend + wasm fee + state credit + stake/bridge/feature satoshi" @(
         "tests/unit/test_devnet_pool_spend.py"
