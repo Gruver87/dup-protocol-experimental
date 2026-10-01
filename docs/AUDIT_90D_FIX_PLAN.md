@@ -93,7 +93,7 @@
 - Docs honesty matches code  
 - No claim of soak unless pack exists  
 
-**Current focus:** validators dual-write stake_satoshi (SQLite+Rocks). Firm kickoff still shelf. E4 tip soak operator-only. Pre-soak self-check PASS on this host (not soak).
+**Current focus:** bridge locks/credits dual-write mount_satoshi + satoshi debit/credit/refund. Firm kickoff shelf. E4 soak operator-only.
 
 ---
 

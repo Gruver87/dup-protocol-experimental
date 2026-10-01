@@ -126,6 +126,8 @@ class Database:
             ("accounts", "storage", "TEXT DEFAULT ''"),
             ("accounts", "balance_satoshi", "INTEGER"),
             ("validators", "stake_satoshi", "INTEGER"),
+            ("bridge_locks", "amount_satoshi", "INTEGER"),
+            ("bridge_credits", "amount_satoshi", "INTEGER"),
             ("plasma_blocks", "merkle_root", "TEXT NOT NULL DEFAULT ''"),
             ("plasma_blocks", "tx_root",     "TEXT NOT NULL DEFAULT ''"),
         ]
@@ -173,6 +175,37 @@ class Database:
         self._backfill_proposer_audit_v49()
         self._backfill_balance_satoshi_v80()
         self._backfill_validator_stake_satoshi()
+        self._backfill_bridge_amount_satoshi()
+
+    def _backfill_bridge_amount_satoshi(self) -> None:
+        """Populate bridge lock/credit amount_satoshi from float amount (idempotent)."""
+        try:
+            from runtime.amount import to_satoshi
+
+            for table in ("bridge_locks", "bridge_credits"):
+                cols = {
+                    row[1]
+                    for row in self.conn.execute(f"PRAGMA table_info({table})").fetchall()
+                }
+                if "amount_satoshi" not in cols:
+                    continue
+                rows = self.conn.execute(
+                    f"SELECT rowid, amount FROM {table} WHERE amount_satoshi IS NULL"
+                ).fetchall()
+                for r in rows:
+                    sat = int(to_satoshi(r["amount"] or 0))
+                    self.conn.execute(
+                        f"UPDATE {table} SET amount_satoshi=? WHERE rowid=?",
+                        (sat, r["rowid"]),
+                    )
+                if rows:
+                    print(
+                        f"[DB] Migration: backfilled amount_satoshi for "
+                        f"{len(rows)} {table} row(s)"
+                    )
+            self.conn.commit()
+        except Exception as e:
+            print(f"[DB] bridge amount_satoshi backfill warning: {e}")
 
     def _backfill_validator_stake_satoshi(self) -> None:
         """Populate validators.stake_satoshi from float stake where NULL (idempotent)."""
@@ -310,6 +343,7 @@ class Database:
             CREATE TABLE IF NOT EXISTS validators (
                 address  TEXT    PRIMARY KEY,
                 stake    REAL    NOT NULL DEFAULT 0.0,
+                stake_satoshi INTEGER,
                 active   INTEGER DEFAULT 1,
                 slashed  INTEGER DEFAULT 0,
                 joined_at INTEGER DEFAULT 0
@@ -1823,15 +1857,17 @@ class Database:
 
     def save_bridge_lock(self, from_addr: str, to_chain: str, to_addr: str,
                          amount: float, tx_hash: str) -> None:
-        from runtime.amount import money_abs
+        from runtime.amount import money_abs, to_satoshi
 
         amt = money_abs(amount)
+        amt_sat = int(to_satoshi(amt))
         with self.lock:
             self.conn.execute(
                 """INSERT OR REPLACE INTO bridge_locks
-                   (tx_hash, from_addr, to_chain, to_addr, amount, status, created_at)
-                   VALUES (?,?,?,?,?,'pending',?)""",
-                (tx_hash, from_addr, to_chain, to_addr, amt, int(time.time())),
+                   (tx_hash, from_addr, to_chain, to_addr, amount, amount_satoshi,
+                    status, created_at)
+                   VALUES (?,?,?,?,?,?,'pending',?)""",
+                (tx_hash, from_addr, to_chain, to_addr, amt, amt_sat, int(time.time())),
             )
             self.conn.commit()
 
@@ -1843,7 +1879,7 @@ class Database:
             self.conn.commit()
 
     def get_bridge_locks(self, limit: int = 50) -> List[Dict]:
-        from runtime.amount import money_abs
+        from runtime.amount import money_abs, to_satoshi
 
         with self.lock:
             rows = self.conn.execute(
@@ -1853,6 +1889,10 @@ class Database:
             for r in rows:
                 row = dict(r)
                 row["amount"] = money_abs(row.get("amount", 0), field="amount")
+                if row.get("amount_satoshi") is None:
+                    row["amount_satoshi"] = int(to_satoshi(row["amount"]))
+                else:
+                    row["amount_satoshi"] = int(row["amount_satoshi"])
                 out.append(row)
             return out
 
@@ -1883,15 +1923,25 @@ class Database:
         log_index: int = 0,
     ) -> str:
         key = self.bridge_credit_key(from_chain, event_tx_hash, log_index)
-        from runtime.amount import money_abs
+        from runtime.amount import money_abs, to_satoshi
 
         amt = money_abs(amount)
+        amt_sat = int(to_satoshi(amt))
         with self.lock:
             self.conn.execute(
                 """INSERT OR IGNORE INTO bridge_credits
-                   (credit_key, l1_tx_hash, recipient, amount, from_chain, credited_at)
-                   VALUES (?,?,?,?,?,?)""",
-                (key, event_tx_hash, recipient, amt, from_chain, int(time.time())),
+                   (credit_key, l1_tx_hash, recipient, amount, amount_satoshi,
+                    from_chain, credited_at)
+                   VALUES (?,?,?,?,?,?,?)""",
+                (
+                    key,
+                    event_tx_hash,
+                    recipient,
+                    amt,
+                    amt_sat,
+                    from_chain,
+                    int(time.time()),
+                ),
             )
             self.conn.commit()
         return key
@@ -1909,9 +1959,10 @@ class Database:
         Insert-if-absent replay claim then credit recipient in one transaction.
         Returns {credited, duplicate, credit_key}.
         """
-        from runtime.amount import money_abs
+        from runtime.amount import money_abs, to_satoshi
 
         amt = money_abs(amount)
+        amt_sat = int(to_satoshi(amt))
         key = self.bridge_credit_key(from_chain, event_tx_hash, log_index)
         with self.atomic():
             row = self.conn.execute(
@@ -1921,18 +1972,20 @@ class Database:
                 return {"credited": False, "duplicate": True, "credit_key": key}
             self.conn.execute(
                 """INSERT INTO bridge_credits
-                   (credit_key, l1_tx_hash, recipient, amount, from_chain, credited_at)
-                   VALUES (?,?,?,?,?,?)""",
+                   (credit_key, l1_tx_hash, recipient, amount, amount_satoshi,
+                    from_chain, credited_at)
+                   VALUES (?,?,?,?,?,?,?)""",
                 (
                     key,
                     event_tx_hash,
                     recipient,
                     amt,
+                    amt_sat,
                     from_chain,
                     int(time.time()),
                 ),
             )
-            self.balance_delta(recipient, amt)
+            self.balance_delta_satoshi(recipient, amt_sat)
             lock_hash = (abs_tx_hash or event_tx_hash or "").strip()
             if lock_hash:
                 self.conn.execute(
@@ -1959,6 +2012,7 @@ class Database:
             dual_write_balance,
             from_satoshi_float,
             money_abs,
+            to_satoshi,
             try_debit_satoshi,
         )
 
@@ -1985,24 +2039,30 @@ class Database:
                 ),
             )
             if burn_amount and burn_address:
-                self.balance_delta(burn_address, money_abs(burn_amount, field="burn_amount"))
+                self.balance_delta_satoshi(
+                    burn_address, int(to_satoshi(money_abs(burn_amount, field="burn_amount")))
+                )
+            net_abs = money_abs(net_amount, field="net_amount")
+            net_sat = int(to_satoshi(net_abs))
             self.conn.execute(
                 """INSERT OR REPLACE INTO bridge_locks
-                   (tx_hash, from_addr, to_chain, to_addr, amount, status, created_at)
-                   VALUES (?,?,?,?,?,'pending',?)""",
+                   (tx_hash, from_addr, to_chain, to_addr, amount, amount_satoshi,
+                    status, created_at)
+                   VALUES (?,?,?,?,?,?,'pending',?)""",
                 (
                     tx_hash,
                     from_addr,
                     to_chain,
                     to_addr,
-                    money_abs(net_amount, field="net_amount"),
+                    net_abs,
+                    net_sat,
                     int(time.time()),
                 ),
             )
 
     def refund_pending_bridge_lock(self, tx_hash: str) -> Dict:
         """Credit back pending lock amount and mark refunded atomically."""
-        from runtime.amount import money_abs
+        from runtime.amount import money_abs, to_satoshi
 
         with self.atomic():
             row = self.conn.execute(
@@ -2013,7 +2073,12 @@ class Database:
             lock = dict(row)
             if lock.get("status") != "pending":
                 return {"refunded": False, "error": "Lock not found or already processed"}
-            self.balance_delta(lock["from_addr"], money_abs(lock["amount"]))
+            amt_abs = money_abs(lock["amount"])
+            if lock.get("amount_satoshi") is None:
+                amt_sat = int(to_satoshi(amt_abs))
+            else:
+                amt_sat = int(lock["amount_satoshi"])
+            self.balance_delta_satoshi(lock["from_addr"], amt_sat)
             self.conn.execute(
                 "UPDATE bridge_locks SET status='refunded' WHERE tx_hash=?",
                 (tx_hash,),
@@ -2021,7 +2086,8 @@ class Database:
         return {
             "refunded": True,
             "tx_hash": tx_hash,
-            "amount": money_abs(lock["amount"]),
+            "amount": amt_abs,
+            "amount_satoshi": amt_sat,
         }
 
     def save_minivm_contract(self, address: str, bytecode: list, storage: dict, calls: int = 0) -> None:

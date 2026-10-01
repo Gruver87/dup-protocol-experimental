@@ -1843,14 +1843,16 @@ class RocksChainStore:
         amount: float,
         tx_hash: str,
     ) -> None:
-        from runtime.amount import money_abs
+        from runtime.amount import money_abs, to_satoshi
 
+        amt = money_abs(amount)
         row = {
             "tx_hash": tx_hash,
             "from_addr": from_addr,
             "to_chain": to_chain,
             "to_addr": to_addr,
-            "amount": money_abs(amount),
+            "amount": amt,
+            "amount_satoshi": int(to_satoshi(amt)),
             "status": "pending",
             "created_at": int(time.time()),
         }
@@ -1888,11 +1890,15 @@ class RocksChainStore:
                 )
                 continue
         rows.sort(key=lambda r: int(r.get("created_at", 0) or 0), reverse=True)
-        from runtime.amount import money_abs
+        from runtime.amount import money_abs, to_satoshi
 
         out = []
         for row in rows[:limit]:
             row["amount"] = money_abs(row.get("amount", 0), field="amount")
+            if row.get("amount_satoshi") is None:
+                row["amount_satoshi"] = int(to_satoshi(row["amount"]))
+            else:
+                row["amount_satoshi"] = int(row["amount_satoshi"])
             out.append(row)
         return out
 
@@ -1910,13 +1916,15 @@ class RocksChainStore:
         key = self.bridge_credit_key(from_chain, event_tx_hash, log_index)
         if self.has_bridge_credit(key):
             return key
-        from runtime.amount import money_abs
+        from runtime.amount import money_abs, to_satoshi
 
+        amt = money_abs(amount)
         row = {
             "credit_key": key,
             "l1_tx_hash": event_tx_hash,
             "recipient": recipient,
-            "amount": money_abs(amount),
+            "amount": amt,
+            "amount_satoshi": int(to_satoshi(amt)),
             "from_chain": from_chain,
             "log_index": int(log_index),
             "credited_at": int(time.time()),
@@ -1939,20 +1947,22 @@ class RocksChainStore:
         with self.atomic():
             if self.has_bridge_credit(key):
                 return {"credited": False, "duplicate": True, "credit_key": key}
-            from runtime.amount import money_abs
+            from runtime.amount import money_abs, to_satoshi
 
             amt = money_abs(amount)
+            amt_sat = int(to_satoshi(amt))
             row = {
                 "credit_key": key,
                 "l1_tx_hash": event_tx_hash,
                 "recipient": recipient,
                 "amount": amt,
+                "amount_satoshi": amt_sat,
                 "from_chain": from_chain,
                 "log_index": int(log_index),
                 "credited_at": int(time.time()),
             }
             self._raw_put(kc.key_bridge_credit(key), json.dumps(row).encode("utf-8"))
-            self.balance_delta(recipient, amt)
+            self.balance_delta_satoshi(recipient, amt_sat)
             lock_hash = (abs_tx_hash or event_tx_hash or "").strip()
             if lock_hash:
                 raw = self._raw_get(kc.key_bridge_lock(lock_hash))
@@ -1980,7 +1990,13 @@ class RocksChainStore:
         tx_hash: str,
     ) -> None:
         """Debit sender (fail on underflow), burn fee share, persist lock — one Rocks batch."""
-        from runtime.amount import dual_write_balance, from_satoshi_float, money_abs, try_debit_satoshi
+        from runtime.amount import (
+            dual_write_balance,
+            from_satoshi_float,
+            money_abs,
+            to_satoshi,
+            try_debit_satoshi,
+        )
 
         with self.atomic():
             row = self._load_account(from_addr)
@@ -1990,13 +2006,18 @@ class RocksChainStore:
             row["balance_satoshi"] = new_sat
             self._save_account_row(row)
             if burn_amount and burn_address:
-                self.balance_delta(burn_address, money_abs(burn_amount, field="burn_amount"))
+                self.balance_delta_satoshi(
+                    burn_address,
+                    int(to_satoshi(money_abs(burn_amount, field="burn_amount"))),
+                )
+            net_abs = money_abs(net_amount, field="net_amount")
             lock_row = {
                 "tx_hash": tx_hash,
                 "from_addr": from_addr,
                 "to_chain": to_chain,
                 "to_addr": to_addr,
-                "amount": money_abs(net_amount, field="net_amount"),
+                "amount": net_abs,
+                "amount_satoshi": int(to_satoshi(net_abs)),
                 "status": "pending",
                 "created_at": int(time.time()),
             }
@@ -2004,7 +2025,7 @@ class RocksChainStore:
 
     def refund_pending_bridge_lock(self, tx_hash: str) -> Dict:
         """Credit back pending lock amount and mark refunded atomically."""
-        from runtime.amount import money_abs
+        from runtime.amount import money_abs, to_satoshi
 
         with self.atomic():
             raw = self._raw_get(kc.key_bridge_lock(tx_hash))
@@ -2013,13 +2034,20 @@ class RocksChainStore:
             lock = self._loads_json_or_none(raw, context=f"bridge_lock {tx_hash[:16]}")
             if lock is None or lock.get("status") != "pending":
                 return {"refunded": False, "error": "Lock not found or already processed"}
-            self.balance_delta(lock["from_addr"], money_abs(lock["amount"]))
+            amt_abs = money_abs(lock["amount"])
+            if lock.get("amount_satoshi") is None:
+                amt_sat = int(to_satoshi(amt_abs))
+            else:
+                amt_sat = int(lock["amount_satoshi"])
+            self.balance_delta_satoshi(lock["from_addr"], amt_sat)
             lock["status"] = "refunded"
+            lock["amount_satoshi"] = amt_sat
             self._raw_put(kc.key_bridge_lock(tx_hash), json.dumps(lock).encode("utf-8"))
         return {
             "refunded": True,
             "tx_hash": tx_hash,
-            "amount": money_abs(lock["amount"]),
+            "amount": amt_abs,
+            "amount_satoshi": amt_sat,
         }
 
     # ── burn ──────────────────────────────────────────────────────────────

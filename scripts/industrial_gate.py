@@ -289,10 +289,18 @@ def _check_p2p_hardening() -> tuple[list[str], list[str]]:
         errors.append("validators must dual-write stake_satoshi with backfill")
     if '("validators", "stake_satoshi"' not in db_py:
         errors.append("database migration must add validators.stake_satoshi")
+    if (
+        "_backfill_bridge_amount_satoshi" not in db_py
+        or '("bridge_locks", "amount_satoshi"' not in db_py
+    ):
+        errors.append("bridge_locks/credits must dual-write amount_satoshi with backfill")
     if "stake_satoshi" not in (ROOT / "storage" / "rocks_store.py").read_text(
         encoding="utf-8"
     ):
         errors.append("rocks_store validators must dual-write stake_satoshi")
+    rocks_bridge = (ROOT / "storage" / "rocks_store.py").read_text(encoding="utf-8")
+    if '"amount_satoshi"' not in rocks_bridge or "balance_delta_satoshi(recipient" not in rocks_bridge:
+        errors.append("rocks_store bridge paths must dual-write amount_satoshi / satoshi credit")
     if not (ROOT / "api" / "market_feed.py").is_file():
         errors.append("api/market_feed.py missing (ops market snapshot)")
     else:

@@ -284,11 +284,16 @@ function Verify-PhaseG {
     Assert-FileContains "main.py" "satoshi_store_required_dev_signer_fund" "G dev signer refuse float fund"
     Assert-FileContains "storage/database.py" "stake_satoshi" "G validators stake_satoshi"
     Assert-FileContains "storage/database.py" "_backfill_validator_stake_satoshi" "G validators stake backfill"
-    Run-Pytest "G unit: pool spend + wasm fee + state credit + stake satoshi" @(
+    Assert-FileContains "storage/database.py" "_backfill_bridge_amount_satoshi" "G bridge amount_satoshi backfill"
+    Assert-FileContains "storage/database.py" "amount_satoshi" "G bridge amount_satoshi"
+    Run-Pytest "G unit: pool spend + wasm fee + state credit + stake/bridge satoshi" @(
         "tests/unit/test_devnet_pool_spend.py"
         "tests/unit/test_wave42_wasm_relayer.py"
         "tests/unit/test_state_service_satoshi_credit.py"
         "tests/unit/test_validator_stake_satoshi.py"
+        "tests/unit/test_bridge_amount_satoshi.py"
+        "tests/unit/test_prod_bridge_lock.py"
+        "tests/unit/test_bridge_confirm_pending.py"
     )
 }
 
