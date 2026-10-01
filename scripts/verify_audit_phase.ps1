@@ -8,13 +8,14 @@
 #   .\scripts\verify_audit_phase.ps1 -Phase D
 #   .\scripts\verify_audit_phase.ps1 -Phase E
 #   .\scripts\verify_audit_phase.ps1 -Phase F
+#   .\scripts\verify_audit_phase.ps1 -Phase G
 #   .\scripts\verify_audit_phase.ps1 -Phase All
 #   .\scripts\verify_audit_phase.ps1 -Phase All -SkipGate
 #
 # Optional mesh (Phase E only, operator-owned):
 #   .\scripts\verify_audit_phase.ps1 -Phase E -MeshProbe
 param(
-    [ValidateSet("A", "B", "C", "D", "E", "F", "All")]
+    [ValidateSet("A", "B", "C", "D", "E", "F", "G", "All")]
     [string]$Phase = "All",
     [switch]$SkipGate,
     [switch]$MeshProbe
@@ -253,11 +254,34 @@ function Verify-PhaseF {
     Assert-FileContains "docs/sprouts/EVM_COMPAT_MATRIX.md" "Remap to Yellow Paper is a breaking Phase F ADR" "F1 matrix no silent remap"
 }
 
+function Verify-PhaseG {
+    Write-Host ""
+    Write-Host "======== PHASE G - Refuse float money fallback ========" -ForegroundColor Magenta
+    Run-Pytest "G unit: satoshi refuse float (EVM/sprouts/apply)" @(
+        "tests/unit/test_evm_satoshi_refuse_float.py"
+        "tests/unit/test_apply_store_delta_satoshi.py"
+        "tests/unit/test_nft_uow.py"
+        "tests/unit/test_cross_shard_coordinator.py"
+        "tests/unit/test_evm_host_value.py"
+    )
+    Step "G needles"
+    Assert-FileContains "runtime/amount.py" "allow_float_fallback" "G apply_store_delta allow_float_fallback"
+    Assert-FileContains "execution/evm_adapter.py" "allow_float_fallback=False" "G EVM refuse float"
+    Assert-FileContains "execution/evm_adapter.py" "satoshi_store_required" "G EVM satoshi_store_required"
+    Assert-FileContains "features/nft.py" "allow_float_fallback=False" "G NFT refuse float"
+    Assert-FileContains "features/plasma.py" "allow_float_fallback=False" "G plasma refuse float"
+    Assert-FileContains "features/lightning.py" "allow_float_fallback=False" "G lightning refuse float"
+    Assert-FileContains "features/crypto_will.py" "allow_float_fallback=False" "G crypto_will refuse float"
+    Assert-FileContains "dynamic_sharding.py" "allow_float_fallback=False" "G sharding refuse float"
+    Assert-FileContains "api/http.py" "satoshi_store_required" "G faucet refuse float"
+    Assert-FileContains "consensus/cross_shard_coordinator.py" "allow_float_fallback=False" "G cross-shard refuse float"
+}
+
 Write-Host "AUDIT 90D phase self-check (dup-protocol-experimental)" -ForegroundColor Cyan
 Write-Host "  Phase=$Phase  SkipGate=$SkipGate  MeshProbe=$MeshProbe" -ForegroundColor DarkGray
 Write-Host "  NOT soak / NOT mainnet claim" -ForegroundColor DarkGray
 
-$phases = if ($Phase -eq "All") { @("A", "B", "C", "D", "E", "F") } else { @($Phase) }
+$phases = if ($Phase -eq "All") { @("A", "B", "C", "D", "E", "F", "G") } else { @($Phase) }
 foreach ($p in $phases) {
     switch ($p) {
         "A" { Verify-PhaseA }
@@ -266,6 +290,7 @@ foreach ($p in $phases) {
         "D" { Verify-PhaseD }
         "E" { Verify-PhaseE }
         "F" { Verify-PhaseF }
+        "G" { Verify-PhaseG }
     }
 }
 

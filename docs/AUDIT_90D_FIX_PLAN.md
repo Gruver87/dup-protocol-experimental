@@ -106,6 +106,7 @@
 .\scripts\verify_audit_phase.ps1 -Phase D
 .\scripts\verify_audit_phase.ps1 -Phase E
 .\scripts\verify_audit_phase.ps1 -Phase F
+.\scripts\verify_audit_phase.ps1 -Phase G          # post A–F: refuse float money fallback
 .\scripts\verify_audit_phase.ps1 -Phase All          # + industrial_gate
 .\scripts\verify_audit_phase.ps1 -Phase E -MeshProbe # optional live probe (NOT soak)
 ```
