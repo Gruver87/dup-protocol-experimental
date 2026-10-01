@@ -294,6 +294,13 @@ def _check_p2p_hardening() -> tuple[list[str], list[str]]:
         or '("bridge_locks", "amount_satoshi"' not in db_py
     ):
         errors.append("bridge_locks/credits must dual-write amount_satoshi with backfill")
+    if (
+        "_backfill_feature_amount_satoshi" not in db_py
+        or '("plasma_deposits", "amount_satoshi"' not in db_py
+        or '("crypto_wills", "amount_satoshi"' not in db_py
+        or '("lightning_channels", "capacity_satoshi"' not in db_py
+    ):
+        errors.append("feature sprouts must dual-write plasma/lightning/will satoshi columns")
     if "stake_satoshi" not in (ROOT / "storage" / "rocks_store.py").read_text(
         encoding="utf-8"
     ):

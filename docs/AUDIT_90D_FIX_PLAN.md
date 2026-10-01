@@ -93,7 +93,7 @@
 - Docs honesty matches code  
 - No claim of soak unless pack exists  
 
-**Current focus:** bridge locks/credits dual-write mount_satoshi + satoshi debit/credit/refund. Firm kickoff shelf. E4 soak operator-only.
+**Current focus:** feature sprouts (plasma/lightning/will) dual-write *_satoshi on SQLite persist. Firm kickoff shelf. E4 soak operator-only.
 
 ---
 

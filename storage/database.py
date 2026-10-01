@@ -77,6 +77,27 @@ class Database:
         parsed = self._loads_json_or_none(raw, context=context)
         return default if parsed is None else parsed
 
+    @staticmethod
+    def _abs_sat(value: Any, field: str = "amount") -> tuple:
+        """Return (ABS float display, integer satoshi) from a money input."""
+        from runtime.amount import money_abs, to_satoshi
+
+        abs_v = money_abs(value, field=field)
+        return abs_v, int(to_satoshi(abs_v))
+
+    @staticmethod
+    def _overlay_sat(row: Dict, abs_key: str, sat_key: str) -> Dict:
+        """Normalize display ABS and ensure satoshi twin is present on a row."""
+        from runtime.amount import money_abs, to_satoshi
+
+        abs_v = money_abs(row.get(abs_key), field=abs_key)
+        row[abs_key] = abs_v
+        if row.get(sat_key) is None:
+            row[sat_key] = int(to_satoshi(abs_v))
+        else:
+            row[sat_key] = int(row[sat_key])
+        return row
+
     # ── Инициализация ────────────────────────────────────────────────────────
 
     def _configure(self):
@@ -128,6 +149,16 @@ class Database:
             ("validators", "stake_satoshi", "INTEGER"),
             ("bridge_locks", "amount_satoshi", "INTEGER"),
             ("bridge_credits", "amount_satoshi", "INTEGER"),
+            ("plasma_deposits", "amount_satoshi", "INTEGER"),
+            ("plasma_exits", "amount_satoshi", "INTEGER"),
+            ("plasma_blocks", "total_amount_satoshi", "INTEGER"),
+            ("crypto_wills", "amount_satoshi", "INTEGER"),
+            ("lightning_channels", "capacity_satoshi", "INTEGER"),
+            ("lightning_channels", "balance1_satoshi", "INTEGER"),
+            ("lightning_channels", "balance2_satoshi", "INTEGER"),
+            ("lightning_payments", "amount_satoshi", "INTEGER"),
+            ("lightning_payments", "fee_satoshi", "INTEGER"),
+            ("lightning_htlcs", "amount_satoshi", "INTEGER"),
             ("plasma_blocks", "merkle_root", "TEXT NOT NULL DEFAULT ''"),
             ("plasma_blocks", "tx_root",     "TEXT NOT NULL DEFAULT ''"),
         ]
@@ -176,6 +207,57 @@ class Database:
         self._backfill_balance_satoshi_v80()
         self._backfill_validator_stake_satoshi()
         self._backfill_bridge_amount_satoshi()
+        self._backfill_feature_amount_satoshi()
+
+    def _backfill_feature_amount_satoshi(self) -> None:
+        """Backfill sprout money satoshi columns from float ABS (idempotent)."""
+        try:
+            from runtime.amount import to_satoshi
+
+            specs = (
+                ("plasma_deposits", (("amount", "amount_satoshi"),)),
+                ("plasma_exits", (("amount", "amount_satoshi"),)),
+                ("plasma_blocks", (("total_amount", "total_amount_satoshi"),)),
+                ("crypto_wills", (("amount", "amount_satoshi"),)),
+                (
+                    "lightning_channels",
+                    (
+                        ("capacity", "capacity_satoshi"),
+                        ("balance1", "balance1_satoshi"),
+                        ("balance2", "balance2_satoshi"),
+                    ),
+                ),
+                (
+                    "lightning_payments",
+                    (("amount", "amount_satoshi"), ("fee", "fee_satoshi")),
+                ),
+                ("lightning_htlcs", (("amount", "amount_satoshi"),)),
+            )
+            for table, pairs in specs:
+                cols = {
+                    row[1]
+                    for row in self.conn.execute(f"PRAGMA table_info({table})").fetchall()
+                }
+                for abs_col, sat_col in pairs:
+                    if sat_col not in cols or abs_col not in cols:
+                        continue
+                    rows = self.conn.execute(
+                        f"SELECT rowid, {abs_col} FROM {table} WHERE {sat_col} IS NULL"
+                    ).fetchall()
+                    for r in rows:
+                        sat = int(to_satoshi(r[abs_col] or 0))
+                        self.conn.execute(
+                            f"UPDATE {table} SET {sat_col}=? WHERE rowid=?",
+                            (sat, r["rowid"]),
+                        )
+                    if rows:
+                        print(
+                            f"[DB] Migration: backfilled {sat_col} for "
+                            f"{len(rows)} {table} row(s)"
+                        )
+            self.conn.commit()
+        except Exception as e:
+            print(f"[DB] feature amount_satoshi backfill warning: {e}")
 
     def _backfill_bridge_amount_satoshi(self) -> None:
         """Populate bridge lock/credit amount_satoshi from float amount (idempotent)."""
@@ -2353,19 +2435,26 @@ class Database:
     # ── Lightning Network (Wave 40 persistence) ─────────────────────────────
 
     def save_lightning_channel(self, ch: Dict) -> None:
+        cap, cap_sat = self._abs_sat(ch["capacity"], field="capacity")
+        b1, b1_sat = self._abs_sat(ch["balance1"], field="balance1")
+        b2, b2_sat = self._abs_sat(ch["balance2"], field="balance2")
         with self.lock:
             self.conn.execute(
                 """INSERT OR REPLACE INTO lightning_channels
-                   (channel_id, node1, node2, capacity, balance1, balance2,
+                   (channel_id, node1, node2, capacity, capacity_satoshi,
+                    balance1, balance1_satoshi, balance2, balance2_satoshi,
                     status, fee_rate, created_at)
-                   VALUES (?,?,?,?,?,?,?,?,?)""",
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (
                     ch["channel_id"],
                     ch["node1"],
                     ch["node2"],
-                    money_abs(ch["capacity"], field="capacity"),
-                    money_abs(ch["balance1"], field="balance1"),
-                    money_abs(ch["balance2"], field="balance2"),
+                    cap,
+                    cap_sat,
+                    b1,
+                    b1_sat,
+                    b2,
+                    b2_sat,
                     ch.get("status", "open"),
                     parse_finite_number(ch.get("fee_rate", 0.00001), field="fee_rate"),
                     int(ch.get("created_at", 0)),
@@ -2388,26 +2477,30 @@ class Database:
 
     @staticmethod
     def _lightning_channel_row(row: Dict) -> Dict:
-        row["capacity"] = money_abs(row.get("capacity"), field="capacity")
-        row["balance1"] = money_abs(row.get("balance1"), field="balance1")
-        row["balance2"] = money_abs(row.get("balance2"), field="balance2")
+        Database._overlay_sat(row, "capacity", "capacity_satoshi")
+        Database._overlay_sat(row, "balance1", "balance1_satoshi")
+        Database._overlay_sat(row, "balance2", "balance2_satoshi")
         row["fee_rate"] = parse_finite_number(row.get("fee_rate", 0), field="fee_rate")
         return row
 
     def save_lightning_payment(self, p: Dict) -> None:
+        amt, amt_sat = self._abs_sat(p["amount"], field="amount")
+        fee, fee_sat = self._abs_sat(p.get("fee", 0), field="fee")
         with self.lock:
             self.conn.execute(
                 """INSERT OR REPLACE INTO lightning_payments
-                   (payment_id, channel_id, from_node, to_node, amount, fee,
-                    status, payment_hash, timestamp)
-                   VALUES (?,?,?,?,?,?,?,?,?)""",
+                   (payment_id, channel_id, from_node, to_node, amount, amount_satoshi,
+                    fee, fee_satoshi, status, payment_hash, timestamp)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
                 (
                     p["payment_id"],
                     p["channel_id"],
                     p["from_node"],
                     p["to_node"],
-                    money_abs(p["amount"], field="amount"),
-                    money_abs(p.get("fee", 0), field="fee"),
+                    amt,
+                    amt_sat,
+                    fee,
+                    fee_sat,
                     p.get("status", "completed"),
                     p.get("payment_hash", ""),
                     int(p.get("timestamp", 0)),
@@ -2425,22 +2518,24 @@ class Database:
 
     @staticmethod
     def _lightning_payment_row(row: Dict) -> Dict:
-        row["amount"] = money_abs(row.get("amount"), field="amount")
-        row["fee"] = money_abs(row.get("fee", 0), field="fee")
+        Database._overlay_sat(row, "amount", "amount_satoshi")
+        Database._overlay_sat(row, "fee", "fee_satoshi")
         return row
 
     def save_lightning_htlc(self, h: Dict) -> None:
+        amt, amt_sat = self._abs_sat(h["amount"], field="amount")
         with self.lock:
             self.conn.execute(
                 """INSERT OR REPLACE INTO lightning_htlcs
-                   (htlc_id, channel_id, payment_hash, amount, expiry,
+                   (htlc_id, channel_id, payment_hash, amount, amount_satoshi, expiry,
                     sender, receiver, status, preimage, created_at)
-                   VALUES (?,?,?,?,?,?,?,?,?,?)""",
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
                 (
                     h["htlc_id"],
                     h["channel_id"],
                     h["payment_hash"],
-                    money_abs(h["amount"], field="amount"),
+                    amt,
+                    amt_sat,
                     int(h["expiry"]),
                     h["sender"],
                     h["receiver"],
@@ -2467,7 +2562,7 @@ class Database:
 
     @staticmethod
     def _lightning_htlc_row(row: Dict) -> Dict:
-        row["amount"] = money_abs(row.get("amount"), field="amount")
+        Database._overlay_sat(row, "amount", "amount_satoshi")
         return row
 
     def save_lightning_channel_state(self, st: Dict) -> None:
@@ -2507,15 +2602,18 @@ class Database:
     # ── Plasma L2 (Wave 40 persistence) ─────────────────────────────────────
 
     def save_plasma_deposit(self, dep: Dict) -> None:
+        amt, amt_sat = self._abs_sat(dep["amount"], field="amount")
         with self.lock:
             self.conn.execute(
                 """INSERT OR REPLACE INTO plasma_deposits
-                   (deposit_id, from_addr, amount, main_tx_hash, created_at, status)
-                   VALUES (?,?,?,?,?,?)""",
+                   (deposit_id, from_addr, amount, amount_satoshi, main_tx_hash,
+                    created_at, status)
+                   VALUES (?,?,?,?,?,?,?)""",
                 (
                     dep["id"],
                     dep["from"],
-                    money_abs(dep["amount"], field="amount"),
+                    amt,
+                    amt_sat,
                     dep.get("main_tx_hash", ""),
                     int(dep.get("created_at", 0)),
                     dep.get("status", "confirmed"),
@@ -2531,29 +2629,37 @@ class Database:
             ).fetchall()
             out = []
             for r in rows:
-                out.append({
+                row = {
                     "id": r["deposit_id"],
                     "from": r["from_addr"],
-                    "amount": money_abs(r["amount"], field="amount"),
+                    "amount": r["amount"],
+                    "amount_satoshi": r["amount_satoshi"] if "amount_satoshi" in r.keys() else None,
                     "main_tx_hash": r["main_tx_hash"],
                     "created_at": r["created_at"],
                     "status": r["status"],
-                })
+                }
+                Database._overlay_sat(row, "amount", "amount_satoshi")
+                out.append(row)
             return out
 
     def save_plasma_block(self, block: Dict) -> None:
+        total, total_sat = self._abs_sat(
+            block.get("total_amount", 0), field="total_amount"
+        )
         with self.lock:
             self.conn.execute(
                 """INSERT OR REPLACE INTO plasma_blocks
                    (block_id, block_hash, parent_hash, transactions,
-                    total_amount, tx_count, created_at, merkle_root, tx_root)
-                   VALUES (?,?,?,?,?,?,?,?,?)""",
+                    total_amount, total_amount_satoshi, tx_count, created_at,
+                    merkle_root, tx_root)
+                   VALUES (?,?,?,?,?,?,?,?,?,?)""",
                 (
                     int(block["block_id"]),
                     block["block_hash"],
                     block["parent_hash"],
                     json.dumps(block.get("transactions", [])),
-                    money_abs(block.get("total_amount", 0), field="total_amount"),
+                    total,
+                    total_sat,
                     int(block.get("transaction_count", block.get("tx_count", 0))),
                     int(block.get("created_at", 0)),
                     block.get("merkle_root", ""),
@@ -2571,28 +2677,36 @@ class Database:
             out = []
             for r in rows:
                 txs = self._loads_json(r["transactions"] or "[]", context="plasma_txs", default=[])
-                out.append({
+                row = {
                     "block_id": r["block_id"],
                     "block_hash": r["block_hash"],
                     "parent_hash": r["parent_hash"],
                     "transactions": txs,
-                    "total_amount": money_abs(r["total_amount"], field="total_amount"),
+                    "total_amount": r["total_amount"],
+                    "total_amount_satoshi": r["total_amount_satoshi"]
+                    if "total_amount_satoshi" in r.keys()
+                    else None,
                     "transaction_count": r["tx_count"],
                     "created_at": r["created_at"],
-                })
+                }
+                Database._overlay_sat(row, "total_amount", "total_amount_satoshi")
+                out.append(row)
             return sorted(out, key=lambda b: b["block_id"])
 
     def save_plasma_exit(self, ex: Dict) -> None:
+        amt, amt_sat = self._abs_sat(ex["amount"], field="amount")
         with self.lock:
             self.conn.execute(
                 """INSERT OR REPLACE INTO plasma_exits
-                   (exit_id, deposit_id, user_addr, amount, created_at, status)
-                   VALUES (?,?,?,?,?,?)""",
+                   (exit_id, deposit_id, user_addr, amount, amount_satoshi,
+                    created_at, status)
+                   VALUES (?,?,?,?,?,?,?)""",
                 (
                     ex["id"],
                     ex["deposit_id"],
                     ex["user"],
-                    money_abs(ex["amount"], field="amount"),
+                    amt,
+                    amt_sat,
                     int(ex.get("created_at", 0)),
                     ex.get("status", "pending"),
                 ),
@@ -2607,30 +2721,35 @@ class Database:
             ).fetchall()
             out = []
             for r in rows:
-                out.append({
+                row = {
                     "id": r["exit_id"],
                     "deposit_id": r["deposit_id"],
                     "user": r["user_addr"],
-                    "amount": money_abs(r["amount"], field="amount"),
+                    "amount": r["amount"],
+                    "amount_satoshi": r["amount_satoshi"] if "amount_satoshi" in r.keys() else None,
                     "created_at": r["created_at"],
                     "status": r["status"],
-                })
+                }
+                Database._overlay_sat(row, "amount", "amount_satoshi")
+                out.append(row)
             return out
 
     # ── Crypto Will (Wave 41 persistence) ───────────────────────────────────
 
     def save_crypto_will(self, will: Dict) -> None:
+        amt, amt_sat = self._abs_sat(will["amount"], field="amount")
         with self.lock:
             self.conn.execute(
                 """INSERT OR REPLACE INTO crypto_wills
-                   (will_id, owner, heir, amount, assets, execution_time,
-                    created_at, status, witnesses)
-                   VALUES (?,?,?,?,?,?,?,?,?)""",
+                   (will_id, owner, heir, amount, amount_satoshi, assets,
+                    execution_time, created_at, status, witnesses)
+                   VALUES (?,?,?,?,?,?,?,?,?,?)""",
                 (
                     will["will_id"],
                     will["owner"],
                     will["heir"],
-                    money_abs(will["amount"], field="amount"),
+                    amt,
+                    amt_sat,
                     json.dumps(will.get("assets", {})),
                     int(will.get("execution_time", 0)),
                     int(will.get("created_at", 0)),
@@ -2657,17 +2776,20 @@ class Database:
             for r in rows:
                 assets = self._loads_json(r["assets"] or "{}", context="will_assets", default={})
                 witnesses = self._loads_json(r["witnesses"] or "[]", context="will_witnesses", default=[])
-                out.append({
+                row = {
                     "will_id": r["will_id"],
                     "owner": r["owner"],
                     "heir": r["heir"],
-                    "amount": money_abs(r["amount"], field="amount"),
+                    "amount": r["amount"],
+                    "amount_satoshi": r["amount_satoshi"] if "amount_satoshi" in r.keys() else None,
                     "assets": assets,
                     "execution_time": r["execution_time"],
                     "created_at": r["created_at"],
                     "status": r["status"],
                     "witnesses": witnesses,
-                })
+                }
+                Database._overlay_sat(row, "amount", "amount_satoshi")
+                out.append(row)
             return out
 
     def delete_crypto_will(self, will_id: str) -> None:
