@@ -1819,7 +1819,9 @@ class RocksChainStore:
                     "proposer": addr,
                     "blocks_proposed": n,
                     "total_txs": 0,
+                    # Meta counters do not track burn; satoshi twin stays 0 (honest).
                     "total_burned": money_abs(0, field="total_burned"),
+                    "total_burned_satoshi": 0,
                     "last_height": None,
                     "first_height": None,
                 }
@@ -1828,18 +1830,22 @@ class RocksChainStore:
         return rows[:limit]
 
     def get_proposer_detail(self, address: str, recent_limit: int = 10) -> Dict:
-        from runtime.amount import money_abs
+        from runtime.amount import from_satoshi_float, money_abs
 
         addr = SqliteDatabase._normalize_address(address)
         known = self._proposer_counts_enabled()
         n = self._read_plain_meta_int(f"proposer_count:{addr}") if known else None
         recent = self.get_proposer_audit_log(limit=recent_limit, offset=0, proposer=addr)
+        # Page-local burn sum only (meta path has no global burn counter).
+        burned_sat = sum(int(r.get("total_burned_satoshi") or 0) for r in recent)
         return {
             "proposer": addr,
             "blocks_proposed": int(n or 0),
             "blocks_proposed_known": bool(known),
             "total_txs": 0,
-            "total_burned": money_abs(0, field="total_burned"),
+            "total_burned": from_satoshi_float(burned_sat) if burned_sat else money_abs(0, field="total_burned"),
+            "total_burned_satoshi": burned_sat,
+            "total_burned_scope": "recent_page",
             "first_height": recent[-1]["height"] if recent else None,
             "last_height": recent[0]["height"] if recent else None,
             "recent_blocks": recent,

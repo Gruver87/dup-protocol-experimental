@@ -45,11 +45,13 @@ Operator self-check:
 ## In-scope (suggested)
 
 1. Tip-safety / import refuse (ADR 0001)  
-2. Money path: satoshi integers, wire refuse float mismatch  
+2. Money path: satoshi integers on wire **and** ABS ledger persist dual-write (AUDIT Phase G — validators/bridge/sprouts/NFT/burn/tx+receipts); refuse float mismatch / float fallback on critical paths  
 3. Prod mesh config fail-closed (`tip_safety_enforce`, `require_native_crypto`, bridge OFF)  
 4. P2P soft-refuse / rate limits (not ban theater)  
 5. Secrets: no file-based secrets in prod; JWT / API keys  
 6. EVM honesty: Absolute opcode map + CREATE2 host-salt Absolute hashing  
+
+**Not ABS ledger (keep out of money satoshi claims):** oracle feed/report market `value`; lightning `fee_rate`.
 
 ## Out-of-scope (explicit)
 

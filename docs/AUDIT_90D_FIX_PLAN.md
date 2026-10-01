@@ -110,7 +110,19 @@
 - Docs honesty matches code  
 - No claim of soak unless pack exists  
 
-**Current focus:** Phase G money dual-write cascade complete on ABS ledger persist. Firm kickoff shelf (Phase H prep only). E4 soak operator-only.
+**Current focus:** Phase G money cascade ✅. Phase H engagement prep scripts PASS (2 human firm items still pending — honest). Firm kickoff shelf. E4 soak operator-only.
+
+---
+
+## Phase H — Engagement prep ✅ PREP PASS (2026-10-01)
+
+| Step | Action | Status |
+|------|--------|--------|
+| H1 | `verify_audit_engagement_prep.ps1` / Phase H | Done — automated checklist live-eval PASS |
+| H2 | Human firm items remain pending | Honest — pen-test + third-party L1 audit still open |
+| H3 | Firm kickoff (NDA / schedule / evidence URLs) | Shelf — org only |
+
+**Not** firm audit PASS. **Not** soak.
 
 ---
 

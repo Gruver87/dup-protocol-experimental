@@ -33,6 +33,7 @@ Hybrid stays freeze-safe. Experimental absorbs transport / Long-Range / EVM-dept
 |-------|--------|
 | Working local **3-node prod-profile mesh** (chain `778888`) | **Proven** — probe + multi-pack 48h soaks |
 | Fail-closed money path (satoshi integers; float refuse on wire) | **Proven** — units + mesh [`ind48pass1`](evidence/runs/ind48pass1/) |
+| ABS ledger persist satoshi dual-write (AUDIT Phase G) | **Code+gate** — SQLite/Rocks twins for stake/bridge/sprouts/NFT/burn/tx+receipts; Phase G PASS; **not** a new soak |
 | Industrial R&D ceiling for this sandbox | **Reached** for Phases 1–5 — see [INDUSTRIAL_MAX_SCAN](INDUSTRIAL_MAX_SCAN_2026-09-20.md) |
 | Public audited mainnet / listed token / BLS prod | **Not claimed** |
 | External firm security audit PDF | **Pending** (Phase 6) |

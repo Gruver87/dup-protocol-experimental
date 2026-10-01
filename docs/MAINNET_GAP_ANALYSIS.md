@@ -105,7 +105,7 @@ Operator sequence: [MAINNET_CUTOVER.md](MAINNET_CUTOVER.md).
 | Area | Action |
 |------|--------|
 | EVM | CREATE/CREATE2 deterministic addresses (v1.2.79); EOF roadmap later |
-| State | Dual-write + StateEngine + IMS reconcile; **Wave C** tip v2 `b_satoshi` when ceremony-armed (fresh mesh); float column retained for display/legacy |
+| State | Dual-write + StateEngine + IMS reconcile; **Wave C** tip v2 `b_satoshi` when ceremony-armed (fresh mesh); float display retained; **AUDIT Phase G** ABS ledger persist satoshi twins (SQLite+Rocks) — code/gate, not a new soak |
 | Consensus | Single canonical fork-choice in prod (adapter + node skip parallel engines, v1.2.79) |
 | Bridge | On-chain lock/mint contracts + monitored relayer (not proof-only) |
 | Storage | RocksDB prod + backup/restore; **reorg purges EVM/tx-prop indexes** (v1.2.43); aux.db scope documented |
