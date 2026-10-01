@@ -168,6 +168,12 @@ class Database:
             ("burn_stats", "total_burned_satoshi", "INTEGER"),
             ("blocks", "total_burned_satoshi", "INTEGER"),
             ("block_proposer_audit", "total_burned_satoshi", "INTEGER"),
+            ("transactions", "value_satoshi", "INTEGER"),
+            ("transactions", "fee_satoshi", "INTEGER"),
+            ("transactions", "burned_satoshi", "INTEGER"),
+            ("tx_receipts", "value_satoshi", "INTEGER"),
+            ("tx_receipts", "fee_satoshi", "INTEGER"),
+            ("tx_receipts", "burned_satoshi", "INTEGER"),
             ("ai_agents", "total_profit_satoshi", "INTEGER"),
             ("mev_simulations", "profit_satoshi", "INTEGER"),
             ("plasma_blocks", "merkle_root", "TEXT NOT NULL DEFAULT ''"),
@@ -220,6 +226,58 @@ class Database:
         self._backfill_bridge_amount_satoshi()
         self._backfill_feature_amount_satoshi()
         self._backfill_burn_satoshi()
+        self._backfill_tx_money_satoshi()
+
+    def _backfill_tx_money_satoshi(self) -> None:
+        """Backfill transactions/tx_receipts value/fee/burned satoshi (idempotent)."""
+        try:
+            from runtime.amount import to_satoshi
+
+            specs = (
+                (
+                    "transactions",
+                    "hash",
+                    (
+                        ("value", "value_satoshi"),
+                        ("fee", "fee_satoshi"),
+                        ("burned", "burned_satoshi"),
+                    ),
+                ),
+                (
+                    "tx_receipts",
+                    "tx_hash",
+                    (
+                        ("value", "value_satoshi"),
+                        ("fee", "fee_satoshi"),
+                        ("burned", "burned_satoshi"),
+                    ),
+                ),
+            )
+            for table, pk, pairs in specs:
+                cols = {
+                    row[1]
+                    for row in self.conn.execute(f"PRAGMA table_info({table})").fetchall()
+                }
+                for abs_col, sat_col in pairs:
+                    if sat_col not in cols or abs_col not in cols:
+                        continue
+                    rows = self.conn.execute(
+                        f"SELECT {pk}, {abs_col} FROM {table} WHERE {sat_col} IS NULL"
+                    ).fetchall()
+                    for r in rows:
+                        sat = int(to_satoshi(r[abs_col] or 0))
+                        self.conn.execute(
+                            f"UPDATE {table} SET {sat_col}=? WHERE {pk}=?",
+                            (sat, r[pk]),
+                        )
+                    if rows:
+                        print(
+                            f"[DB] Migration: backfilled {table}.{sat_col} "
+                            f"for {len(rows)} row(s)"
+                        )
+            self.conn.commit()
+        except Exception as e:
+            print(f"[DB] Migration tx money satoshi backfill warning: {e}")
 
     def _backfill_burn_satoshi(self) -> None:
         """Backfill burn_stats / blocks / proposer_audit satoshi twins (idempotent)."""
@@ -1206,24 +1264,29 @@ class Database:
             return 0
 
     def _insert_transaction(self, tx: Dict) -> None:
-        from runtime.amount import tx_money_abs
+        from runtime.amount import tx_money_abs, tx_money_satoshi
 
         money = tx_money_abs(tx)
+        sat = tx_money_satoshi(tx)
         self.conn.execute(
             """INSERT OR REPLACE INTO transactions
-               (hash, block_height, from_addr, to_addr, value,
-                gas, gas_used, fee, burned, nonce, tx_data, status, timestamp)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+               (hash, block_height, from_addr, to_addr, value, value_satoshi,
+                gas, gas_used, fee, fee_satoshi, burned, burned_satoshi,
+                nonce, tx_data, status, timestamp)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 tx.get("hash", tx.get("tx_hash", "")),
                 tx.get("block_height", 0),
                 self._normalize_address(tx.get("from_addr", tx.get("from", ""))),
                 self._normalize_address(tx.get("to_addr", tx.get("to", ""))),
                 money["value"],
+                sat["value_satoshi"],
                 tx.get("gas", 21000),
                 tx.get("gas_used", tx.get("gas", 21000)),
                 money["fee"],
+                sat["fee_satoshi"],
                 money["burned"],
+                sat["burned_satoshi"],
                 tx.get("nonce", 0),
                 tx.get("data", tx.get("tx_data", "")),
                 # Omit / None / unknown → fail-closed 0 (never invent success).
@@ -1233,17 +1296,19 @@ class Database:
         )
 
     def _insert_tx_receipt(self, tx: Dict, block_hash: str, block_height: int) -> None:
-        from runtime.amount import tx_money_abs
+        from runtime.amount import tx_money_abs, tx_money_satoshi
 
         tx_hash = tx.get("hash", tx.get("tx_hash", ""))
         if not tx_hash:
             return
         money = tx_money_abs(tx)
+        sat = tx_money_satoshi(tx)
         self.conn.execute(
             """INSERT OR REPLACE INTO tx_receipts
-               (tx_hash, block_height, block_hash, from_addr, to_addr, value,
-                fee, burned, gas_used, status, created_at)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+               (tx_hash, block_height, block_hash, from_addr, to_addr,
+                value, value_satoshi, fee, fee_satoshi, burned, burned_satoshi,
+                gas_used, status, created_at)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 tx_hash,
                 int(tx.get("block_height", block_height) or block_height),
@@ -1251,8 +1316,11 @@ class Database:
                 self._normalize_address(tx.get("from_addr", tx.get("from", ""))),
                 self._normalize_address(tx.get("to_addr", tx.get("to", ""))),
                 money["value"],
+                sat["value_satoshi"],
                 money["fee"],
+                sat["fee_satoshi"],
                 money["burned"],
+                sat["burned_satoshi"],
                 int(tx.get("gas_used", tx.get("gas", 21000))),
                 # Omitted status → fail-closed (normalize None → 0).
                 self._normalize_tx_status(tx.get("status")),
@@ -1261,7 +1329,7 @@ class Database:
         )
 
     def get_tx_receipt(self, tx_hash: str) -> Optional[Dict]:
-        from runtime.amount import tx_money_abs
+        from runtime.amount import tx_money_abs, tx_money_satoshi
 
         with self.lock:
             row = self.conn.execute(
@@ -1269,7 +1337,9 @@ class Database:
             ).fetchone()
             if not row:
                 return None
-            money = tx_money_abs(dict(row))
+            src = dict(row)
+            money = tx_money_abs(src)
+            sat = tx_money_satoshi(src)
             return {
                 "tx_hash": row["tx_hash"],
                 "block_height": row["block_height"],
@@ -1279,13 +1349,16 @@ class Database:
                 "value": money["value"],
                 "fee": money["fee"],
                 "burned": money["burned"],
+                "value_satoshi": sat["value_satoshi"],
+                "fee_satoshi": sat["fee_satoshi"],
+                "burned_satoshi": sat["burned_satoshi"],
                 "gas_used": row["gas_used"],
                 "status": self._normalize_tx_status(row["status"]),
                 "timestamp": row["created_at"],
             }
 
     def get_receipts_by_block(self, block_height: int) -> List[Dict]:
-        from runtime.amount import tx_money_abs
+        from runtime.amount import tx_money_abs, tx_money_satoshi
 
         with self.lock:
             rows = self.conn.execute(
@@ -1294,7 +1367,9 @@ class Database:
             ).fetchall()
             out: List[Dict] = []
             for r in rows:
-                money = tx_money_abs(dict(r))
+                src = dict(r)
+                money = tx_money_abs(src)
+                sat = tx_money_satoshi(src)
                 out.append(
                     {
                         "tx_hash": r["tx_hash"],
@@ -1305,6 +1380,9 @@ class Database:
                         "value": money["value"],
                         "fee": money["fee"],
                         "burned": money["burned"],
+                        "value_satoshi": sat["value_satoshi"],
+                        "fee_satoshi": sat["fee_satoshi"],
+                        "burned_satoshi": sat["burned_satoshi"],
                         "gas_used": r["gas_used"],
                         "status": self._normalize_tx_status(r["status"]),
                         "timestamp": r["created_at"],
@@ -1650,7 +1728,7 @@ class Database:
         return (address or "").strip().lower()
 
     def _serialize_tx_row(self, row: Dict, viewer_addr: str = "") -> Dict:
-        from runtime.amount import tx_money_abs
+        from runtime.amount import tx_money_abs, tx_money_satoshi
 
         viewer = self._normalize_address(viewer_addr)
         from_addr = self._normalize_address(row.get("from_addr", ""))
@@ -1664,6 +1742,7 @@ class Database:
             elif to_addr == viewer:
                 direction = "received"
         money = tx_money_abs(row)
+        sat = tx_money_satoshi(row)
         return {
             "hash": row.get("hash", ""),
             "block_height": row.get("block_height", 0),
@@ -1672,6 +1751,9 @@ class Database:
             "value": money["value"],
             "fee": money["fee"],
             "burned": money["burned"],
+            "value_satoshi": sat["value_satoshi"],
+            "fee_satoshi": sat["fee_satoshi"],
+            "burned_satoshi": sat["burned_satoshi"],
             "gas_used": observed_optional_int(row, "gas_used"),
             "status": self._normalize_tx_status(row.get("status")),
             "timestamp": int(row.get("timestamp", 0)),

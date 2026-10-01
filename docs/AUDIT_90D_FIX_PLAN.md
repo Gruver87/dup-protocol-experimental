@@ -93,7 +93,7 @@
 - Docs honesty matches code  
 - No claim of soak unless pack exists  
 
-**Current focus:** blocks + proposer_audit total_burned_satoshi dual-write. Firm kickoff shelf. E4 soak operator-only.
+**Current focus:** transactions/tx_receipts value/fee/burned satoshi dual-write (SQLite catch-up to Rocks). Firm kickoff shelf. E4 soak operator-only.
 
 ---
 

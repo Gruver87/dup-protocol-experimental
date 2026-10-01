@@ -1600,9 +1600,10 @@ class RocksChainStore:
         return self._loads_receipt_blob_or_none(raw, context=f"receipt {tx_hash[:16]}")
 
     def _format_receipt_row(self, row: Dict) -> Dict:
-        from runtime.amount import tx_money_abs
+        from runtime.amount import tx_money_abs, tx_money_satoshi
 
         money = tx_money_abs(row)
+        sat = tx_money_satoshi(row)
         return {
             "tx_hash": row.get("tx_hash", ""),
             "block_height": row.get("block_height", 0),
@@ -1612,6 +1613,9 @@ class RocksChainStore:
             "value": money["value"],
             "fee": money["fee"],
             "burned": money["burned"],
+            "value_satoshi": sat["value_satoshi"],
+            "fee_satoshi": sat["fee_satoshi"],
+            "burned_satoshi": sat["burned_satoshi"],
             "gas_used": observed_optional_int(row, "gas_used"),
             "status": SqliteDatabase._normalize_tx_status(row.get("status")),
             "timestamp": row.get("created_at", row.get("timestamp", 0)),
@@ -1640,7 +1644,7 @@ class RocksChainStore:
         return out
 
     def _serialize_tx_row(self, row: Dict, viewer_addr: str = "") -> Dict:
-        from runtime.amount import tx_money_abs
+        from runtime.amount import tx_money_abs, tx_money_satoshi
 
         viewer = SqliteDatabase._normalize_address(viewer_addr)
         from_addr = SqliteDatabase._normalize_address(row.get("from_addr", ""))
@@ -1654,6 +1658,7 @@ class RocksChainStore:
             elif to_addr == viewer:
                 direction = "received"
         money = tx_money_abs(row)
+        sat = tx_money_satoshi(row)
         return {
             "hash": row.get("hash", ""),
             "block_height": row.get("block_height", 0),
@@ -1662,6 +1667,9 @@ class RocksChainStore:
             "value": money["value"],
             "fee": money["fee"],
             "burned": money["burned"],
+            "value_satoshi": sat["value_satoshi"],
+            "fee_satoshi": sat["fee_satoshi"],
+            "burned_satoshi": sat["burned_satoshi"],
             "gas_used": observed_optional_int(row, "gas_used"),
             "status": SqliteDatabase._normalize_tx_status(row.get("status")),
             "timestamp": int(row.get("timestamp", 0)),

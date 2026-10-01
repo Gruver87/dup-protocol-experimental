@@ -297,6 +297,9 @@ function Verify-PhaseG {
     Assert-FileContains "storage/database.py" "burned_amount_satoshi" "G burn burned_amount_satoshi"
     Assert-FileContains "storage/database.py" '("blocks", "total_burned_satoshi"' "G blocks total_burned_satoshi"
     Assert-FileContains "storage/database.py" '("block_proposer_audit", "total_burned_satoshi"' "G proposer_audit total_burned_satoshi"
+    Assert-FileContains "storage/database.py" "_backfill_tx_money_satoshi" "G tx money satoshi backfill"
+    Assert-FileContains "storage/database.py" '("transactions", "value_satoshi"' "G transactions value_satoshi"
+    Assert-FileContains "storage/database.py" '("tx_receipts", "fee_satoshi"' "G tx_receipts fee_satoshi"
     Assert-FileContains "storage/rocks_store.py" "total_burned_satoshi" "G rocks burn total_burned_satoshi"
     Run-Pytest "G unit: pool spend + wasm fee + state credit + stake/bridge/feature satoshi" @(
         "tests/unit/test_devnet_pool_spend.py"
@@ -306,6 +309,7 @@ function Verify-PhaseG {
         "tests/unit/test_bridge_amount_satoshi.py"
         "tests/unit/test_feature_amount_satoshi.py"
         "tests/unit/test_burn_satoshi.py"
+        "tests/unit/test_tx_money_satoshi.py"
         "tests/unit/test_prod_bridge_lock.py"
         "tests/unit/test_bridge_confirm_pending.py"
     )
