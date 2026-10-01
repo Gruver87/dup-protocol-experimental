@@ -301,9 +301,11 @@ def _check_p2p_hardening() -> tuple[list[str], list[str]]:
         or '("lightning_channels", "capacity_satoshi"' not in db_py
         or '("nft_tokens", "price_satoshi"' not in db_py
         or '("lightning_channel_states", "balance1_satoshi"' not in db_py
+        or '("ai_agents", "total_profit_satoshi"' not in db_py
+        or '("mev_simulations", "profit_satoshi"' not in db_py
     ):
         errors.append(
-            "feature sprouts must dual-write plasma/lightning/will/nft/channel_state satoshi"
+            "feature sprouts must dual-write plasma/lightning/will/nft/channel_state/ai/mev satoshi"
         )
     rocks_store_py = (ROOT / "storage" / "rocks_store.py").read_text(encoding="utf-8")
     if "stake_satoshi" not in rocks_store_py:

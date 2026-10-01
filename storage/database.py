@@ -166,6 +166,8 @@ class Database:
             ("lightning_channel_states", "balance2_satoshi", "INTEGER"),
             ("burn_stats", "burned_amount_satoshi", "INTEGER"),
             ("burn_stats", "total_burned_satoshi", "INTEGER"),
+            ("ai_agents", "total_profit_satoshi", "INTEGER"),
+            ("mev_simulations", "profit_satoshi", "INTEGER"),
             ("plasma_blocks", "merkle_root", "TEXT NOT NULL DEFAULT ''"),
             ("plasma_blocks", "tx_root",     "TEXT NOT NULL DEFAULT ''"),
         ]
@@ -285,6 +287,8 @@ class Database:
                         ("balance2", "balance2_satoshi"),
                     ),
                 ),
+                ("ai_agents", (("total_profit", "total_profit_satoshi"),)),
+                ("mev_simulations", (("profit", "profit_satoshi"),)),
             )
             for table, pairs in specs:
                 cols = {
@@ -2975,13 +2979,16 @@ class Database:
     # ── AI Agents (Wave 43 persistence) ─────────────────────────────────────
 
     def save_ai_agent(self, agent: Dict) -> None:
+        profit, profit_sat = self._abs_sat(
+            agent.get("total_profit", 0), field="total_profit"
+        )
         with self.lock:
             self.conn.execute(
                 """INSERT OR REPLACE INTO ai_agents
                    (agent_id, name, owner, agent_type, status, created_at,
-                    last_action, performance_score, total_profit, actions_count,
-                    strategy_json, memory_json)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    last_action, performance_score, total_profit, total_profit_satoshi,
+                    actions_count, strategy_json, memory_json)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (
                     agent["agent_id"],
                     agent["name"],
@@ -2991,7 +2998,8 @@ class Database:
                     int(agent.get("created_at", 0)),
                     int(agent.get("last_action", 0)),
                     parse_finite_number(agent.get("performance_score", 0), field="performance_score"),
-                    money_abs(agent.get("total_profit", 0), field="total_profit"),
+                    profit,
+                    profit_sat,
                     int(agent.get("actions_count", 0)),
                     json.dumps(agent.get("strategy", {})),
                     json.dumps(agent.get("memory", [])),
@@ -3015,7 +3023,7 @@ class Database:
             for r in rows:
                 strategy = self._loads_json(r["strategy_json"] or "{}", context="ai_strategy", default={})
                 memory = self._loads_json(r["memory_json"] or "[]", context="ai_memory", default=[])
-                out.append({
+                row = {
                     "agent_id": r["agent_id"],
                     "name": r["name"],
                     "owner": r["owner"],
@@ -3026,11 +3034,18 @@ class Database:
                     "performance_score": parse_finite_number(
                         r["performance_score"], field="performance_score"
                     ),
-                    "total_profit": money_abs(r["total_profit"], field="total_profit"),
+                    "total_profit": r["total_profit"],
+                    "total_profit_satoshi": (
+                        r["total_profit_satoshi"]
+                        if "total_profit_satoshi" in r.keys()
+                        else None
+                    ),
                     "actions_count": r["actions_count"],
                     "strategy": strategy,
                     "memory": memory,
-                })
+                }
+                Database._overlay_sat(row, "total_profit", "total_profit_satoshi")
+                out.append(row)
             return out
 
     def get_ai_agent(self, agent_id: str) -> Optional[Dict]:
@@ -3043,15 +3058,17 @@ class Database:
     # ── MEV simulations (Wave 44 persistence) ───────────────────────────────
 
     def save_mev_simulation(self, sim: Dict) -> None:
+        profit, profit_sat = self._abs_sat(sim.get("profit", 0), field="profit")
         with self.lock:
             self.conn.execute(
                 """INSERT OR REPLACE INTO mev_simulations
-                   (sim_id, sim_type, profit, payload, created_at)
-                   VALUES (?,?,?,?,?)""",
+                   (sim_id, sim_type, profit, profit_satoshi, payload, created_at)
+                   VALUES (?,?,?,?,?,?)""",
                 (
                     sim["sim_id"],
                     sim.get("sim_type", sim.get("type", "")),
-                    money_abs(sim.get("profit", 0), field="profit"),
+                    profit,
+                    profit_sat,
                     json.dumps(sim.get("payload", sim)),
                     int(sim.get("created_at", 0)),
                 ),
@@ -3067,13 +3084,18 @@ class Database:
             out = []
             for r in rows:
                 payload = self._loads_json(r["payload"] or "{}", context="mev_sim", default={})
-                out.append({
+                row = {
                     "sim_id": r["sim_id"],
                     "sim_type": r["sim_type"],
-                    "profit": money_abs(r["profit"], field="profit"),
+                    "profit": r["profit"],
+                    "profit_satoshi": (
+                        r["profit_satoshi"] if "profit_satoshi" in r.keys() else None
+                    ),
                     "payload": payload,
                     "created_at": r["created_at"],
-                })
+                }
+                Database._overlay_sat(row, "profit", "profit_satoshi")
+                out.append(row)
             return out
 
     # ── Reorg assessments (Wave 45 persistence) ─────────────────────────────

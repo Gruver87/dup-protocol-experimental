@@ -209,6 +209,45 @@ def test_source_needles_feature_amount_satoshi():
     assert '("crypto_wills", "amount_satoshi"' in src
     assert '("nft_tokens", "price_satoshi"' in src
     assert '("lightning_channel_states", "balance1_satoshi"' in src
+    assert '("ai_agents", "total_profit_satoshi"' in src
+    assert '("mev_simulations", "profit_satoshi"' in src
     rocks = (ROOT / "storage" / "rocks_store.py").read_text(encoding="utf-8")
     assert "price_satoshi" in rocks
     assert 'f"{field}_satoshi"' in rocks
+
+
+def test_ai_and_mev_profit_satoshi():
+    db, path = _db()
+    try:
+        db.save_ai_agent(
+            {
+                "agent_id": "a1",
+                "name": "bot",
+                "owner": "0xo",
+                "agent_type": "transformer",
+                "status": "active",
+                "created_at": 1,
+                "last_action": 1,
+                "performance_score": 0.5,
+                "total_profit": 8.75,
+                "actions_count": 2,
+                "strategy": {},
+                "memory": [],
+            }
+        )
+        agent = db.get_ai_agents()[0]
+        assert agent["total_profit_satoshi"] == int(to_satoshi(8.75))
+        db.save_mev_simulation(
+            {
+                "sim_id": "s1",
+                "sim_type": "arb",
+                "profit": 0.42,
+                "payload": {},
+                "created_at": 2,
+            }
+        )
+        sim = db.get_mev_simulations()[0]
+        assert sim["profit_satoshi"] == int(to_satoshi(0.42))
+    finally:
+        db.close()
+        os.remove(path)

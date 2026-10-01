@@ -290,6 +290,8 @@ function Verify-PhaseG {
     Assert-FileContains "storage/database.py" "capacity_satoshi" "G lightning capacity_satoshi"
     Assert-FileContains "storage/database.py" "price_satoshi" "G NFT price_satoshi"
     Assert-FileContains "storage/database.py" "balance1_satoshi" "G lightning channel_state balance1_satoshi"
+    Assert-FileContains "storage/database.py" "total_profit_satoshi" "G AI total_profit_satoshi"
+    Assert-FileContains "storage/database.py" "profit_satoshi" "G MEV profit_satoshi"
     Assert-FileContains "storage/rocks_store.py" "price_satoshi" "G rocks NFT price_satoshi"
     Assert-FileContains "storage/database.py" "_backfill_burn_satoshi" "G burn satoshi backfill"
     Assert-FileContains "storage/database.py" "burned_amount_satoshi" "G burn burned_amount_satoshi"

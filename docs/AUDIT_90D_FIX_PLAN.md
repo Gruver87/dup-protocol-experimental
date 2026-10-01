@@ -93,7 +93,7 @@
 - Docs honesty matches code  
 - No claim of soak unless pack exists  
 
-**Current focus:** burn_stats dual-write *_satoshi (SQLite + Rocks). Firm kickoff shelf. E4 soak operator-only.
+**Current focus:** AI/MEV profit dual-write *_satoshi. Residual: blocks.total_burned column (burn_stats already satoshi). Firm kickoff shelf. E4 soak operator-only.
 
 ---
 
