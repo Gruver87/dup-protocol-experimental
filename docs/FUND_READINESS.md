@@ -78,6 +78,8 @@ ADRs: 0001 tip-safety · 0009 hybrid · 0016 profiles · 0017 Long-Range (lab) �
 | Item | Status |
 |------|--------|
 | Fail-closed money (satoshi) + wire refuse float-only | Done |
+| ABS ledger persist satoshi dual-write (AUDIT Phase G) | Done — code+gate; **not** a new soak |
+| Phase 5 host lab re-verify (oracle/shard/bridge OFF) | Done — [`phase5reverify2`](evidence/runs/phase5reverify2/) |
 | Persist / backup fail-closed | Done |
 | Industrial HIGH honesty pack | Done |
 | Host pytest + waves green | Done 2026-09-21 |

@@ -15,6 +15,7 @@ Canonical language for this repository is **English**. Older inherited entries b
 
 ### Experimental R&D
 
+- **DX: AUDIT 90D All wrapper (2026-10-01):** `.\scripts\verify_audit_90d_all.ps1` → `verify_audit_phase.ps1 -Phase All`. Face sync: EVIDENCE_MATRIX / AT_A_GLANCE / FUND_READINESS / engagement tip `98cd3ef` + `phase5reverify2`. **Not** soak / **not** firm PASS.
 - **Phase 5 host lab re-verify (2026-10-01):** pack [`docs/evidence/runs/phase5reverify2/`](docs/evidence/runs/phase5reverify2/) — oracle 3/3 + cross-shard 2/2 + bridge OFF 3/3 PASS on git `33af82f` (SkipGate on oracle/shard). Prod flags stay off. **Not** soak / **not** L1 cutover. Prior [`phase5reverify1`](docs/evidence/runs/phase5reverify1/).
 - **AUDIT Phase G money dual-write cascade (2026-10-01):** SQLite (+ Rocks where missing) persist satoshi twins for validators/bridge/sprouts/NFT/channel_state/AI-MEV/burn_stats/blocks/proposer_audit/tx+receipts; Phase G/gate needles; Phase H engagement prep PASS (2 human firm items still pending). Oracle price floats and lightning `fee_rate` stay non-ABS by design. **Not** soak / **not** firm audit PASS. Operator: `.\scripts\verify_audit_phase.ps1 -Phase G` / `-Phase H`.
 - **Face sync after GitHub rename (2026-10-01):** README/diligence no longer show old Absolute repo link text; clone `cd dup-protocol-experimental`; all `.cursor/rules/*.mdc` force-tracked on GitHub (were local-only via gitignore).

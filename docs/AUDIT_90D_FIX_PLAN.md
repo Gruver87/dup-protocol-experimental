@@ -138,6 +138,8 @@
 .\scripts\verify_audit_phase.ps1 -Phase G
 .\scripts\verify_audit_phase.ps1 -Phase H          # engagement prep (NOT firm PASS)
 .\scripts\verify_audit_phase.ps1 -Phase All          # + industrial_gate
+.\scripts\verify_audit_90d_all.ps1                   # same as -Phase All
+.\scripts\verify_audit_90d_all.ps1 -SkipGate
 .\scripts\verify_audit_phase.ps1 -Phase E -MeshProbe # optional live probe (NOT soak)
 ```
 

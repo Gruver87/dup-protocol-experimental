@@ -26,18 +26,20 @@ Prefer the **pin** for firm scope. Experimental packs (libp2p / LR lab / EVM STR
 | Tree | Ref | SHA (object) |
 |------|-----|----------------|
 | Industrial pin | tag `v1.3.1339-tip-v2-industrial` | `3e91a5922277916636102aeacf111a16ac21b476` |
-| Experimental (this repo, tip at prep) | `main` | record at kickoff via `git rev-parse HEAD` |
+| Experimental (this repo, tip at 2026-10-01 re-verify) | `main` | `98cd3ef` (record again at firm kickoff via `git rev-parse HEAD`) |
 
 ### Evidence pack IDs to list in the engagement letter
 
 - Tip / industrial mesh: pin soak + Hybrid tip-v2 pack as labeled in [`EVIDENCE_MATRIX.md`](EVIDENCE_MATRIX.md)
 - Experimental (optional, label R&D): `ind48pass1`, `lp2pstrict1`, `evmstrict1`, `mempool48pass1`, `lrstrict1` (lab only)
+- Host lab re-verify (optional): `phase5reverify2` (oracle/shard/bridge OFF — **not** soak)
 
 Operator self-check:
 
 ```powershell
 .\scripts\verify_audit_engagement_prep.ps1
 .\scripts\verify_audit_phase.ps1 -Phase H
+.\scripts\verify_audit_90d_all.ps1 -SkipGate   # full A–H without industrial_gate
 ```
 
 ---
