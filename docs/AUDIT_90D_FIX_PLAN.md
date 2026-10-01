@@ -110,7 +110,7 @@
 - Docs honesty matches code  
 - No claim of soak unless pack exists  
 
-**Current focus:** Thin operator SDK v0 lab (`sdk/dup_sdk`, `python scripts/dup_sdk_lab.py`) — diligence/DX after AUDIT A–H. **Not** mainnet / **not** pin / **not** firm PASS. Prior: Phase 5 host re-verify [`phase5reverify2`](evidence/runs/phase5reverify2/) PASS. Next org = Phase 6 firm kickoff or E4 soak — operator-ordered only.
+**Current focus:** AI/MEV sprout harden + lab (`scripts/ai_lab.py`, `docs/sprouts/AI_LAB_PROFILE.md`) — ModelPort fail-closed, satoshi profit, off-node anomaly helper. Prod `feature_ai_*=false`. **Not** consensus / **not** soak / **not** firm PASS. Prior: thin SDK v0 (`sdk/dup_sdk`); Phase 5 [`phase5reverify2`](evidence/runs/phase5reverify2/). Next org = Phase 6 firm kickoff or E4 soak — operator-ordered only.
 
 ---
 

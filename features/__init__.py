@@ -118,6 +118,7 @@ OPTIONAL_MODULE_PROBES: Dict[str, tuple[str, str]] = {
     "lightning": ("features.lightning", "LightningNetwork"),
     "zk": ("features.zk", "ZKProofSystem"),
     "ai_agents": ("features.ai_manager", "AIAgentManager"),
+    "ai_validator": ("features.ai_validator", "AIValidatorEngine"),
     "mev": ("features.mev_analyzer", "MEVAnalyzer"),
     "pq": ("features.postquantum", "PostQuantumManager"),
 }

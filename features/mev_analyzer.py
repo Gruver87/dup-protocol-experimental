@@ -42,14 +42,20 @@ class MEVAnalyzer:
             self.attack_history.append(entry)
 
     def _record(self, sim_type: str, profit: float, payload: Dict) -> str:
+        from runtime.amount import to_satoshi
+
         sim_id = native.sha256_hex(
             f"{sim_type}{profit}{time.time()}".encode()
         )[:16]
+        profit_sat = int(payload.get("profit_satoshi", to_satoshi(profit)))
         entry = {
             "sim_id": sim_id,
             "type": sim_type,
             "profit": profit,
+            "profit_satoshi": profit_sat,
             "timestamp": int(time.time()),
+            "executed": False,
+            "heuristic": True,
             **payload,
         }
         self.attack_history.append(entry)
@@ -60,6 +66,7 @@ class MEVAnalyzer:
                 "sim_id": sim_id,
                 "sim_type": sim_type,
                 "profit": profit,
+                "profit_satoshi": profit_sat,
                 "payload": entry,
                 "created_at": entry["timestamp"],
             })
@@ -144,15 +151,23 @@ class MEVAnalyzer:
         return list(reversed(self.attack_history[-limit:]))
 
     def get_statistics(self) -> Dict[str, Any]:
+        from runtime.amount import from_satoshi_float, to_satoshi
+
         n = len(self.attack_history)
-        model_est = round(sum(a.get("profit", 0) for a in self.attack_history), 4)
+        profit_sat = sum(
+            int(a.get("profit_satoshi", to_satoshi(a.get("profit", 0))))
+            for a in self.attack_history
+        )
+        model_est = from_satoshi_float(profit_sat)
         return {
             # Legacy key kept for API compatibility; prefer heuristic_signals.
             "total_attacks": n,
             "heuristic_signals": n,
-            "estimated_profit": model_est,
-            "model_estimate_profit": model_est,
+            "estimated_profit": round(model_est, 4),
+            "estimated_profit_satoshi": int(profit_sat),
+            "model_estimate_profit": round(model_est, 4),
             "executed": False,
+            "consensus_wired": False,
             "attack_types": {
                 "sandwich": sum(
                     1 for a in self.attack_history if a.get("type") == "sandwich"

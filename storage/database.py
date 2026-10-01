@@ -3138,9 +3138,16 @@ class Database:
     # ── AI Agents (Wave 43 persistence) ─────────────────────────────────────
 
     def save_ai_agent(self, agent: Dict) -> None:
-        profit, profit_sat = self._abs_sat(
-            agent.get("total_profit", 0), field="total_profit"
-        )
+        # Prefer explicit satoshi twin when present (fail-closed money honesty).
+        if agent.get("total_profit_satoshi") is not None:
+            from runtime.amount import from_satoshi_float
+
+            profit_sat = max(0, int(agent["total_profit_satoshi"]))
+            profit = from_satoshi_float(profit_sat)
+        else:
+            profit, profit_sat = self._abs_sat(
+                agent.get("total_profit", 0), field="total_profit"
+            )
         with self.lock:
             self.conn.execute(
                 """INSERT OR REPLACE INTO ai_agents
@@ -3217,7 +3224,13 @@ class Database:
     # ── MEV simulations (Wave 44 persistence) ───────────────────────────────
 
     def save_mev_simulation(self, sim: Dict) -> None:
-        profit, profit_sat = self._abs_sat(sim.get("profit", 0), field="profit")
+        if sim.get("profit_satoshi") is not None:
+            from runtime.amount import from_satoshi_float
+
+            profit_sat = max(0, int(sim["profit_satoshi"]))
+            profit = from_satoshi_float(profit_sat)
+        else:
+            profit, profit_sat = self._abs_sat(sim.get("profit", 0), field="profit")
         with self.lock:
             self.conn.execute(
                 """INSERT OR REPLACE INTO mev_simulations
