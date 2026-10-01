@@ -272,24 +272,11 @@ class CrossShardCoordinator:
     @staticmethod
     def _apply_delta_satoshi(db, addr: str, delta_sats: int) -> bool:
         """Apply integer satoshi delta; refuse float-only money move."""
+        from runtime.amount import apply_store_delta_satoshi
+
         if db is None or not addr or not int(delta_sats):
             return False
-        if hasattr(db, "balance_delta_satoshi"):
-            db.balance_delta_satoshi(addr, int(delta_sats))
-            return True
-        # Rocks adapter / port path
-        if hasattr(db, "balance_delta") and hasattr(db, "get_balance_satoshi"):
-            # balance_delta on some stores expects ABS float — derive from sats only
-            from runtime.amount import from_satoshi_float
-
-            db.update_balance(addr, float(from_satoshi_float(int(delta_sats))))
-            return True
-        if hasattr(db, "update_balance"):
-            from runtime.amount import from_satoshi_float
-
-            db.update_balance(addr, float(from_satoshi_float(int(delta_sats))))
-            return True
-        return False
+        return bool(apply_store_delta_satoshi(db, addr, int(delta_sats)))
 
     def export_migration_debit(self, row: dict, db, owns_shard: Callable[[int], bool]) -> Optional[dict]:
         """Debit balance on source shard; return gossip payload for destination.

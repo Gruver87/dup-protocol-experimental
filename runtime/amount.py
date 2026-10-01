@@ -268,6 +268,30 @@ def from_satoshi_float(satoshi: int) -> float:
     return float(from_satoshi(satoshi))
 
 
+def apply_store_delta_satoshi(store: Any, address: str, delta_sat: int) -> bool:
+    """Apply integer satoshi delta on a storage/db handle.
+
+    Prefer ``balance_delta_satoshi``; fall back to float ``update_balance`` /
+    ``balance_delta`` only when the satoshi method is absent. Returns False if
+    no write path exists.
+    """
+    if store is None or not address:
+        return False
+    delta = int(delta_sat)
+    if delta == 0:
+        return True
+    if hasattr(store, "balance_delta_satoshi"):
+        store.balance_delta_satoshi(address, delta)
+        return True
+    if hasattr(store, "balance_delta"):
+        store.balance_delta(address, from_satoshi_float(delta))
+        return True
+    if hasattr(store, "update_balance"):
+        store.update_balance(address, from_satoshi_float(delta))
+        return True
+    return False
+
+
 def account_satoshi(row: Optional[Mapping[str, Any]]) -> int:
     """Read satoshi from account row; backfill from float balance if needed."""
     if not row:

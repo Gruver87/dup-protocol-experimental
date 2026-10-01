@@ -3127,12 +3127,21 @@ class RESTHandler(BaseHTTPRequestHandler):
                 })
 
             elif path == "/burn-stats":
+                from runtime.amount import from_satoshi_float
+
                 burn = db.get_burn_stats()
+                burn_sat = 0
+                if bc is not None and getattr(cfg, "burn_address", None):
+                    if hasattr(bc, "get_balance_satoshi"):
+                        burn_sat = int(bc.get_balance_satoshi(cfg.burn_address) or 0)
+                    elif hasattr(bc, "get_balance"):
+                        burn_sat = int(to_satoshi(bc.get_balance(cfg.burn_address) or 0))
                 self._json({
                     **burn,
                     "burn_rate_pct": cfg.burn_rate * 100,
                     "burn_address": cfg.burn_address,
-                    "burn_address_balance": bc.get_balance(cfg.burn_address),
+                    "burn_address_balance": float(from_satoshi_float(burn_sat)),
+                    "burn_address_balance_satoshi": burn_sat,
                 })
 
             elif path == "/validators":
@@ -4133,11 +4142,15 @@ class RESTHandler(BaseHTTPRequestHandler):
                         "source": "immutable_state",
                     })
                 else:
-                    bal = bc.get_balance(addr) if hasattr(bc, "get_balance") else 0
+                    from runtime.amount import from_satoshi_float
+
+                    bal_sat = db_sat
+                    if bc is not None and hasattr(bc, "get_balance_satoshi"):
+                        bal_sat = int(bc.get_balance_satoshi(addr) or 0)
                     self._json({
                         "address": addr,
-                        "balance": bal,
-                        "balance_satoshi": db_sat,
+                        "balance": float(from_satoshi_float(bal_sat)),
+                        "balance_satoshi": bal_sat,
                         # DB-only is never IMS-canonical when shadow state is absent.
                         "canonical": False,
                         "ims_available": False,
@@ -7140,6 +7153,12 @@ class RESTHandler(BaseHTTPRequestHandler):
 
             # ── Devnet faucet (ABS credit for testing) ───────────────────────
             elif path == "/devnet/faucet":
+                from runtime.amount import (
+                    apply_store_delta_satoshi,
+                    from_satoshi_float,
+                    to_satoshi,
+                )
+
                 if getattr(cfg, "deployment_mode", "dev") == "prod":
                     self._error(403, "faucet disabled in production"); return
                 db = self.__class__.db
@@ -7151,14 +7170,23 @@ class RESTHandler(BaseHTTPRequestHandler):
                     self._error(400, "address required"); return
                 if amount <= 0 or amount > 1000:
                     self._error(400, "amount must be 0 < amount <= 1000"); return
-                db.update_balance(address, amount)
+                amount_sat = int(to_satoshi(amount))
+                if not apply_store_delta_satoshi(db, address, amount_sat):
+                    db.update_balance(address, amount)
+                bal_sat = (
+                    int(db.get_balance_satoshi(address) or 0)
+                    if hasattr(db, "get_balance_satoshi")
+                    else int(to_satoshi(db.get_balance(address) or 0))
+                )
                 self._json({
                     "success": True,
                     "address": address,
-                    "credited": amount,
-                    "balance": db.get_balance(address),
+                    "credited": float(from_satoshi_float(amount_sat)),
+                    "credited_satoshi": amount_sat,
+                    "balance": float(from_satoshi_float(bal_sat)),
+                    "balance_satoshi": bal_sat,
                 })
-
+                return
             elif path == "/devnet/pool-spend":
                 if getattr(cfg, "deployment_mode", "dev") == "prod":
                     self._error(403, "pool-spend disabled in production"); return

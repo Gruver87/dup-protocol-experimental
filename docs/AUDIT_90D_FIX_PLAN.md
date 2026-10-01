@@ -93,7 +93,7 @@
 - Docs honesty matches code  
 - No claim of soak unless pack exists  
 
-**Current focus:** Code/docs wave C1+F2+F3 checklist closed without soak. Remaining: **E4 soak** (operator) · firm audit kickoff (org) · residual float call-sites outside QueryFacade/REST wallet surfaces.
+**Current focus:** Residual float writes on EVM/cross-shard/faucet prefer `apply_store_delta_satoshi` / `balance_delta_satoshi`. Remaining without soak: firm audit kickoff (org) · **E4 soak** (operator) · feature-sprout float fallbacks (NFT/plasma/lightning when satoshi method absent).
 
 ---
 

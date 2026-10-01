@@ -242,6 +242,14 @@ def _check_p2p_hardening() -> tuple[list[str], list[str]]:
         errors.append("explorer ZK section must disclose not claimed / no audited ZK")
     if "get_balance_satoshi" not in (ROOT / "api" / "query_facade.py").read_text(encoding="utf-8"):
         errors.append("QueryFacade must expose get_balance_satoshi (Phase C1)")
+    if "apply_store_delta_satoshi" not in (ROOT / "runtime" / "amount.py").read_text(
+        encoding="utf-8"
+    ):
+        errors.append("runtime.amount must expose apply_store_delta_satoshi")
+    if "get_balance(addr) * 1_000_000" in (
+        ROOT / "execution" / "evm_adapter.py"
+    ).read_text(encoding="utf-8"):
+        errors.append("evm_adapter must not use float*1e6 satoshi heuristic")
     if not (ROOT / "api" / "market_feed.py").is_file():
         errors.append("api/market_feed.py missing (ops market snapshot)")
     else:
