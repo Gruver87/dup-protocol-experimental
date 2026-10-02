@@ -8582,17 +8582,25 @@ class RESTHandler(BaseHTTPRequestHandler):
 
             # ── ZK: range proof & transaction ─────────────────────────────────
             elif path == "/zk/prove/range":
+                # POST body path (GET handler above is educational-only too).
                 zk = self.__class__.zk
-                value = int(body.get("value", 42))
-                min_v = int(body.get("min_value", 0))
-                max_v = int(body.get("max_value", 100))
+                value = int(body.get("value", body.get("secret", 42)))
+                min_v = int(body.get("min_value", body.get("min", 0)))
+                max_v = int(body.get("max_value", body.get("max", 100)))
                 if zk and hasattr(zk, "prove_range"):
                     try:
                         proof = zk.prove_range(value, min_v, max_v)
                     except NotImplementedError as e:
                         self._error(501, str(e))
                         return
-                    self._json({"proof": str(proof), "valid": True})
+                    proof_valid = getattr(proof, "valid", None)
+                    self._json({
+                        "proof": proof.__dict__ if hasattr(proof, "__dict__") else str(proof),
+                        "valid": proof_valid if isinstance(proof_valid, bool) else None,
+                        "range": f"[{min_v}, {max_v}]",
+                        "canonical": False,
+                        "educational_only": True,
+                    })
                 else:
                     self._error(503, "ZK range proofs not available")
 
@@ -8601,19 +8609,32 @@ class RESTHandler(BaseHTTPRequestHandler):
                     self._error(403, "ZK create-tx forbidden in prod"); return
                 zk = self.__class__.zk
                 if zk and hasattr(zk, "create_zk_transaction"):
+                    if body.get("amount") is None and body.get("amount_satoshi") is None:
+                        self._error(400, "amount or amount_satoshi required"); return
+                    if body.get("private_key") is None or body.get("public_key") is None:
+                        self._error(400, "private_key and public_key required"); return
+                    try:
+                        amount_abs, _amount_sat = _http_amount_abs(
+                            body, self.__class__.config, field="amount"
+                        )
+                        amount = int(amount_abs) if amount_abs == int(amount_abs) else int(
+                            round(amount_abs)
+                        )
+                    except ValueError as exc:
+                        self._error(400, str(exc)); return
                     tx, proof = zk.create_zk_transaction(
                         from_addr=body.get("from_addr", body.get("sender", "")),
                         to_addr=body.get("to_addr", body.get("to", "")),
-                        amount=int(body.get("amount", 1)),
-                        private_key=int(body.get("private_key", 0)),
-                        public_key=int(body.get("public_key", 0)),
+                        amount=amount,
+                        private_key=int(body.get("private_key")),
+                        public_key=int(body.get("public_key")),
                     )
                     self._json({
                         "tx": tx,
                         "proof": proof.to_dict(),
                         "success": True,
-                        "canonical": False,
                         "submitted": False,
+                        "canonical": False,
                         "educational_only": True,
                     })
                 else:

@@ -99,8 +99,9 @@ def create_signed_transaction(
         "value": value,
         "nonce": nonce,
         "chain_id": chain_id,
+        # Explicit demo defaults (not Hasher invent) — lab helper only.
         "gas_limit": 21000,
-        "gas_price": 1
+        "gas_price": 1,
     }
     
     # Add signature
