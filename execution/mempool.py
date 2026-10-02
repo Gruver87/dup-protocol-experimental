@@ -41,7 +41,16 @@ class Mempool(_BaseMempool):
             recipient = tx.get("to", tx.get("to_addr", ""))
             amount = float(tx.get("value", tx.get("amount", 0)))
             nonce = int(tx.get("nonce", 0))
-            fee = float(tx.get("gas_price", tx.get("gasPrice", tx.get("fee", 1))))
+            # Refuse invent fee=1 when gas_price/fee omitted.
+            raw_fee = tx.get("gas_price", tx.get("gasPrice", tx.get("fee")))
+            if raw_fee is None or raw_fee == "":
+                return False
+            try:
+                fee = float(raw_fee)
+            except (TypeError, ValueError):
+                return False
+            if fee <= 0:
+                return False
             tx_hash = tx.get("hash") or (
                 "0x" + native.sha256_hex(f"{sender}{recipient}{amount}{nonce}".encode())
             )

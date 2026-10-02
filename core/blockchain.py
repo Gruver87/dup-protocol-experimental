@@ -135,18 +135,34 @@ class Transaction:
     def from_dict(cls, d: Dict) -> "Transaction":
         from runtime.amount import parse_rpc_value_abs
 
+        # Refuse invent gas=21000 on deserialize — wire/storage must carry gas.
+        raw_gas = d.get("gas", d.get("gas_limit", d.get("gasLimit")))
+        if raw_gas is None or raw_gas == "":
+            raise ValueError("gas_required")
+        try:
+            gas = int(raw_gas)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"gas_required: {exc}") from exc
+        if gas <= 0:
+            raise ValueError("gas_required")
+
         tx = cls(
             from_addr=d.get("from_addr", d.get("from", "")),
             to_addr=d.get("to_addr", d.get("to", "")),
             value=parse_rpc_value_abs(d.get("value", d.get("amount", 0)), field="value"),
             nonce=int(d.get("nonce", 0)),
-            gas=int(d.get("gas", 21_000)),
+            gas=gas,
             data=d.get("data", d.get("tx_data", "")),
             tx_hash=d.get("hash", d.get("tx_hash", "")),
             signature=d.get("signature", ""),
             public_key=d.get("public_key", ""),
             timestamp=int(d.get("timestamp", 0)),
         )
+        if d.get("gas_used") is not None and d.get("gas_used") != "":
+            try:
+                tx.gas_used = int(d["gas_used"])
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"invalid gas_used: {exc}") from exc
         tx.fee = parse_rpc_value_abs(d.get("fee", 0.0), field="fee")
         tx.burned = parse_rpc_value_abs(d.get("burned", 0.0), field="burned")
         tx.block_height = int(d.get("block_height", 0))

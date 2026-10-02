@@ -14,6 +14,19 @@ def test_from_dict_refuses_bool_value():
                 "to_addr": "0x" + "b" * 40,
                 "value": True,
                 "nonce": 0,
+                "gas": 21000,
+            }
+        )
+
+
+def test_from_dict_refuses_missing_gas():
+    with pytest.raises(ValueError, match="gas_required"):
+        Transaction.from_dict(
+            {
+                "from_addr": "0x" + "a" * 40,
+                "to_addr": "0x" + "b" * 40,
+                "value": 1,
+                "nonce": 0,
             }
         )
 

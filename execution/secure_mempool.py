@@ -21,7 +21,16 @@ class SecureMempool(Mempool):
             sender = tx.get("from", tx.get("from_addr", ""))
             recipient = tx.get("to", tx.get("to_addr", ""))
             nonce = int(tx.get("nonce", 0))
-            fee = float(tx.get("gas_price", tx.get("fee", 1)))
+            # Refuse invent fee=1 when gas_price/fee omitted.
+            raw_fee = tx.get("gas_price", tx.get("fee"))
+            if raw_fee is None or raw_fee == "":
+                return False, "fee_required"
+            try:
+                fee = float(raw_fee)
+            except (TypeError, ValueError):
+                return False, "fee_required"
+            if fee <= 0:
+                return False, "fee_required"
             tx_hash = tx.get("hash") or (
                 "0x" + native.sha256_hex(f"{sender}{recipient}{amount}{nonce}".encode())
             )
