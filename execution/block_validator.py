@@ -57,8 +57,10 @@ class BlockValidator:
 
         if b.get("tx_root") and b.get("transactions"):
             computed = self._compute_tx_root(b["transactions"])
-            expected = b["tx_root"]
-            if computed != expected and computed[: len(expected)] != expected:
+            expected = str(b["tx_root"] or "").strip().lower()
+            got = str(computed or "").strip().lower()
+            # Strict full equality — prefix match rejected (audit 2026-10-02 §10).
+            if not expected or got != expected:
                 return False, f"Tx root mismatch: expected {computed}"
 
         return True, ""
