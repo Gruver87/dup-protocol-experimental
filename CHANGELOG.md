@@ -15,6 +15,7 @@ Canonical language for this repository is **English**. Older inherited entries b
 
 ### Experimental R&D
 
+- **P1 audit follow-ups (2026-10-02):** CI honesty drift fixed (`live_automated=False` in external_audit units; AI/NFT satoshi needles). Wallet `export(password=...)` is scrypt+AES-256-GCM (password never ignored); import binds address↔privkey. NFT `accept_offer` / `finalize_auction` settle under `_uow()` (no pre-settle finalize). **Not** soak / **not** firm PASS.
 - **P0 CRITICAL: sender↔pubkey binding (2026-10-02):** `crypto/wallet.py` `_transaction_signature_material` now refuses txs where `derive_address(public_key) != from`. Closes forged-sender authorization hole (audit 2026-10-02). Units `tests/unit/test_tx_sender_identity_binding.py`. Same fix on industrial pin tree. **Not** firm PASS / soak claim unchanged.
 - **Pre-fund diligence pack (2026-10-01):** [`docs/DILIGENCE_SNAPSHOT_2026-10-01.md`](docs/DILIGENCE_SNAPSHOT_2026-10-01.md) · NDA outline · firm calendar stub · pin audit zip · probe OK · adversarial 401/CORS PASS · STRICT 48h **IN_PROGRESS** (PID started; **not** PASS yet). Tracker stays **6/8**.
 - **GitHub face sync (2026-10-01):** README / REPO_PROFILE / EVIDENCE_MATRIX list Phase 6 prep, thin SDK, AI/NFT labs, critical-path audit scan. **Not** firm PASS / **not** soak.

@@ -62,7 +62,8 @@ def test_nft_settle_uses_satoshi():
     src = (Path(__file__).resolve().parents[2] / "features" / "nft.py").read_text(
         encoding="utf-8"
     )
-    assert "balance_delta_satoshi" in src
+    assert "apply_store_delta_satoshi" in src
+    assert "resolve_price_satoshi" in src
     assert "nft_council_gate_unavailable" in src
 
 

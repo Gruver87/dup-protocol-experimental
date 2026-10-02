@@ -573,7 +573,7 @@ class NFTMarketplace:
             return offer_id
 
     def accept_offer(self, offer_id: str, seller: str) -> Dict:
-        """Accept an offer — transfer NFT to bidder."""
+        """Accept an offer — transfer NFT to bidder (single UoW with balances)."""
         with self.lock:
             offer = self.offers.get(offer_id)
             if not offer or offer["status"] != "pending":
@@ -582,29 +582,40 @@ class NFTMarketplace:
             t = self.tokens.get(token_id)
             if not t or t.owner != seller:
                 return {"success": False, "error": "Not token owner"}
-            # Transfer — prefer integer price_satoshi twin when present
             price = offer["price"]
             price_sat = offer.get("price_satoshi")
-            if not self._settle_sale(
-                offer["bidder"],
-                seller,
-                t.creator,
-                price,
-                price_satoshi=int(price_sat) if price_sat is not None else None,
-            ):
-                return {"success": False, "error": "Bidder has insufficient balance or balance backend unavailable"}
             old_owner = t.owner
-            t.owner = offer["bidder"]
-            t.for_sale = False
-            self._persist_token(token_id)
-            offer["status"] = "accepted"
-            self._persist_offer(offer_id)
-            self._record_sale({
-                "token_id": token_id, "from": old_owner,
-                "to": offer["bidder"], "price": price,
-                "price_satoshi": int(price_sat or resolve_price_satoshi(price=price)),
-                "type": "offer", "timestamp": int(time.time()),
-            })
+            old_for_sale = t.for_sale
+            old_status = offer["status"]
+            try:
+                with self._uow():
+                    if not self._settle_sale(
+                        offer["bidder"],
+                        seller,
+                        t.creator,
+                        price,
+                        price_satoshi=int(price_sat) if price_sat is not None else None,
+                    ):
+                        return {
+                            "success": False,
+                            "error": "Bidder has insufficient balance or balance backend unavailable",
+                        }
+                    t.owner = offer["bidder"]
+                    t.for_sale = False
+                    self._persist_token(token_id)
+                    offer["status"] = "accepted"
+                    self._persist_offer(offer_id)
+                    self._record_sale({
+                        "token_id": token_id, "from": old_owner,
+                        "to": offer["bidder"], "price": price,
+                        "price_satoshi": int(price_sat or resolve_price_satoshi(price=price)),
+                        "type": "offer", "timestamp": int(time.time()),
+                    })
+            except Exception as exc:
+                t.owner = old_owner
+                t.for_sale = old_for_sale
+                offer["status"] = old_status
+                return {"success": False, "error": f"nft_uow_failed: {exc}"}
             if self.bus:
                 self.bus.emit("nft.offer_accepted", {"offer_id": offer_id, "token_id": token_id})
             return {
@@ -613,6 +624,7 @@ class NFTMarketplace:
                 "token_id": token_id,
                 "price": price,
                 "price_satoshi": int(price_sat or 0),
+                "uow_atomic": self._has_atomic_uow(),
             }
 
     def get_offers(self, token_id: str = None) -> List[Dict]:
@@ -740,14 +752,13 @@ class NFTMarketplace:
             }
 
     def finalize_auction(self, auction_id: str) -> Dict:
+        """Finalize auction; settle balances + ownership in one UoW (no pre-settle finalize)."""
         with self.lock:
             auction = self.auctions.get(auction_id)
             if not auction:
                 return {"success": False, "error": "Auction not found"}
             if auction["status"] != "active":
                 return {"success": False, "error": "Auction already finalized"}
-            auction["status"] = "finalized"
-            self._persist_auction(auction_id)
             winner = auction["current_bidder"]
             price = auction["current_bid"]
             price_sat = int(
@@ -758,46 +769,66 @@ class NFTMarketplace:
                 auction.get("reserve_price_satoshi")
                 or resolve_price_satoshi(price=auction.get("reserve_price", 0))
             )
-            if winner and price_sat >= reserve_sat:
-                token_id = auction["token_id"]
-                t = self.tokens.get(token_id)
-                if not t:
-                    auction["status"] = "settlement_failed"
+            old_status = auction["status"]
+            token_id = auction["token_id"]
+            t = self.tokens.get(token_id) if winner and price_sat >= reserve_sat else None
+            old_owner = t.owner if t else None
+            old_for_sale = t.for_sale if t else None
+
+            try:
+                with self._uow():
+                    if winner and price_sat >= reserve_sat:
+                        if not t:
+                            raise RuntimeError("Auction token not found")
+                        if not self._settle_sale(
+                            winner, old_owner, t.creator, price, price_satoshi=price_sat
+                        ):
+                            raise RuntimeError(
+                                "insufficient balance or balance backend unavailable"
+                            )
+                        t.owner = winner
+                        t.for_sale = False
+                        self._persist_token(token_id)
+                        self._record_sale({
+                            "token_id": token_id,
+                            "from": old_owner,
+                            "to": winner,
+                            "price": price,
+                            "price_satoshi": price_sat,
+                            "type": "auction",
+                            "timestamp": int(time.time()),
+                        })
+                    auction["status"] = "finalized"
                     self._persist_auction(auction_id)
-                    return {"success": False, "error": "Auction token not found"}
-                old_owner = t.owner
-                if not self._settle_sale(
-                    winner, old_owner, t.creator, price, price_satoshi=price_sat
-                ):
-                    auction["status"] = "settlement_failed"
-                    self._persist_auction(auction_id)
+            except Exception as exc:
+                auction["status"] = old_status
+                if t is not None and old_owner is not None:
+                    t.owner = old_owner
+                    t.for_sale = old_for_sale
+                err = str(exc)
+                if "insufficient balance" in err or "balance backend" in err:
                     return {
                         "success": False,
                         "error": "insufficient balance or balance backend unavailable",
                     }
-                t.owner = winner
-                t.for_sale = False
-                self._persist_token(token_id)
-                self._record_sale({
-                    "token_id": token_id,
-                    "from": old_owner,
-                    "to": winner,
-                    "price": price,
-                    "price_satoshi": price_sat,
-                    "type": "auction",
-                    "timestamp": int(time.time()),
-                })
+                if "token not found" in err.lower():
+                    return {"success": False, "error": "Auction token not found"}
+                return {"success": False, "error": f"nft_uow_failed: {exc}"}
+
+            if winner and price_sat >= reserve_sat:
                 return {
                     "success": True,
                     "auction_id": auction_id,
                     "winner": winner,
                     "price": price,
                     "price_satoshi": price_sat,
+                    "uow_atomic": self._has_atomic_uow(),
                 }
             return {
                 "success": True,
                 "auction_id": auction_id,
                 "message": "Reserve price not met — no sale",
+                "uow_atomic": self._has_atomic_uow(),
             }
 
     def get_auctions(self, active_only: bool = False) -> List[Dict]:

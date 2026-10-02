@@ -67,3 +67,39 @@ def test_nft_mint_rolls_back_memory_on_uow_failure():
     assert r["success"] is False
     assert "nft_uow_failed" in r["error"]
     assert "x" not in nft.tokens
+
+
+def test_nft_offer_auction_settle_under_uow():
+    from features.nft import NFTMarketplace
+    from storage.database import Database
+
+    tmp = tempfile.mkdtemp()
+    db = Database(os.path.join(tmp, "nft_offer_uow.db"))
+    db.initialize()
+    seller = "0x" + "a" * 40
+    buyer = "0x" + "b" * 40
+    db.update_balance(seller, 1000.0)
+    db.update_balance(buyer, 1000.0)
+    nft = NFTMarketplace(db=db)
+    nft.tokens.clear()
+    assert nft.mint("o1", "O", "d", "i", seller, price=5.0)["success"]
+    oid = nft.make_offer("o1", buyer, price=5.0, hours=1)
+    assert oid
+    acc = nft.accept_offer(oid, seller)
+    assert acc["success"] is True
+    assert acc.get("uow_atomic") is True
+    assert nft.get_token("o1")["owner"] == buyer
+
+    db.update_balance(seller, 1000.0)
+    db.update_balance(buyer, 1000.0)
+    assert nft.mint("a1", "A", "d", "i", seller, price=5.0)["success"]
+    aid = nft.create_auction(
+        "a1", seller, start_price=1.0, reserve_price=1.0, hours=1
+    )
+    assert aid
+    assert nft.place_bid(aid, buyer, amount=2.0)["success"]
+    fin = nft.finalize_auction(aid)
+    assert fin["success"] is True
+    assert fin.get("uow_atomic") is True
+    assert nft.get_token("a1")["owner"] == buyer
+    assert nft.auctions[aid]["status"] == "finalized"
