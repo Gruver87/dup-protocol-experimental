@@ -848,5 +848,7 @@ class SmartAccountManager:
             'persistent': False,
             'execution_bound': bool(self.transaction_executor),
             'in_memory_registry': True,
+            # Manager instance exists; not a claim of durable/production custody.
             'enabled': True,
+            'canonical': False,
         }

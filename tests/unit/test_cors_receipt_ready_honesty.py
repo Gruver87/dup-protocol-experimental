@@ -101,6 +101,8 @@ def test_build_sync_status_p2p_fallback_fail_closed_with_peers():
 
     status = _build_sync_status(None, p2p, bc, cfg)
     assert status["source"] == "p2p_fallback"
+    assert status["enabled"] is False
+    assert status.get("sync_engine_missing") is True
     assert status["syncing"] is True
     assert status["wire_probe_ok"] is False
     assert status["wire_probe_probed"] is False

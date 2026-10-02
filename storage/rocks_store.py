@@ -2940,8 +2940,9 @@ class RocksChainStore:
             "tx_count": tx_count,
             "receipt_count": receipt_count,
             "proposer_audit_count": audit_count,
-            "receipts_enabled": True,
-            "proposer_audit_enabled": True,
+            # Capability honesty: Rocks CFs exist iff this store engine is rocks*.
+            "receipts_enabled": str(getattr(self, "engine", "") or "").startswith("rocks"),
+            "proposer_audit_enabled": str(getattr(self, "engine", "") or "").startswith("rocks"),
             "state_root_strict_p2p": True,
             "avg_block_time_sec": round(avg_block_time, 2),
             "target_block_time_sec": 15.0,

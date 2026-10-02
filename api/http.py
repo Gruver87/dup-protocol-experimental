@@ -5820,9 +5820,11 @@ class RESTHandler(BaseHTTPRequestHandler):
                     except NotImplementedError as e:
                         self._error(501, str(e))
                         return
+                    # Educational ZK only — never paint cryptographic valid:true.
+                    proof_valid = getattr(proof, "valid", None)
                     self._json({
                         "proof": proof.__dict__ if hasattr(proof,'__dict__') else str(proof),
-                        "valid": True,
+                        "valid": proof_valid if isinstance(proof_valid, bool) else None,
                         "range": f"[{min_v}, {max_v}]",
                         "canonical": False,
                         "educational_only": True,
@@ -6239,8 +6241,23 @@ class RESTHandler(BaseHTTPRequestHandler):
                         proof = zk.prove_balance(secret, threshold)
                     else:
                         self._error(400, "Unknown proof type"); return
-                    pd = proof.to_dict() if hasattr(proof, "to_dict") else {"valid": getattr(proof, "valid", True)}
-                    self._json({"proof_type": proof_type, "valid": True, **pd})
+                    # Educational ZK — never force valid:true; only echo bool from proof.
+                    if hasattr(proof, "to_dict"):
+                        pd = dict(proof.to_dict())
+                    else:
+                        raw_valid = getattr(proof, "valid", None)
+                        pd = {
+                            "valid": raw_valid if isinstance(raw_valid, bool) else None,
+                        }
+                    out = {
+                        "proof_type": proof_type,
+                        "educational_only": True,
+                        "canonical": False,
+                        **pd,
+                    }
+                    if not isinstance(out.get("valid"), bool):
+                        out["valid"] = None
+                    self._json(out)
                 except NotImplementedError as e:
                     self._error(501, str(e))
                 except Exception as e:
@@ -6264,7 +6281,16 @@ class RESTHandler(BaseHTTPRequestHandler):
                 owners = body.get("owners", [])
                 required = int(body.get("required", 2))
                 to = body.get("to", "")
-                value = _http_abs(body.get("value", 0), field="value")
+                try:
+                    value, value_sat = _http_amount_abs(
+                        body,
+                        cfg,
+                        field="value",
+                        sat_keys=("value_satoshi", "amount_satoshi"),
+                        abs_keys=("value", "amount"),
+                    )
+                except ValueError as exc:
+                    self._error(400, str(exc)); return
                 try:
                     from features.multisig import MultiSigWallet
                     ms = MultiSigWallet(owners, required)
@@ -6272,7 +6298,12 @@ class RESTHandler(BaseHTTPRequestHandler):
                     if isinstance(result, dict) and result.get("success") is False:
                         self._error(400, result.get("error", "multisig transaction failed"))
                         return
-                    self._json({**result, "owners": owners, "required": required})
+                    self._json({
+                        **result,
+                        "owners": owners,
+                        "required": required,
+                        "value_satoshi": int(value_sat),
+                    })
                 except ValueError as e:
                     self._error(400, str(e))
                 except Exception as e:
@@ -7197,9 +7228,26 @@ class RESTHandler(BaseHTTPRequestHandler):
                 fn = body.get("function", "")
                 params = body.get("params", {})
                 caller = body.get("caller", "")
-                value = _http_abs(body.get("value", 0), field="value")
                 if not contract_addr or not fn:
                     self._error(400, "contract and function required"); return
+                # Value optional (0) for pure calls; when present prefer satoshi.
+                has_value = any(
+                    body.get(k) is not None and str(body.get(k)).strip() != ""
+                    for k in ("value_satoshi", "amount_satoshi", "value", "amount")
+                )
+                if has_value:
+                    try:
+                        value, _value_sat = _http_amount_abs(
+                            body,
+                            self.__class__.config,
+                            field="value",
+                            sat_keys=("value_satoshi", "amount_satoshi"),
+                            abs_keys=("value", "amount"),
+                        )
+                    except ValueError as exc:
+                        self._error(400, str(exc)); return
+                else:
+                    value = 0.0
                 result = vm.call(contract_addr, fn, params, caller, value)
                 self._json(result)
 
@@ -9370,10 +9418,11 @@ def _build_sync_status(se, p2p, bc, cfg) -> Dict:
             )
         return status
 
-    # No SyncEngine: fail-closed wire-probe fields (never claim a completed probe).
+    # No SyncEngine: fail-closed — do not paint enabled:true without SyncEngine.
     # With peers, do not claim synced — SyncEngine missing means we cannot prove tip.
     return {
-        "enabled": True,
+        "enabled": False,
+        "sync_engine_missing": True,
         "source": "p2p_fallback",
         "syncing": peer_count > 0,
         "local_height": local_h,
