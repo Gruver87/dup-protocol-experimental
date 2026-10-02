@@ -1229,7 +1229,10 @@ class NodeOrchestrator:
                 from consensus.lmd import LMDTable as _LMD
                 self.lmd_table = _LMD()
                 if config.miner_address:
-                    self.lmd_table.add_validator(config.miner_address)
+                    # Explicit min_stake — do not invent stake=100 via LMD default.
+                    self.lmd_table.add_validator(
+                        config.miner_address, int(getattr(config, "min_stake", 0) or 0)
+                    )
                 print("[Node] LMDTable: LMD-GHOST fork choice ready")
             except Exception as _e:
                 self.lmd_table = None
