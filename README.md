@@ -82,8 +82,8 @@ Explorer (solo): http://localhost:8080
 | Fund / diligence card | **Landed** | [DILIGENCE_BRIEF](docs/DILIGENCE_BRIEF.md) · [FUND_READINESS](docs/FUND_READINESS.md) |
 | Phase 6 firm kickoff **prep** | **PREP** (not firm PASS) | [`phase6prep1`](docs/evidence/runs/phase6prep1/) · [FIRM_KICKOFF_CHECKLIST](docs/FIRM_KICKOFF_CHECKLIST.md) · `.\scripts\verify_audit_engagement_prep.ps1` |
 | Thin operator SDK v0 (`dup_sdk`) | **Landed** (lab) | [`sdk/README.md`](sdk/README.md) · `python scripts/dup_sdk_lab.py` · TLS on · satoshi-honest · JWT/API key via env. **Not** pin SDK / **not** custody |
-| AI / MEV sprouts harden | **Lab** | [AI_LAB_PROFILE](docs/sprouts/AI_LAB_PROFILE.md) · `python scripts/ai_lab.py`. Prod `feature_ai_*` / `feature_mev` **false**. **Not** consensus |
-| NFT marketplace satoshi lab | **Lab** | [NFT_LAB_PROFILE](docs/sprouts/NFT_LAB_PROFILE.md) · `python scripts/nft_lab.py` · `.\scripts\verify_nft_marketplace.ps1`. Prod `feature_nft=false`. **Not** ERC-721 |
+| AI / MEV sprouts harden | **Lab closed** (mid-soak disk 2026-10-03) | [AI_LAB_PROFILE](docs/sprouts/AI_LAB_PROFILE.md) · `python scripts/ai_lab.py`. HTTP gated · forge unhooked · prod `feature_ai_*` / `feature_mev` **false**. **Not** consensus / **not** soak PASS |
+| NFT marketplace satoshi lab | **Lab closed** (mid-soak disk 2026-10-03) | [NFT_LAB_PROFILE](docs/sprouts/NFT_LAB_PROFILE.md) · `python scripts/nft_lab.py` · soft escrow + `_nft_sprout_enabled`. Prod `feature_nft=false`. **Not** ERC-721 / **not** soak PASS |
 | Critical-path audit scan (2026-10-01) | **Landed** (code+gate) | [AUDIT_FULL_SCAN_2026-10-01](docs/AUDIT_FULL_SCAN_2026-10-01.md) · `python scripts/audit_critical_paths.py`. **Not** soak / **not** mesh L1 claim |
 | EVM / oracle / shard labs | **Lab + mesh soak** | waves + `evm_pre_48h_harness.py` · prod sprout flags **off** |
 | Hybrid 48h soak / firm audit / public mainnet | **No — other repo** | [Industrial pin](https://github.com/Gruver87/dup-protocol) |
@@ -107,7 +107,7 @@ What is closed vs open on **this** tree. Columns = execution order ([EXECUTION_O
 | **4** | Mempool / validation → Rust | **DONE** (phases 0–3 + mesh bake + global audit + STRICT 48h) | [`adr0021gaudit1`](docs/evidence/runs/adr0021gaudit1/) · [`mempool48pass1`](docs/evidence/runs/mempool48pass1/) · [ADR 0021](docs/adr/0021-mempool-validation-rust-phases.md) |
 | **5** | Industrial polish (wire satoshi · persist · native f64 · HIGH · MED · verify restore · tip 48h) | **DONE** | [INDUSTRIAL_MAX_SCAN](docs/INDUSTRIAL_MAX_SCAN_2026-09-20.md) · [`ind48pass1`](docs/evidence/runs/ind48pass1/) · [DILIGENCE_BRIEF](docs/DILIGENCE_BRIEF.md) · [FUND_READINESS](docs/FUND_READINESS.md) |
 | **6** | External audit / ceremony live | **Org / PREP** | [MAINNET_GAP_ANALYSIS](docs/MAINNET_GAP_ANALYSIS.md) · prep [`phase6prep1`](docs/evidence/runs/phase6prep1/) · [FIRM_KICKOFF_CHECKLIST](docs/FIRM_KICKOFF_CHECKLIST.md) (**not** firm PASS) |
-| **6+** | Oracles / shard / council / NFT / AI (lab) | **Lab parallel** | flags **off** on prod JSON · SDK [`sdk/`](sdk/) · [AUDIT_FULL_SCAN_2026-10-01](docs/AUDIT_FULL_SCAN_2026-10-01.md) |
+| **6+** | Oracles / shard / council / NFT / AI (lab) | **Lab parallel** (AI+NFT mid-soak honesty **closed** 2026-10-03) | flags **off** on prod JSON · SDK [`sdk/`](sdk/) · [AI_LAB_PROFILE](docs/sprouts/AI_LAB_PROFILE.md) · [NFT_LAB_PROFILE](docs/sprouts/NFT_LAB_PROFILE.md) |
 | — | Hybrid audit pin / public mainnet | **Other repo** | never claimed here |
 
 ```mermaid
@@ -261,4 +261,4 @@ Open source allows viewing, testing, and forking. It does **not** mean the work 
 ---
 
 *Author: ULADZIMIR DABRANSKI (D.U.P.) · Owner: [Gruver87](https://github.com/Gruver87) · Default branch: `main`*  
-*Last surface update: **2026-10-01** — brand **DUP Labs / DUP Protocol** · Phases 1–5 + STRICT packs · Phase 6 **prep** · thin SDK · AI/NFT labs · critical-path audit scan. Not BLS / not public mainnet / not firm PASS / not industrial pin freeze.*
+*Last surface update: **2026-10-03** — mid-soak AI+NFT honesty wave **closed** on disk (`6fb5640`) · Phases 1–5 + STRICT packs · Phase 6 **prep**. Live EVM STRICT soak not claimed here. Not BLS / not public mainnet / not firm PASS / not industrial pin freeze.*

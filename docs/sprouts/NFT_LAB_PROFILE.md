@@ -1,6 +1,7 @@
 # NFT marketplace lab profile (ADR 0016 Profile C / app-profile)
 
 **Status:** sprout — **not** industrial L1 core on `778888`.  
+**Mid-soak disk wave:** **CLOSED** 2026-10-03 (`6fb5640`…`18be475`) — soft escrow + HTTP sprout gate; **not** soak PASS.  
 **Prod mesh:** `feature_nft=false` (enforced by industrial_gate).
 
 ## What this is

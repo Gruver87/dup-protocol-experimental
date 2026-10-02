@@ -179,6 +179,7 @@ Other optional depth:
 | Mempool Rust | **Phases 0–3 + mesh bake** (ADR 0021) + **STRICT dual-report 48h PASS** [`mempool48pass1`](evidence/runs/mempool48pass1/) + **wire satoshi cutover** + **require_wire_satoshi** + **host verify_hard_all green** 2026-09-21 + **industrial tip 48h PASS** [`ind48pass1`](evidence/runs/ind48pass1/) (2026-09-21→23) | Prod arm of unrelated features stays off |
 | Oracles / shard / bridge OFF | Lab verify packs [`oraclelab1`](evidence/runs/oraclelab1/) · [`shardlab1`](evidence/runs/shardlab1/) · [`bridgeoff1`](evidence/runs/bridgeoff1/); host re-verify [`phase5reverify1`](evidence/runs/phase5reverify1/) (2026-09-20) + [`phase5reverify2`](evidence/runs/phase5reverify2/) (2026-10-01, post AUDIT money G/H) | Prod arm / L1 bridge cutover / docker shard mesh (optional) |
 | Council ADR 0022 | Lab + live staging 778889 genesis 87/87 (2026-08-28) | On-chain signed gov, mainnet, 48h council soak |
+| AI / NFT sprouts | Mid-soak honesty **CLOSED** 2026-10-03 — soft escrow, HTTP sprout gates, labs/units green (`6fb5640`) | Prod flag arm / consensus wire / ERC-721 / soak PASS from this wave |
 
 ---
 
