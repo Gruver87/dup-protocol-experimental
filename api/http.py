@@ -3310,19 +3310,8 @@ class RESTHandler(BaseHTTPRequestHandler):
                     try:
                         stats = dict(ca.get_stats())
                     except Exception as e:
-                        stats = {
-                            "enabled": True,
-                            "healthy": False,
-                            "error": str(e),
-                            "lmd_ghost_enabled": getattr(ca, "slashing_engine", None) is not None,
-                            "casper_ffg": (
-                                getattr(ca, "casper_engine", None) is not None
-                                or getattr(ca, "finality", None) is not None
-                            ),
-                            "slashing_enabled": getattr(ca, "slashing_engine", None) is not None,
-                            "pbs_enabled": getattr(ca, "pbs_market", None) is not None,
-                            "validator_registry": getattr(ca, "validator_registry", None) is not None,
-                        }
+                        self._error(503, f"consensus stats failed: {e}")
+                        return
                     validators = db.get_validators()
                     stats["validators"] = len(validators)
                     checkpoints = db.get_checkpoints() if hasattr(db, "get_checkpoints") else []
@@ -4052,13 +4041,8 @@ class RESTHandler(BaseHTTPRequestHandler):
                             "in_memory_registry": True,
                         })
                     except Exception as e:
-                        self._json({
-                            "smart_accounts": [],
-                            "error": str(e),
-                            "enabled": True,
-                            "persistent": False,
-                            "execution_bound": False,
-                        })
+                        self._error(503, f"smart_accounts list failed: {e}")
+                        return
                 else:
                     self._json({
                         "smart_accounts": [],
@@ -4081,13 +4065,8 @@ class RESTHandler(BaseHTTPRequestHandler):
                             "in_memory_registry": True,
                         })
                     except Exception as e:
-                        self._json({
-                            "multisig_wallets": [],
-                            "enabled": True,
-                            "persistent": False,
-                            "execution_bound": False,
-                            "error": str(e),
-                        })
+                        self._error(503, f"multisig list failed: {e}")
+                        return
                 else:
                     self._json({
                         "multisig_wallets": [],
@@ -5977,7 +5956,8 @@ class RESTHandler(BaseHTTPRequestHandler):
                     from execution.evm_bytecode_validator import validate_bytecode_hex
                     self._json(validate_bytecode_hex(str(raw)))
                 except Exception as e:
-                    self._json({"valid": False, "error": str(e)})
+                    # Probe/import failure is unavailable — not "invalid bytecode".
+                    self._error(503, f"bytecode validation unavailable: {e}")
 
             elif path == "/contract/deploy":
                 if not evm_adapter:
@@ -6229,9 +6209,8 @@ class RESTHandler(BaseHTTPRequestHandler):
                         "public_key": getattr(w, "public_key_hex", ""),
                     })
                 except Exception as e:
-                    import time as _t
-                    addr = "0x" + native.sha256_hex(str(_t.time()).encode())[:40]
-                    self._json({"address": addr, "note": "ecdsa not available"})
+                    # Never invent a hash-demo address when ECDSA is unavailable.
+                    self._error(503, f"wallet create unavailable: {e}")
 
             # ── Multisig create ───────────────────────────────────────────────
             elif path == "/multisig/create":
