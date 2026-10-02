@@ -251,7 +251,12 @@ Default Hybrid CI / prod mesh builds **without** the `libp2p` feature.
 
 ## License
 
-MIT — [LICENSE](LICENSE)
+**MIT** — [LICENSE](LICENSE)  
+Copyright © 2025–2026 **Uladzimir Dabranski (D.U.P.) / DUP Labs**
+
+Attribution and brand (honest limits): [NOTICE](NOTICE) · [docs/IP_AND_ATTRIBUTION.md](docs/IP_AND_ATTRIBUTION.md) · cite [CITATION.cff](CITATION.cff)
+
+Open source allows viewing, testing, and forking. It does **not** mean the work is unowned, or that a clone may be presented as the official DUP Protocol without attribution to the canonical repos.
 
 ---
 

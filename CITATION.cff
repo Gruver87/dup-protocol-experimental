@@ -1,19 +1,22 @@
 cff-version: 1.2.0
 title: "DUP Protocol (Experimental)"
-message: "If you use this software in research or diligence, please cite it using these metadata."
+message: >-
+  If you use this software in research or diligence, please cite it using these
+  metadata. Retain LICENSE copyright and NOTICE attribution in redistributions.
 type: software
 authors:
   - family-names: Dabranski
     given-names: Uladzimir
     alias: Gruver87
     website: "https://github.com/Gruver87"
+    affiliation: "DUP Labs"
 repository-code: "https://github.com/Gruver87/dup-protocol-experimental"
 url: "https://github.com/Gruver87/dup-protocol-experimental"
 abstract: >-
   Evidence-first R&D sandbox for DUP Protocol (DUP Labs) — hybrid Python + Rust L1:
   rust-libp2p (ADR 0019), Long-Range / weak-subjectivity labs (ADR 0017), and EVM depth.
   Formerly Absolute Blockchain Experimental. Not the industrial audit-freeze pin;
-  not a launched public mainnet.
+  not a launched public mainnet. Copyright Uladzimir Dabranski (D.U.P.) / DUP Labs.
 keywords:
   - blockchain
   - layer1
@@ -27,3 +30,11 @@ keywords:
 license: MIT
 version: "rd-1.0.0"
 date-released: "2026-08-15"
+preferred-citation:
+  type: software
+  authors:
+    - family-names: Dabranski
+      given-names: Uladzimir
+  title: "DUP Protocol (Experimental)"
+  year: 2026
+  url: "https://github.com/Gruver87/dup-protocol-experimental"
