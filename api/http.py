@@ -6535,13 +6535,17 @@ class RESTHandler(BaseHTTPRequestHandler):
                 if not ai:
                     self._error(503, "AI validator not enabled"); return
                 address = body.get("address", "")
-                stake   = _http_abs(body.get("stake", 100), field="stake")
                 if not address:
                     self._error(400, "address required"); return
-                ai.add_validator(address, stake)
+                try:
+                    stake, stake_sat = _http_stake_abs(body, cfg)
+                except ValueError as exc:
+                    self._error(400, str(exc)); return
+                ai.add_validator(address, stake, stake_satoshi=int(stake_sat))
                 self._json({
                     "registered": address,
                     "stake": stake,
+                    "stake_satoshi": int(stake_sat),
                     "total_validators": len(ai.validators),
                     "simulation_only": True,
                     "consensus_wired": False,
@@ -7834,15 +7838,27 @@ class RESTHandler(BaseHTTPRequestHandler):
                 if not se:
                     self._error(503, "SlashingEngine not enabled"); return
                 validator = body.get("validator_address", body.get("validator", ""))
-                stake = _http_abs(body.get("stake", 32.0), field="stake")
                 if not validator:
                     self._error(400, "validator_address required"); return
+                try:
+                    stake, stake_sat = _http_stake_abs(body, cfg)
+                except ValueError as exc:
+                    self._error(400, str(exc)); return
                 if hasattr(se, "register_validator"):
-                    se.register_validator(validator, stake)
-                    self._json({"success": True, "validator": validator, "stake": stake})
+                    se.register_validator(validator, int(stake_sat))
+                    self._json({
+                        "success": True,
+                        "validator": validator,
+                        "stake": stake,
+                        "stake_satoshi": int(stake_sat),
+                    })
                 elif hasattr(se, "add_validator"):
-                    se.add_validator(validator, stake)
-                    self._json({"success": True, "validator": validator})
+                    se.add_validator(validator, int(stake_sat))
+                    self._json({
+                        "success": True,
+                        "validator": validator,
+                        "stake_satoshi": int(stake_sat),
+                    })
                 else:
                     self._json({"success": False, "error": "add_validator not available"})
 

@@ -1263,11 +1263,38 @@ class Database:
         except ValueError:
             return 0
 
+    @staticmethod
+    def _tx_gas_fields(tx: Dict) -> tuple:
+        """Require explicit gas; never invent gas/gas_used=21000.
+
+        Accept ``gas`` / ``gas_limit`` / observed ``gas_used``. Missing
+        ``gas_used`` stores 0 (unobserved) — not a silent 21000 fill.
+        """
+        raw_gas = tx.get("gas", tx.get("gas_limit"))
+        raw_used = tx.get("gas_used")
+        if raw_gas is None or str(raw_gas).strip() == "":
+            # Observed gas_used alone is enough to bind limit (no invent).
+            if raw_used is None or str(raw_used).strip() == "":
+                raise ValueError("gas_required")
+            gas = int(raw_used)
+        else:
+            gas = int(raw_gas)
+        if gas <= 0:
+            raise ValueError("gas_required")
+        if raw_used is None or str(raw_used).strip() == "":
+            gas_used = 0
+        else:
+            gas_used = int(raw_used)
+            if gas_used < 0:
+                raise ValueError("gas_used_invalid")
+        return gas, gas_used
+
     def _insert_transaction(self, tx: Dict) -> None:
         from runtime.amount import tx_money_abs, tx_money_satoshi
 
         money = tx_money_abs(tx)
         sat = tx_money_satoshi(tx)
+        gas, gas_used = self._tx_gas_fields(tx)
         self.conn.execute(
             """INSERT OR REPLACE INTO transactions
                (hash, block_height, from_addr, to_addr, value, value_satoshi,
@@ -1281,8 +1308,8 @@ class Database:
                 self._normalize_address(tx.get("to_addr", tx.get("to", ""))),
                 money["value"],
                 sat["value_satoshi"],
-                tx.get("gas", 21000),
-                tx.get("gas_used", tx.get("gas", 21000)),
+                gas,
+                gas_used,
                 money["fee"],
                 sat["fee_satoshi"],
                 money["burned"],
@@ -1303,6 +1330,7 @@ class Database:
             return
         money = tx_money_abs(tx)
         sat = tx_money_satoshi(tx)
+        _gas, gas_used = self._tx_gas_fields(tx)
         self.conn.execute(
             """INSERT OR REPLACE INTO tx_receipts
                (tx_hash, block_height, block_hash, from_addr, to_addr,
@@ -1321,7 +1349,7 @@ class Database:
                 sat["fee_satoshi"],
                 money["burned"],
                 sat["burned_satoshi"],
-                int(tx.get("gas_used", tx.get("gas", 21000))),
+                gas_used,
                 # Omitted status → fail-closed (normalize None → 0).
                 self._normalize_tx_status(tx.get("status")),
                 int(tx.get("timestamp", time.time())),
