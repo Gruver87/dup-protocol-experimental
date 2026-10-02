@@ -55,6 +55,16 @@ def main() -> int:
         return _fail(err)
     print("OK: prod mesh feature_nft=false")
 
+    http_py = (ROOT / "api" / "http.py").read_text(encoding="utf-8")
+    if "_nft_sprout_enabled" not in http_py:
+        return _fail("HTTP must gate NFT sprouts via _nft_sprout_enabled")
+    if '"offers_escrow": False' in http_py.split('path == "/nft/offer"')[1].split("elif path ==")[0]:
+        return _fail("POST /nft/offer must not hardcode offers_escrow=False")
+    main_py = (ROOT / "main.py").read_text(encoding="utf-8")
+    if 'getattr(config, "feature_nft", False)' not in main_py:
+        return _fail("main.py feature_nft default must be False")
+    print("OK: HTTP NFT sprout gate + offer escrow honesty")
+
     try:
         resolve_price_satoshi(price=1.25)
         return _fail("expected refuse dust float price")

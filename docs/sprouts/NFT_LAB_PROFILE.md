@@ -26,9 +26,11 @@ docker compose -p abs-staging-app -f docker-compose.staging.app.yml up -d --buil
 - Settlement raises inside `atomic()` (no partial commit on royalty fail)
 - Paid paths require store `atomic()` (`nft_uow_required`)
 - Offer expiry enforced; auction finalize refuses before `ends_at`
-- `offers_escrow` / `auction_escrow` = false (balance re-check only)
+- Soft escrow: offer/bid debit `held_satoshi`; cancel/finalize refunds; **not** L1 escrow contract
+- `offers_escrow` / `auction_escrow` = true when balance-bound (see `escrow_note`)
+- HTTP GET `/nft/*` gated `feature_nft ∧ loaded ∧ ¬prod_block` (`_nft_sprout_enabled`)
 - `get_stats().enabled` follows balance backend
-- Port: mint/list/buy/offer/auction/delist + Null fail-closed
+- Port: mint/list/buy/offer/auction/cancel_auction/delist + Null fail-closed
 - HTTP mutations (offer/bid/auction/accept/cancel/delist/finalize) require actor signature unless JWT admin
 
 ## Forbidden

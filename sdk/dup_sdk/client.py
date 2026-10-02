@@ -300,6 +300,16 @@ class Client:
         out = self.get("/ai/proposer")
         return out if isinstance(out, dict) else {"raw": out}
 
+    def get_ai_agent_stats(self) -> JsonDict:
+        """Read-only AI agent sprout stats (loaded ≠ enabled on prod mesh)."""
+        out = self.get("/ai-agent/stats")
+        return out if isinstance(out, dict) else {"raw": out}
+
+    def get_ai_mev_scan(self) -> JsonDict:
+        """Read-only AI validator MEV stub scan (simulation_only)."""
+        out = self.get("/ai/mev-scan")
+        return out if isinstance(out, dict) else {"raw": out}
+
     def get_balance_satoshi(self, address: str) -> int:
         """Prefer REST ``/wallet/balance/{addr}``; fall back to eth_getBalance wei→sat."""
         addr = (address or "").strip()

@@ -211,9 +211,13 @@ class NullNftMarketplacePort:
             "execution_bound": False,
             "offers_escrow": False,
             "auction_escrow": False,
+            "escrow_note": "nft sprout off / NullNftMarketplacePort",
             "tier": "app-profile",
             "adr": "0016",
             "consensus_wired": False,
+            "honesty": (
+                "nft marketplace sprout — not consensus / prod feature_nft=false"
+            ),
         }
 
 

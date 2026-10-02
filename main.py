@@ -755,7 +755,7 @@ class NodeOrchestrator:
         # 8. NFT marketplace (app-profile sprout; off on prod mesh — ADR 0016)
         from features.nft_ports import NftMarketplaceAdapter, NullNftMarketplacePort
 
-        if getattr(config, "feature_nft", True):
+        if getattr(config, "feature_nft", False):
             self.nft = NFTMarketplace(db=self.db, bus=self.bus)
             self.nft_port = NftMarketplaceAdapter(self.nft)
             stats = self.nft.get_stats()
@@ -935,7 +935,7 @@ class NodeOrchestrator:
             self.tx_validator = None
 
         # 22. AI Validator Engine (simulation_only; off in prod via FEATURE_AI_VALIDATOR)
-        if _AI_VALIDATOR_AVAILABLE and getattr(config, "feature_ai_validator", True):
+        if _AI_VALIDATOR_AVAILABLE and getattr(config, "feature_ai_validator", False):
             self.ai_validator = AIValidatorEngine()
             print(
                 "[Node] AIValidatorEngine: enabled "
@@ -1109,7 +1109,7 @@ class NodeOrchestrator:
             self.wasm_vm = None
 
         # 32. AI Agent Manager (trading agents; disabled by prod profile)
-        if _AI_MANAGER_AVAILABLE and getattr(config, "feature_ai_agents", True):
+        if _AI_MANAGER_AVAILABLE and getattr(config, "feature_ai_agents", False):
             try:
                 self.ai_manager = AIAgentManager(db=self.db)
                 print("[Node] AI Agent Manager: registry ready (no model/executor bound)")

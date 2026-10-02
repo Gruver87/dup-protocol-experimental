@@ -181,6 +181,8 @@ def test_ai_http_source_honesty_needles():
     assert "feature_ai_validator" in chunk or "_ai_sprout_enabled" in chunk
     assert "honesty" in chunk
     assert "_ai_sprout_enabled" in src
+    assert "_nft_sprout_enabled" in src
+    assert "_nft_disabled_payload" in src
     assert 'feature_attr="feature_ai_agents"' in src
     assert "/ai-agent/stats" in src
     agent_chunk = src.split('path == "/ai-agent/create"')[1].split("elif path == \"/ai-agent/predict\"")[0]
@@ -188,6 +190,29 @@ def test_ai_http_source_honesty_needles():
     reg = src.split('path == "/ai/register-validator"')[1].split("elif path ==")[0]
     assert "_ai_sprout_enabled" in reg
     assert "feature_ai_validator" in reg
+    offer = src.split('path == "/nft/offer"')[1].split("elif path ==")[0]
+    assert '"offers_escrow": False' not in offer
+    assert "held_satoshi" in offer
+    assert "nft_enabled" in src
+    assert "ai_validator_enabled" in src
+
+
+def test_main_ai_nft_feature_defaults_fail_closed():
+    src = (ROOT / "main.py").read_text(encoding="utf-8")
+    assert 'getattr(config, "feature_nft", False)' in src
+    assert 'getattr(config, "feature_ai_agents", False)' in src
+    assert 'getattr(config, "feature_ai_validator", False)' in src
+    assert 'getattr(config, "feature_nft", True)' not in src
+    assert 'getattr(config, "feature_ai_agents", True)' not in src
+    assert 'getattr(config, "feature_ai_validator", True)' not in src
+
+
+def test_sdk_ai_read_helpers_exist():
+    src = (ROOT / "sdk" / "dup_sdk" / "client.py").read_text(encoding="utf-8")
+    assert "def get_ai_agent_stats" in src
+    assert "def get_ai_mev_scan" in src
+    assert "/ai-agent/stats" in src
+    assert "/ai/mev-scan" in src
 
 
 def test_feature_flags_includes_ai_validator():

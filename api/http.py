@@ -148,6 +148,33 @@ def _ai_sprout_enabled(cfg: Any, instance: Any, *, feature_attr: str) -> tuple[b
     return bool(cfg_on and loaded and not prod_block), loaded
 
 
+def _nft_sprout_enabled(cfg: Any, instance: Any) -> tuple[bool, bool]:
+    """Return ``(enabled, loaded)`` for NFT marketplace sprout (ADR 0016)."""
+    return _ai_sprout_enabled(cfg, instance, feature_attr="feature_nft")
+
+
+def _nft_disabled_payload(*, loaded: bool = False) -> Dict[str, Any]:
+    """Fail-closed NFT GET envelope when sprout is off / unbound."""
+    try:
+        from features.nft import HONESTY as nft_honesty
+    except Exception:
+        nft_honesty = "nft marketplace sprout — not consensus / prod feature_nft=false"
+    return {
+        "enabled": False,
+        "loaded": bool(loaded),
+        "execution_bound": False,
+        "persisted": False,
+        "on_chain_standard": False,
+        "offers_escrow": False,
+        "auction_escrow": False,
+        "escrow_note": "nft sprout off / no balance backend",
+        "tier": "app-profile",
+        "adr": "0016",
+        "consensus_wired": False,
+        "honesty": nft_honesty,
+    }
+
+
 _AI_AGENT_HONESTY = (
     "ai_agents sprout — not consensus / not custody / prod feature_ai_agents=false"
 )
@@ -3009,6 +3036,22 @@ class RESTHandler(BaseHTTPRequestHandler):
                             feature_attr="feature_ai_agents",
                         )[0]
                     ),
+                    "ai_validator_loaded": (
+                        _ai_sprout_enabled(
+                            cfg,
+                            self.__class__.ai_validator,
+                            feature_attr="feature_ai_validator",
+                        )[1]
+                    ),
+                    "ai_validator_enabled": (
+                        _ai_sprout_enabled(
+                            cfg,
+                            self.__class__.ai_validator,
+                            feature_attr="feature_ai_validator",
+                        )[0]
+                    ),
+                    "nft_loaded": _nft_sprout_enabled(cfg, self.__class__.nft)[1],
+                    "nft_enabled": _nft_sprout_enabled(cfg, self.__class__.nft)[0],
                     "mev_enabled": self.__class__.mev_simulator is not None,
                     "reorg_predictor_enabled": self.__class__.reorg_predictor is not None,
                     "core_receipts_enabled": bool(
@@ -4393,39 +4436,60 @@ class RESTHandler(BaseHTTPRequestHandler):
             # ── NFT listings/auctions (from extended_api_server) ─────────────
             elif path == "/nft/listings":
                 nft = self.__class__.nft
-                if not nft:
-                    self._json({"listings": [], "enabled": False, "count": 0})
+                enabled, loaded = _nft_sprout_enabled(cfg, nft)
+                if not enabled:
+                    payload = _nft_disabled_payload(loaded=loaded)
+                    payload.update({"listings": [], "count": 0})
+                    self._json(payload)
                 elif hasattr(nft, "get_listings"):
                     try:
                         listings = nft.get_listings()
+                        stats = nft.get_stats() if hasattr(nft, "get_stats") else {}
                         self._json({
                             "listings": listings,
                             "count": len(listings),
-                            "enabled": True,
+                            "enabled": bool(stats.get("enabled", True)),
+                            "loaded": True,
+                            "execution_bound": bool(stats.get("execution_bound")),
+                            "offers_escrow": bool(stats.get("offers_escrow")),
+                            "auction_escrow": bool(stats.get("auction_escrow")),
+                            "honesty": stats.get("honesty") or _nft_disabled_payload()["honesty"],
                         })
                     except Exception as e:
-                        self._json({"listings": [], "count": 0, "error": str(e)})
+                        self._json({"listings": [], "count": 0, "enabled": False, "error": str(e)})
                 elif hasattr(nft, "get_on_sale"):
                     listings = nft.get_on_sale()
+                    stats = nft.get_stats() if hasattr(nft, "get_stats") else {}
                     self._json({
                         "listings": listings,
                         "count": len(listings),
-                        "enabled": True,
+                        "enabled": bool(stats.get("enabled", True)),
+                        "loaded": True,
                     })
                 else:
-                    self._json({"listings": [], "enabled": False, "count": 0})
+                    self._json({"listings": [], "enabled": False, "loaded": True, "count": 0})
 
             elif path == "/nft/auctions":
                 nft = self.__class__.nft
-                if nft and hasattr(nft, "auctions"):
+                enabled, loaded = _nft_sprout_enabled(cfg, nft)
+                if not enabled:
+                    payload = _nft_disabled_payload(loaded=loaded)
+                    payload.update({"auctions": {}, "count": 0})
+                    self._json(payload)
+                elif hasattr(nft, "auctions"):
                     try:
                         auctions = {k: (v.__dict__ if hasattr(v, "__dict__") else v)
                                     for k, v in nft.auctions.items()}
-                        self._json({"auctions": auctions, "count": len(auctions)})
+                        self._json({
+                            "auctions": auctions,
+                            "count": len(auctions),
+                            "enabled": True,
+                            "loaded": True,
+                        })
                     except Exception as e:
-                        self._json({"auctions": {}, "error": str(e)})
+                        self._json({"auctions": {}, "enabled": False, "error": str(e)})
                 else:
-                    self._json({"auctions": {}, "enabled": False})
+                    self._json({"auctions": {}, "enabled": False, "loaded": loaded})
 
             # ── Ethereum-style keygen (keccak256 address) ─────────────────────
             elif path == "/crypto/eth-address":
@@ -4687,33 +4751,51 @@ class RESTHandler(BaseHTTPRequestHandler):
             # ── NFT Offers & Auctions (extended) ─────────────────────────────
             elif path == "/nft/offers":
                 nft = self.__class__.nft
+                enabled, loaded = _nft_sprout_enabled(cfg, nft)
                 token_id = qs.get("token_id", [""])[0] or None
-                offers = nft.get_offers(token_id) if nft and hasattr(nft, "get_offers") else []
-                self._json({"offers": offers})
+                if not enabled:
+                    payload = _nft_disabled_payload(loaded=loaded)
+                    payload["offers"] = []
+                    self._json(payload)
+                else:
+                    offers = nft.get_offers(token_id) if hasattr(nft, "get_offers") else []
+                    self._json({
+                        "offers": offers,
+                        "enabled": True,
+                        "loaded": True,
+                        "offers_escrow": True,
+                    })
 
             elif path == "/nft/sales":
                 nft = self.__class__.nft
+                enabled, loaded = _nft_sprout_enabled(cfg, nft)
                 token_id = qs.get("token_id", [""])[0] or None
                 limit = int(qs.get("limit", ["50"])[0])
-                sales = nft.get_sales_history(token_id, limit) if nft and hasattr(nft, "get_sales_history") else []
-                self._json({"sales": sales})
+                if not enabled:
+                    payload = _nft_disabled_payload(loaded=loaded)
+                    payload["sales"] = []
+                    self._json(payload)
+                else:
+                    sales = (
+                        nft.get_sales_history(token_id, limit)
+                        if hasattr(nft, "get_sales_history")
+                        else []
+                    )
+                    self._json({"sales": sales, "enabled": True, "loaded": True})
 
             elif path == "/nft/marketplace":
                 nft = self.__class__.nft
-                if not nft:
+                enabled, loaded = _nft_sprout_enabled(cfg, nft)
+                if not enabled:
+                    disabled = _nft_disabled_payload(loaded=loaded)
                     self._json({
-                        "stats": {
-                            "enabled": False,
-                            "execution_bound": False,
-                            "persisted": False,
-                            "on_chain_standard": False,
-                            "offers_escrow": False,
-                            "auction_escrow": False,
-                        },
+                        "stats": disabled,
                         "active_auctions": 0,
                         "active_offers": 0,
                         "total_auctions": 0,
                         "enabled": False,
+                        "loaded": loaded,
+                        "honesty": disabled["honesty"],
                     })
                     return
                 stats = nft.get_stats() if hasattr(nft, "get_stats") else {}
@@ -4727,17 +4809,14 @@ class RESTHandler(BaseHTTPRequestHandler):
                     "active_offers": len(offers),
                     "total_auctions": len(auctions),
                     "enabled": bool(stats.get("enabled")),
+                    "loaded": True,
                 })
 
             elif path == "/nft/stats":
                 nft = self.__class__.nft
-                if not nft:
-                    self._json({
-                        "enabled": False,
-                        "execution_bound": False,
-                        "persisted": False,
-                        "on_chain_standard": False,
-                    })
+                enabled, loaded = _nft_sprout_enabled(cfg, nft)
+                if not enabled:
+                    self._json(_nft_disabled_payload(loaded=loaded))
                     return
                 self._json(nft.get_stats())
 
@@ -6942,11 +7021,19 @@ class RESTHandler(BaseHTTPRequestHandler):
                         token_id, bidder, price, hours, price_satoshi=int(price_sat)
                     )
                     if oid:
+                        held = 0
+                        offer_rec = getattr(nft, "offers", {}).get(oid) or {}
+                        held = int(offer_rec.get("held_satoshi") or 0)
+                        stats = nft.get_stats() if hasattr(nft, "get_stats") else {}
                         self._json({
                             "success": True,
                             "offer_id": oid,
                             "price_satoshi": int(price_sat),
-                            "offers_escrow": False,
+                            "held_satoshi": held,
+                            "offers_escrow": bool(
+                                stats.get("offers_escrow", held > 0)
+                            ),
+                            "escrow_note": stats.get("escrow_note"),
                         })
                     else:
                         self._error(400, "Could not create offer")
@@ -7571,6 +7658,11 @@ class RESTHandler(BaseHTTPRequestHandler):
                 result = am.predict(agent_id, market_data)
                 if isinstance(result, dict) and result.get("error"):
                     self._error(404, result.get("error", "Agent not found")); return
+                if isinstance(result, dict):
+                    result = dict(result)
+                    result.setdefault("honesty", _AI_AGENT_HONESTY)
+                    result.setdefault("simulation_only", True)
+                    result.setdefault("consensus_wired", False)
                 self._json(result)
 
             elif path == "/ai-agent/analyze":
@@ -7591,6 +7683,11 @@ class RESTHandler(BaseHTTPRequestHandler):
                 result = am.analyze(agent_id, price_history)
                 if isinstance(result, dict) and result.get("error"):
                     self._error(404, result.get("error", "Agent not found")); return
+                if isinstance(result, dict):
+                    result = dict(result)
+                    result.setdefault("honesty", _AI_AGENT_HONESTY)
+                    result.setdefault("simulation_only", True)
+                    result.setdefault("consensus_wired", False)
                 self._json(result)
 
             elif path == "/ai-agent/trade":
@@ -7629,6 +7726,11 @@ class RESTHandler(BaseHTTPRequestHandler):
                     status = 404 if result.get("error") == "Agent not found" else 400
                     self._error(status, result.get("error", "Trade failed"))
                     return
+                if isinstance(result, dict):
+                    result = dict(result)
+                    result.setdefault("honesty", _AI_AGENT_HONESTY)
+                    result.setdefault("simulation_only", True)
+                    result.setdefault("consensus_wired", False)
                 self._json(result)
 
             # ── Cross-Chain Bridge ────────────────────────────────────────────

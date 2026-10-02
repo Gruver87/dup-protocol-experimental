@@ -1078,8 +1078,11 @@ class NFTMarketplace:
                     auction["status"] = "settlement_failed"
                     try:
                         self._persist_auction(auction_id)
-                    except Exception:
-                        pass
+                    except Exception as persist_exc:
+                        logger.warning(
+                            "nft auction settlement_failed persist refused: %s",
+                            persist_exc,
+                        )
                     return {"success": False, "error": "Auction token not found"}
                 return {"success": False, "error": f"nft_uow_failed: {exc}"}
 
