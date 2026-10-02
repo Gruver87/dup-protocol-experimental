@@ -5371,9 +5371,18 @@ class RESTHandler(BaseHTTPRequestHandler):
                     self._error(503, "ZK module not enabled")
                     return
                 from features.zk import ZKProof
-                value = int(qs.get("value", ["42"])[0])
-                min_v = int(qs.get("min", ["0"])[0])
-                max_v = int(qs.get("max", ["100"])[0])
+                # Refuse invent value=42 — require explicit value when reporting value_checked.
+                value_raw = (qs.get("value") or [None])[0]
+                if value_raw is None or str(value_raw).strip() == "":
+                    self._error(400, "value required (do not invent demo 42)")
+                    return
+                try:
+                    value = int(value_raw)
+                    min_v = int((qs.get("min") or ["0"])[0])
+                    max_v = int((qs.get("max") or ["100"])[0])
+                except (TypeError, ValueError) as exc:
+                    self._error(400, f"invalid range params: {exc}")
+                    return
                 proof_raw = qs.get("proof", [""])[0]
                 try:
                     if proof_raw.startswith("{"):
@@ -5814,9 +5823,18 @@ class RESTHandler(BaseHTTPRequestHandler):
             # ── ZK range proof ────────────────────────────────────────────────
             elif path == "/zk/prove/range":
                 zk = self.__class__.zk
-                value = int(qs.get("value", ["42"])[0])
-                min_v  = int(qs.get("min", ["0"])[0])
-                max_v  = int(qs.get("max", ["100"])[0])
+                # Refuse invent value=42 — require explicit query params.
+                value_raw = (qs.get("value") or [None])[0]
+                if value_raw is None or str(value_raw).strip() == "":
+                    self._error(400, "value required (do not invent demo 42)")
+                    return
+                try:
+                    value = int(value_raw)
+                    min_v = int((qs.get("min") or ["0"])[0])
+                    max_v = int((qs.get("max") or ["100"])[0])
+                except (TypeError, ValueError) as exc:
+                    self._error(400, f"invalid range params: {exc}")
+                    return
                 if zk and hasattr(zk, "prove_range"):
                     try:
                         proof = zk.prove_range(value, min_v, max_v)

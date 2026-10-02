@@ -131,6 +131,7 @@ $Core = @(
     "tests/unit/test_exp_hasher_zk_post_honesty.py",
     "tests/unit/test_exp_sqlite_gas_stake_honesty.py",
     "tests/unit/test_exp_consensus_stake_required.py",
+    "tests/unit/test_exp_proposer_mev_zk_honesty.py",
     "tests/unit/test_exp_list_and_wallet_honesty.py",
     "tests/unit/test_wave_o_honesty_fixes.py",
     "tests/unit/test_wave_q_honesty_fixes.py",

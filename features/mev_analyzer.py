@@ -133,13 +133,24 @@ class MEVAnalyzer:
         if target_tx.value * 0.1 > bot_balance:
             return {"opportunity": False, "executed": False, "reason": "Insufficient balance"}
         estimated_profit = target_tx.value * min(0.05, target_tx.gas_price / 1_000_000_000.0)
+        # Do not invent a default gas_used — only report when target carries explicit gas.
+        raw_gas = getattr(target_tx, "gas", None)
+        if raw_gas is None:
+            raw_gas = getattr(target_tx, "gas_limit", None)
+        try:
+            gas_used = int(raw_gas) if raw_gas is not None else None
+        except (TypeError, ValueError):
+            gas_used = None
+        if gas_used is not None and gas_used <= 0:
+            gas_used = None
         result = {
             "opportunity": estimated_profit > 0,
             "executed": False,
             "estimated_profit": round(estimated_profit, 6),
             "strategy": "frontrun",
-            "gas_used": 21000 * 2,
+            "gas_used": gas_used,
             "source": "fee_priority_model",
+            "model_only": True,
         }
         self._record("frontrun", estimated_profit, {
             "target": target_tx.hash[:16],
