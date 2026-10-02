@@ -50,7 +50,7 @@ class MempoolTransaction:
     signature: str = ""
     public_key: str = ""
     data: str = ""
-    gas: int = 21_000
+    gas: int = 0  # explicit gas required on add (no invent 21000)
     timestamp: float = field(default_factory=time.time)
     fee_satoshi: int = -1
     amount_satoshi: int = -1
@@ -82,7 +82,7 @@ class MempoolTransaction:
                 "signature": self.signature,
                 "public_key": self.public_key,
                 "data": self.data or "",
-                "gas_limit": int(self.gas or 21_000),
+                "gas_limit": int(self.gas),
             }
             return verify_transaction_signature(tx_dict)
         except RuntimeError:
@@ -134,6 +134,13 @@ def _validate_mempool_tx(tx: MempoolTransaction, min_fee_satoshi: int) -> Tuple[
     elif tx.amount < 0:
         return False, "negative_amount"
 
+    try:
+        gas = int(getattr(tx, "gas", 0) or 0)
+    except (TypeError, ValueError):
+        return False, "gas_unparseable"
+    if gas <= 0:
+        return False, "gas_required"
+
     return True, "ok"
 
 
@@ -147,7 +154,7 @@ def _mempool_tx_verify_dict(tx: MempoolTransaction, chain_id: int) -> Dict:
         "signature": tx.signature,
         "public_key": tx.public_key,
         "data": tx.data or "",
-        "gas_limit": int(tx.gas or 21_000),
+        "gas_limit": int(tx.gas),
     }
 
 
@@ -175,7 +182,7 @@ def _tx_to_store_dict(tx: MempoolTransaction) -> Dict[str, Any]:
         "signature": str(tx.signature or ""),
         "public_key": str(tx.public_key or ""),
         "data": str(tx.data or ""),
-        "gas": int(tx.gas or 21_000),
+        "gas": int(tx.gas),
         "timestamp": float(tx.timestamp or 0.0),
     }
 
@@ -193,6 +200,9 @@ def _tx_from_store_dict(raw: Dict[str, Any]) -> MempoolTransaction:
         amount_sat = int(to_satoshi(money_abs(raw.get("amount") or 0, field="amount")))
     else:
         amount_sat = int(raw_amt_sat)
+    # Do not invent gas=21000 when store row lacks/zeros gas.
+    raw_gas = raw.get("gas")
+    gas = int(raw_gas) if raw_gas is not None and str(raw_gas).strip() != "" else 0
     return MempoolTransaction(
         tx_hash=str(raw.get("tx_hash") or ""),
         from_addr=str(raw.get("from_addr") or ""),
@@ -203,7 +213,7 @@ def _tx_from_store_dict(raw: Dict[str, Any]) -> MempoolTransaction:
         signature=str(raw.get("signature") or ""),
         public_key=str(raw.get("public_key") or ""),
         data=str(raw.get("data") or ""),
-        gas=int(raw.get("gas") or 21_000),
+        gas=gas,
         timestamp=float(raw.get("timestamp") or 0.0),
         fee_satoshi=fee_sat,
         amount_satoshi=amount_sat,
@@ -381,13 +391,17 @@ class Mempool:
                 bind_value = (
                     int(amt) if isinstance(amt, (int, float)) and amt == int(amt) else amt
                 )
+                gas_bind = int(getattr(tx, "gas", 0) or 0)
+                if gas_bind <= 0:
+                    self._rejected_count += 1
+                    return False
                 bound, ts = bind_identity_from_fields(
                     tx.tx_hash,
                     from_addr=tx.from_addr,
                     to_addr=tx.to_addr,
                     value=bind_value,
                     nonce=int(tx.nonce or 0),
-                    gas=int(getattr(tx, "gas", 0) or 0) or 21_000,
+                    gas=gas_bind,
                     data=getattr(tx, "data", "") or "",
                     timestamp=int(tx.timestamp or 0),
                     chain_id=int(getattr(self, "chain_id", 1) or 1),
@@ -610,7 +624,7 @@ class Mempool:
                             "to": str(r.get("to_addr") or ""),
                             "value": float(r.get("amount") or 0.0),
                             "gasPrice": float(r.get("fee") or 0.0),
-                            "gas": int(r.get("gas") or 21000),
+                            "gas": int(r.get("gas") or 0),
                             "nonce": int(r.get("nonce") or 0),
                             "data": str(r.get("data") or ""),
                             "timestamp": float(r.get("timestamp") or 0.0),
@@ -632,7 +646,7 @@ class Mempool:
                     "to": tx.to_addr,
                     "value": tx.amount,
                     "gasPrice": tx.fee,
-                    "gas": tx.gas or 21000,
+                    "gas": int(tx.gas or 0),
                     "nonce": tx.nonce,
                     "data": tx.data or "",
                     "timestamp": tx.timestamp,

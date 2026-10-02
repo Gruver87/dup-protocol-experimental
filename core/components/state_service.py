@@ -260,12 +260,15 @@ class StateService:
         snap = self._accounts_sat_snapshot(addrs)
         txs = []
         for tx in block.transactions:
+            gas = int(getattr(tx, "gas", 0) or 0)
+            if gas <= 0:
+                raise RuntimeError("gas_required")
             txs.append(
                 {
                     "from": tx.from_addr,
                     "to": tx.to_addr,
                     "value": float(tx.value),
-                    "gas": int(tx.gas or 21000),
+                    "gas": gas,
                     "nonce": int(tx.nonce),
                     "data": getattr(tx, "data", "") or "",
                 }
@@ -360,17 +363,20 @@ class StateService:
         effects = []
         addrs = self._collect_addrs_for_simple_block(block)
         for tx in block.transactions:
+            tx_gas = int(getattr(tx, "gas", 0) or 0)
+            if tx_gas <= 0:
+                raise RuntimeError("gas_required")
             host = self._run_evm_host_only(tx, block.height)
             if not host.get("success"):
                 raise RuntimeError(host.get("error") or "evm_host_failed")
-            gas_used = int(host.get("gas_used") or tx.gas or 0)
+            gas_used = int(host.get("gas_used") or tx_gas)
             effects.append(
                 {
                     "from": tx.from_addr,
                     "to": tx.to_addr or "",
                     "value": float(tx.value or 0),
                     "apply_value": False,
-                    "gas": int(tx.gas or 21000),
+                    "gas": tx_gas,
                     "gas_used": gas_used,
                     "nonce": int(tx.nonce),
                 }
@@ -448,19 +454,22 @@ class StateService:
         for tx in block.transactions:
             addrs = {miner, burn_addr, tx.from_addr or "", tx.to_addr or ""}
             addrs.discard("")
+            tx_gas = int(getattr(tx, "gas", 0) or 0)
+            if tx_gas <= 0:
+                raise RuntimeError("gas_required")
             if self._tx_is_simple(tx):
-                gas_used = int(tx.gas or 21000)
+                gas_used = tx_gas
                 effect = {
                     "from": tx.from_addr,
                     "to": tx.to_addr or "",
                     "value": float(tx.value or 0),
                     "apply_value": True,
-                    "gas": int(tx.gas or 21000),
+                    "gas": tx_gas,
                     "gas_used": gas_used,
                     "nonce": int(tx.nonce),
                 }
                 plan = plan_transfer_fees_sat(
-                    tx.gas,
+                    tx_gas,
                     self.config.gas_price_wei,
                     self.config.burn_rate,
                     tx.value,
@@ -469,7 +478,7 @@ class StateService:
                 host = self._run_evm_host_only(tx, block.height)
                 if not host.get("success"):
                     raise RuntimeError(host.get("error") or "evm_host_failed")
-                gas_used = int(host.get("gas_used") or tx.gas or 0)
+                gas_used = int(host.get("gas_used") or tx_gas)
                 if host.get("contract_address"):
                     caddr = str(host["contract_address"])
                     addrs.add(caddr)
@@ -482,7 +491,7 @@ class StateService:
                     "to": tx.to_addr or "",
                     "value": float(tx.value or 0),
                     "apply_value": False,
-                    "gas": int(tx.gas or 21000),
+                    "gas": tx_gas,
                     "gas_used": gas_used,
                     "nonce": int(tx.nonce),
                 }

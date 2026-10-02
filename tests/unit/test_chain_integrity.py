@@ -72,6 +72,7 @@ def test_signed_tx_accepted(chain_env):
         nonce=raw["nonce"],
         signature=raw["signature"],
         public_key=raw["public_key"],
+        gas=int(raw.get("gas_limit") or raw.get("gas") or 21000),
     )
     assert mp.add(tx) is True
 

@@ -76,7 +76,7 @@ class BlockBuilder:
                 "from": tx.get("from", ""),
                 "to": tx.get("to", ""),
                 "value": tx.get("value", 0),
-                "gas_limit": tx.get("gas", 21000),
+                "gas_limit": int(tx.get("gas") or 0),
                 "gas_price": tx.get("gasPrice", 0),
                 "nonce": tx.get("nonce", 0),
                 "data": tx.get("data", ""),

@@ -9768,7 +9768,15 @@ def _handle_deploy_tx(body: Dict, bc, mp, cfg, wallet=None, evm=None) -> str:
     zero_addr = "0x0000000000000000000000000000000000000000"
     from_addr = body.get("from", body.get("from_address", ""))
     value = _parse_tx_value(body.get("value", body.get("amount", 0)))
-    gas = int(body.get("gas", getattr(cfg, "evm_gas_limit", 8_000_000)))
+    gas_raw = body.get("gas", body.get("gas_limit"))
+    if gas_raw is None or str(gas_raw).strip() == "":
+        raise ValueError("gas or gas_limit required")
+    if isinstance(gas_raw, str) and gas_raw.startswith(("0x", "0X")):
+        gas = int(gas_raw, 16)
+    else:
+        gas = int(gas_raw)
+    if gas <= 0:
+        raise ValueError("gas or gas_limit must be positive")
 
     tx_body = dict(body or {})
     _reject_auto_sign_in_prod(tx_body, cfg)
@@ -9824,7 +9832,15 @@ def _handle_call_tx(body: Dict, bc, mp, cfg, wallet=None) -> str:
 
     from_addr = body.get("from", body.get("from_address", ""))
     value = _parse_tx_value(body.get("value", body.get("amount", 0)))
-    gas = int(body.get("gas", getattr(cfg, "evm_gas_limit", 500_000)))
+    gas_raw = body.get("gas", body.get("gas_limit"))
+    if gas_raw is None or str(gas_raw).strip() == "":
+        raise ValueError("gas or gas_limit required")
+    if isinstance(gas_raw, str) and gas_raw.startswith(("0x", "0X")):
+        gas = int(gas_raw, 16)
+    else:
+        gas = int(gas_raw)
+    if gas <= 0:
+        raise ValueError("gas or gas_limit must be positive")
 
     tx_body = dict(body or {})
     _reject_auto_sign_in_prod(tx_body, cfg)

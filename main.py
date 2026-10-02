@@ -2174,7 +2174,7 @@ class NodeOrchestrator:
                         "to": t.to_addr,
                         "value": t.amount,
                         "gasPrice": int(abs_to_wei(t.fee)),
-                        "gas": int(getattr(t, "gas", 0) or 21000),
+                        "gas": int(getattr(t, "gas", 0) or 0),
                         "nonce": t.nonce,
                         "data": getattr(t, "data", "") or "",
                         "timestamp": t.timestamp,

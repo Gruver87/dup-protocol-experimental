@@ -34,7 +34,7 @@ def compute_tx_identity_hash(
         str(to_addr or ""),
         value,
         int(nonce or 0),
-        int(gas or 21_000),
+        int(gas),
         str(data or ""),
         int(ts),
     )
@@ -63,7 +63,7 @@ def wallet_signing_digest(
             "nonce": int(nonce or 0),
             "chain_id": int(chain_id or 1),
             "data": data or "",
-            "gas_limit": int(gas or 21_000),
+            "gas_limit": int(gas),
         }
     )
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"))
