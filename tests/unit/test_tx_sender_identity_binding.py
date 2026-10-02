@@ -59,3 +59,37 @@ def test_malformed_public_key_refused():
     bad = dict(tx)
     bad["public_key"] = "not-hex"
     assert verify_transaction_signature(bad) is False
+
+
+def test_tamper_to_after_sign_refused():
+    w = Wallet.create_new()
+    tx = w.sign_transaction(to="0x" + "22" * 20, value=1, nonce=0, chain_id=778888)
+    bad = dict(tx)
+    bad["to"] = "0x" + "33" * 20
+    assert verify_transaction_signature(bad) is False
+
+
+def test_tamper_value_after_sign_refused():
+    w = Wallet.create_new()
+    tx = w.sign_transaction(to="0x" + "22" * 20, value=1, nonce=0, chain_id=778888)
+    bad = dict(tx)
+    bad["value"] = 999
+    assert verify_transaction_signature(bad) is False
+
+
+def test_tamper_data_after_sign_refused():
+    w = Wallet.create_new()
+    tx = w.sign_transaction(
+        to="0x" + "22" * 20, value=0, nonce=0, chain_id=778888, data="0xdead"
+    )
+    bad = dict(tx)
+    bad["data"] = "0xbeef"
+    assert verify_transaction_signature(bad) is False
+
+
+def test_wrong_chain_id_refused():
+    w = Wallet.create_new()
+    tx = w.sign_transaction(to="0x" + "22" * 20, value=1, nonce=0, chain_id=778888)
+    bad = dict(tx)
+    bad["chain_id"] = 1
+    assert verify_transaction_signature(bad) is False
