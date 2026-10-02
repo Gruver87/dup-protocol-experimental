@@ -5349,15 +5349,7 @@ class RESTHandler(BaseHTTPRequestHandler):
                 try:
                     ok = zk.verify_range(proof, min_v, max_v)
                 except NotImplementedError as e:
-                    self._json(
-                        {
-                            "valid": False,
-                            "canonical": False,
-                            "educational_only": False,
-                            "error": str(e),
-                            "refused": True,
-                        }
-                    )
+                    self._error(501, str(e))
                     return
                 self._json({"valid": ok is True, "value_checked": value})
 
@@ -5787,17 +5779,7 @@ class RESTHandler(BaseHTTPRequestHandler):
                     try:
                         proof = zk.prove_range(value, min_v, max_v)
                     except NotImplementedError as e:
-                        self._json(
-                            {
-                                "enabled": True,
-                                "valid": False,
-                                "canonical": False,
-                                "educational_only": False,
-                                "refused": True,
-                                "error": str(e),
-                                "range": f"[{min_v}, {max_v}]",
-                            }
-                        )
+                        self._error(501, str(e))
                         return
                     self._json({
                         "proof": proof.__dict__ if hasattr(proof,'__dict__') else str(proof),
@@ -5807,13 +5789,7 @@ class RESTHandler(BaseHTTPRequestHandler):
                         "educational_only": True,
                     })
                 else:
-                    self._json({
-                        "enabled": False,
-                        "valid": False,
-                        "canonical": False,
-                        "error": "zk_missing",
-                        "range": f"[{min_v}, {max_v}]",
-                    })
+                    self._error(503, "zk_missing")
 
             elif path == "/zk/transaction":
                 # Never accept private keys via GET query string.
@@ -6196,8 +6172,10 @@ class RESTHandler(BaseHTTPRequestHandler):
                         self._error(400, "Unknown proof type"); return
                     pd = proof.to_dict() if hasattr(proof, "to_dict") else {"valid": getattr(proof, "valid", True)}
                     self._json({"proof_type": proof_type, "valid": True, **pd})
+                except NotImplementedError as e:
+                    self._error(501, str(e))
                 except Exception as e:
-                    self._json({"proof_type": proof_type, "valid": False, "error": str(e)})
+                    self._error(503, f"zk prove unavailable: {e}")
 
             # ── Wallet create ─────────────────────────────────────────────────
             elif path == "/wallet/create":
@@ -8371,14 +8349,7 @@ class RESTHandler(BaseHTTPRequestHandler):
                     try:
                         proof = zk.prove_range(value, min_v, max_v)
                     except NotImplementedError as e:
-                        self._json(
-                            {
-                                "valid": False,
-                                "canonical": False,
-                                "refused": True,
-                                "error": str(e),
-                            }
-                        )
+                        self._error(501, str(e))
                         return
                     self._json({"proof": str(proof), "valid": True})
                 else:

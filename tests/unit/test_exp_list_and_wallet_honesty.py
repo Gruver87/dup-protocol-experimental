@@ -23,3 +23,13 @@ def test_list_exception_paths_use_503():
         "multisig list failed",
     ):
         assert needle in src
+
+
+def test_zk_not_implemented_is_501_not_valid_false():
+    src = (ROOT / "api" / "http.py").read_text(encoding="utf-8")
+    # Refused educational ZK must not paint JSON valid:false with enabled:true.
+    assert '"enabled": True,\n                                "valid": False' not in src
+    assert "zk prove unavailable" in src
+    # GET /zk/prove/range NotImplemented → 501
+    chunk = src.split('path == "/zk/prove/range"')[1].split("elif path")[0]
+    assert "_error(501" in chunk
