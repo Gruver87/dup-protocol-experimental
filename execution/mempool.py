@@ -14,7 +14,7 @@ class Transaction:
     sender: str
     recipient: str
     amount: float
-    gas_price: float = 1.0
+    gas_price: float = 0.0  # must be set positive by callers; 0 is invalid for add
     nonce: int = 0
     hash: str = ""
 
@@ -28,10 +28,16 @@ def create_transaction(
     sender: str,
     recipient: str,
     amount: float,
-    gas_price: float = 1.0,
+    gas_price: float | None = None,
     nonce: int = 0,
 ) -> Transaction:
-    return Transaction(sender, recipient, amount, gas_price, nonce)
+    # Refuse invent gas_price=1.0 when omitted.
+    if gas_price is None:
+        raise ValueError("gas_price_required")
+    fee = float(gas_price)
+    if fee <= 0:
+        raise ValueError("gas_price_required")
+    return Transaction(sender, recipient, amount, fee, nonce)
 
 
 class Mempool(_BaseMempool):

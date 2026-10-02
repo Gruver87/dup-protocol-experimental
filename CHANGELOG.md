@@ -15,6 +15,7 @@ Canonical language for this repository is **English**. Older inherited entries b
 
 ### Experimental R&D
 
+- **P1 honesty (2026-10-03):** mid-soak disk — P2P mempool never invents `gas=21000` (flag-off fallbacks removed); `TransactionBuilder` / `create_transaction` require explicit gas; SQLite schema drops `DEFAULT 21000`. Units: `tests/unit/test_exp_p2p_builder_schema_honesty.py`. **Does not** restart soak. **Not** soak PASS.
 - **P1 honesty (2026-10-03):** mid-soak disk — `Transaction.from_dict` refuses invent `gas=21000` (`gas_required`); execution/secure mempool refuse invent `fee=1`. Units: `tests/unit/test_exp_tx_from_dict_fee_honesty.py`. **Does not** restart soak. **Not** soak PASS.
 - **P1 honesty (2026-10-03):** mid-soak disk — proposer selection refuses invent `stake=100` (skip missing/non-positive); MEV frontrun no invent default `gas_used`; GET `/zk/prove|verify/range` require explicit `value` (no demo 42). Units: `tests/unit/test_exp_proposer_mev_zk_honesty.py`. **Does not** restart soak. **Not** soak PASS.
 - **P1 honesty (2026-10-03):** mid-soak disk — LMD / Casper / Beacon / engine_slashing `add_validator` refuse invent `stake=100`; `main.py` LMD bind uses `config.min_stake`; PQ status no fake `{enabled:true}` stats dict. Units: `tests/unit/test_exp_consensus_stake_required.py`. **Does not** restart soak. **Not** soak PASS.

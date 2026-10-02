@@ -65,7 +65,7 @@ try:
     from execution.execution_engine import ExecutionEngine
     from execution.mempool import create_transaction
     engine = ExecutionEngine()
-    tx = create_transaction("alice", "bob", 50)
+    tx = create_transaction("alice", "bob", 50, gas_price=10)
     receipt = engine.execute_transaction(tx)
     test("Execution engine works", receipt is not None)
 except:

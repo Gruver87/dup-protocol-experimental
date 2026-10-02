@@ -4596,38 +4596,30 @@ class P2PNode:
                 return None
             nonce = 0
         # v1.3.203: Inf/junk gas must refuse, not raise into the ingest path.
-        # Honesty: do not invent gas=21000 when missing/zero (flag default on).
+        # Honesty: never invent gas=21000 — missing/unparseable/zero always refuse.
+        # p2p_mempool_require_explicit_gas / p2p_mempool_unparseable_gas_refuse:
+        # invent-on-False paths removed; flags remain for metrics/status honesty.
         raw_gas = data.get("gas", data.get("gas_limit", None))
-        require_explicit_gas = bool(
-            getattr(self.config, "p2p_mempool_require_explicit_gas", True)
-        )
         if raw_gas is None or raw_gas == "":
-            if require_explicit_gas:
-                self._last_tx_wire_reject = "gas_missing"
-                self._mempool_gas_missing_refuse_total = int(
-                    getattr(self, "_mempool_gas_missing_refuse_total", 0) or 0
-                ) + 1
-                return None
-            gas = 21_000
-        else:
-            try:
-                gas = int(raw_gas)
-            except (TypeError, ValueError, OverflowError):
-                if bool(getattr(self.config, "p2p_mempool_unparseable_gas_refuse", True)):
-                    self._last_tx_wire_reject = "gas_unparseable"
-                    self._mempool_gas_unparseable_refuse_total = int(
-                        getattr(self, "_mempool_gas_unparseable_refuse_total", 0) or 0
-                    ) + 1
-                    return None
-                gas = 21_000
-            if gas == 0 and require_explicit_gas:
-                self._last_tx_wire_reject = "gas_missing"
-                self._mempool_gas_missing_refuse_total = int(
-                    getattr(self, "_mempool_gas_missing_refuse_total", 0) or 0
-                ) + 1
-                return None
-            if gas == 0:
-                gas = 21_000
+            self._last_tx_wire_reject = "gas_missing"
+            self._mempool_gas_missing_refuse_total = int(
+                getattr(self, "_mempool_gas_missing_refuse_total", 0) or 0
+            ) + 1
+            return None
+        try:
+            gas = int(raw_gas)
+        except (TypeError, ValueError, OverflowError):
+            self._last_tx_wire_reject = "gas_unparseable"
+            self._mempool_gas_unparseable_refuse_total = int(
+                getattr(self, "_mempool_gas_unparseable_refuse_total", 0) or 0
+            ) + 1
+            return None
+        if gas <= 0:
+            self._last_tx_wire_reject = "gas_missing"
+            self._mempool_gas_missing_refuse_total = int(
+                getattr(self, "_mempool_gas_missing_refuse_total", 0) or 0
+            ) + 1
+            return None
         signature = data.get("signature", "")
         public_key = data.get("public_key", "")
         calldata = data.get("data", data.get("input", ""))
