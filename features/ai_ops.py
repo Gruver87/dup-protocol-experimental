@@ -7,6 +7,11 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+HONESTY = (
+    "ai_ops sprout: off-node heuristic triage only — not consensus / "
+    "not mainnet / simulation_only"
+)
+
 
 def classify_anomaly(
     *,

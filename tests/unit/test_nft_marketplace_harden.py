@@ -137,6 +137,7 @@ def test_auction_refuses_dust_float_and_settles_satoshi():
     ok = m.place_bid(aid, bidder, amount_satoshi=int(to_satoshi(15)))
     assert ok["success"] is True
     assert ok["current_bid_satoshi"] == int(to_satoshi(15))
+    m.auctions[aid]["ends_at"] = 0  # window elapsed for finalize honesty
     fin = m.finalize_auction(aid)
     assert fin["success"] is True
     assert fin["price_satoshi"] == int(to_satoshi(15))

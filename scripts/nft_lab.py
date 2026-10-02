@@ -105,6 +105,63 @@ def main() -> int:
         if tok.get("price_satoshi") is None:
             return _fail("token missing price_satoshi")
 
+        # offer / cancel / expired accept
+        db.set_balance(seller, 1000.0)
+        db.set_balance(buyer, 1000.0)
+        r2 = m.mint("lab2", "Lab2", "d", "img", seller, price=5.0)
+        if not r2.get("success"):
+            return _fail(f"mint lab2 failed: {r2}")
+        oid = m.make_offer("lab2", buyer, price_satoshi=int(to_satoshi(5)), hours=1)
+        if not oid:
+            return _fail("make_offer failed")
+        if not m.cancel_offer(oid, buyer).get("success"):
+            return _fail("cancel_offer failed")
+        oid2 = m.make_offer("lab2", buyer, price_satoshi=int(to_satoshi(5)), hours=1)
+        m.offers[oid2]["expires_at"] = 0
+        exp = m.accept_offer(oid2, seller)
+        if exp.get("success"):
+            return _fail("expired offer must refuse")
+
+        # auction: refuse early finalize, then settle after ends_at
+        db.set_balance(seller, 1000.0)
+        db.set_balance(buyer, 1000.0)
+        assert m.mint("lab3", "Lab3", "d", "img", seller, price=5.0).get("success")
+        aid = m.create_auction(
+            "lab3",
+            seller,
+            start_price_satoshi=int(to_satoshi(1)),
+            reserve_price_satoshi=int(to_satoshi(1)),
+            hours=1,
+        )
+        if not aid:
+            return _fail("create_auction failed")
+        if m.finalize_auction(aid).get("success"):
+            return _fail("early finalize must refuse")
+        assert m.place_bid(aid, buyer, amount_satoshi=int(to_satoshi(2))).get("success")
+        m.auctions[aid]["ends_at"] = 0
+        fin = m.finalize_auction(aid)
+        if not fin.get("success"):
+            return _fail(f"finalize after ends_at failed: {fin}")
+        if m.get_token("lab3")["owner"] != buyer:
+            return _fail("auction owner mismatch")
+
+        # delist
+        db.set_balance(seller, 1000.0)
+        assert m.mint("lab4", "Lab4", "d", "img", seller, price=8.0).get("success")
+        assert m.list_for_sale("lab4", seller, price_satoshi=int(to_satoshi(8))).get("success")
+        if not m.delist("lab4", seller).get("success"):
+            return _fail("delist failed")
+        if m.get_listings():
+            # other leftover listings ok; lab4 must not be listed
+            if any(x.get("token_id") == "lab4" for x in m.get_listings()):
+                return _fail("lab4 still listed after delist")
+
+        st = m.get_stats()
+        if st.get("enabled") is not True:
+            return _fail("enabled must follow balance backend")
+        if st.get("offers_escrow") is not False or st.get("auction_escrow") is not False:
+            return _fail("escrow honesty flags must be false")
+
         try:
             db.close()
         except Exception:
@@ -123,7 +180,7 @@ def main() -> int:
     else:
         print("SKIP: staging :19080 not open")
 
-    print("OK: nft_lab mint/list/buy satoshi honesty")
+    print("OK: nft_lab mint/list/buy/offer/auction/delist satoshi honesty")
     print("RESULT: PASS nft_lab")
     return 0
 

@@ -2979,7 +2979,8 @@ class RESTHandler(BaseHTTPRequestHandler):
                     )
                     if self.__class__.wasm_vm is not None
                     else False,
-                    "ai_agents_enabled": self.__class__.ai_manager is not None,
+                    "ai_agents_loaded": self.__class__.ai_manager is not None,
+                    "ai_agents_enabled": False,  # prod/status: loaded ≠ enabled (ADR 0016)
                     "mev_enabled": self.__class__.mev_simulator is not None,
                     "reorg_predictor_enabled": self.__class__.reorg_predictor is not None,
                     "core_receipts_enabled": bool(
@@ -4133,12 +4134,18 @@ class RESTHandler(BaseHTTPRequestHandler):
             # ── AI Validator ──────────────────────────────────────────────────
             elif path == "/ai/validators":
                 ai = self.__class__.ai_validator
-                if ai:
+                cfg_ai = bool(getattr(cfg, "feature_ai_validator", False))
+                prod_block = bool(getattr(cfg, "is_production", False)) and not cfg_ai
+                loaded = ai is not None
+                enabled = bool(cfg_ai and loaded and not prod_block)
+                if ai and enabled:
                     self._json({
                         "enabled": True,
+                        "loaded": True,
                         "simulation_only": True,
                         "consensus_wired": False,
                         "model_bound": False,
+                        "honesty": "ai_validator sprout — not forge / not consensus",
                         "stats": ai.get_stats(),
                         "validators": {addr: {"performance": v.performance,
                                                "reliability": v.reliability,
@@ -4149,47 +4156,65 @@ class RESTHandler(BaseHTTPRequestHandler):
                 else:
                     self._json({
                         "enabled": False,
+                        "loaded": loaded,
                         "simulation_only": True,
                         "consensus_wired": False,
                         "model_bound": False,
+                        "honesty": "ai_validator sprout — not forge / not consensus",
                     })
 
             elif path == "/ai/proposer":
                 ai = self.__class__.ai_validator
-                if ai:
+                cfg_ai = bool(getattr(cfg, "feature_ai_validator", False))
+                prod_block = bool(getattr(cfg, "is_production", False)) and not cfg_ai
+                loaded = ai is not None
+                enabled = bool(cfg_ai and loaded and not prod_block)
+                if ai and enabled:
                     proposer = ai.select_proposer()
                     self._json({
                         "enabled": True,
+                        "loaded": True,
                         "proposer": proposer,
                         "stats": ai.get_stats(),
                         "simulation_only": True,
                         "consensus_wired": False,
                         "model_bound": False,
                         "note": "heuristic pick; not used by block forge",
+                        "honesty": "ai_validator sprout — not forge / not consensus",
                     })
                 else:
                     self._json({
                         "enabled": False,
+                        "loaded": loaded,
                         "simulation_only": True,
                         "consensus_wired": False,
                         "model_bound": False,
+                        "honesty": "ai_validator sprout — not forge / not consensus",
                     })
 
             elif path == "/ai/mev-scan":
                 ai = self.__class__.ai_validator
                 mp = self.__class__.mempool
-                if ai and mp:
+                cfg_ai = bool(getattr(cfg, "feature_ai_validator", False))
+                prod_block = bool(getattr(cfg, "is_production", False)) and not cfg_ai
+                enabled = bool(cfg_ai and ai is not None and mp is not None and not prod_block)
+                if enabled:
                     pending = mp.get(limit=50)
                     mev_data = ai.detect_mev_opportunity(pending)
                     mev_data["enabled"] = True
+                    mev_data["simulation_only"] = True
+                    mev_data["consensus_wired"] = False
+                    mev_data["honesty"] = "ai_validator MEV stub — invented_numbers=false"
                     self._json(mev_data)
                 else:
                     self._json({
                         "enabled": False,
+                        "loaded": ai is not None,
                         "simulation_only": True,
                         "consensus_wired": False,
                         "model_bound": False,
                         "invented_numbers": False,
+                        "honesty": "ai_validator MEV stub — invented_numbers=false",
                     })
 
             # ── Reorg Predictor ───────────────────────────────────────────────
@@ -4341,19 +4366,27 @@ class RESTHandler(BaseHTTPRequestHandler):
             # ── NFT listings/auctions (from extended_api_server) ─────────────
             elif path == "/nft/listings":
                 nft = self.__class__.nft
-                if nft and hasattr(nft, "get_listings"):
+                if not nft:
+                    self._json({"listings": [], "enabled": False, "count": 0})
+                elif hasattr(nft, "get_listings"):
                     try:
-                        self._json({"listings": nft.get_listings()})
+                        listings = nft.get_listings()
+                        self._json({
+                            "listings": listings,
+                            "count": len(listings),
+                            "enabled": True,
+                        })
                     except Exception as e:
-                        self._json({"listings": [], "error": str(e)})
+                        self._json({"listings": [], "count": 0, "error": str(e)})
+                elif hasattr(nft, "get_on_sale"):
+                    listings = nft.get_on_sale()
+                    self._json({
+                        "listings": listings,
+                        "count": len(listings),
+                        "enabled": True,
+                    })
                 else:
-                    # Basic: return all tokens for sale
-                    if nft and hasattr(nft, "tokens"):
-                        tokens = [t.__dict__ if hasattr(t, "__dict__") else t
-                                  for t in list(nft.tokens.values())[:50]]
-                        self._json({"listings": tokens, "count": len(tokens)})
-                    else:
-                        self._json({"listings": [], "enabled": False})
+                    self._json({"listings": [], "enabled": False, "count": 0})
 
             elif path == "/nft/auctions":
                 nft = self.__class__.nft
@@ -4640,11 +4673,34 @@ class RESTHandler(BaseHTTPRequestHandler):
 
             elif path == "/nft/marketplace":
                 nft = self.__class__.nft
-                stats = nft.get_stats() if nft else {}
-                auctions = nft.get_auctions() if nft and hasattr(nft, "get_auctions") else []
-                offers = list(getattr(nft, "offers", {}).values())[:20] if nft else []
-                self._json({"stats": stats, "active_auctions": len([a for a in auctions if a.get("status")=="active"]),
-                            "active_offers": len(offers), "total_auctions": len(auctions)})
+                if not nft:
+                    self._json({
+                        "stats": {
+                            "enabled": False,
+                            "execution_bound": False,
+                            "persisted": False,
+                            "on_chain_standard": False,
+                            "offers_escrow": False,
+                            "auction_escrow": False,
+                        },
+                        "active_auctions": 0,
+                        "active_offers": 0,
+                        "total_auctions": 0,
+                        "enabled": False,
+                    })
+                    return
+                stats = nft.get_stats() if hasattr(nft, "get_stats") else {}
+                auctions = nft.get_auctions() if hasattr(nft, "get_auctions") else []
+                offers = list(getattr(nft, "offers", {}).values())[:20]
+                self._json({
+                    "stats": stats,
+                    "active_auctions": len(
+                        [a for a in auctions if a.get("status") == "active"]
+                    ),
+                    "active_offers": len(offers),
+                    "total_auctions": len(auctions),
+                    "enabled": bool(stats.get("enabled")),
+                })
 
             elif path == "/nft/stats":
                 nft = self.__class__.nft
@@ -6606,6 +6662,11 @@ class RESTHandler(BaseHTTPRequestHandler):
                 hours       = int(body.get("hours", 24))
                 if not token_id or not seller:
                     self._error(400, "token_id and seller required"); return
+                body = dict(body)
+                body.setdefault("action", "nft_auction")
+                auth_err = _nft_mutation_authorized(cfg, body, seller)
+                if auth_err:
+                    self._error(403, auth_err); return
                 try:
                     start_price, start_sat = _http_amount_abs(
                         body,
@@ -6662,6 +6723,12 @@ class RESTHandler(BaseHTTPRequestHandler):
                 bidder     = body.get("bidder", "")
                 if not auction_id or not bidder:
                     self._error(400, "auction_id and bidder required"); return
+                body = dict(body)
+                body.setdefault("action", "nft_bid")
+                body.setdefault("token_id", auction_id)
+                auth_err = _nft_mutation_authorized(cfg, body, bidder)
+                if auth_err:
+                    self._error(403, auth_err); return
                 try:
                     amount, amount_sat = _http_amount_abs(
                         body, cfg, field="amount"
@@ -6775,6 +6842,11 @@ class RESTHandler(BaseHTTPRequestHandler):
                 hours = int(body.get("hours", 24))
                 if not token_id or not bidder:
                     self._error(400, "token_id, bidder, price required"); return
+                body = dict(body)
+                body.setdefault("action", "nft_offer")
+                auth_err = _nft_mutation_authorized(cfg, body, bidder)
+                if auth_err:
+                    self._error(403, auth_err); return
                 try:
                     price, price_sat = _http_amount_abs(
                         body,
@@ -6786,12 +6858,15 @@ class RESTHandler(BaseHTTPRequestHandler):
                 except ValueError as exc:
                     self._error(400, str(exc)); return
                 if hasattr(nft, "make_offer"):
-                    oid = nft.make_offer(token_id, bidder, price, hours)
+                    oid = nft.make_offer(
+                        token_id, bidder, price, hours, price_satoshi=int(price_sat)
+                    )
                     if oid:
                         self._json({
                             "success": True,
                             "offer_id": oid,
                             "price_satoshi": int(price_sat),
+                            "offers_escrow": False,
                         })
                     else:
                         self._error(400, "Could not create offer")
@@ -6806,6 +6881,12 @@ class RESTHandler(BaseHTTPRequestHandler):
                 seller = body.get("seller", "")
                 if not offer_id or not seller:
                     self._error(400, "offer_id and seller required"); return
+                body = dict(body)
+                body.setdefault("action", "nft_accept_offer")
+                body.setdefault("token_id", offer_id)
+                auth_err = _nft_mutation_authorized(cfg, body, seller)
+                if auth_err:
+                    self._error(403, auth_err); return
                 if hasattr(nft, "accept_offer"):
                     result = nft.accept_offer(offer_id, seller)
                     if isinstance(result, dict) and result.get("success"):
@@ -6816,6 +6897,53 @@ class RESTHandler(BaseHTTPRequestHandler):
                 else:
                     self._error(501, "Offers not supported")
 
+            elif path == "/nft/cancel-offer":
+                nft = self.__class__.nft
+                if not nft:
+                    self._error(503, "NFT not enabled"); return
+                offer_id = body.get("offer_id", "")
+                bidder = body.get("bidder", "")
+                if not offer_id or not bidder:
+                    self._error(400, "offer_id and bidder required"); return
+                body = dict(body)
+                body.setdefault("action", "nft_cancel_offer")
+                body.setdefault("token_id", offer_id)
+                auth_err = _nft_mutation_authorized(cfg, body, bidder)
+                if auth_err:
+                    self._error(403, auth_err); return
+                if hasattr(nft, "cancel_offer"):
+                    result = nft.cancel_offer(offer_id, bidder)
+                    if isinstance(result, dict) and result.get("success"):
+                        self._json(result)
+                    else:
+                        error = result.get("error", "Could not cancel offer") if isinstance(result, dict) else "Could not cancel offer"
+                        self._error(400, error)
+                else:
+                    self._error(501, "Offers not supported")
+
+            elif path == "/nft/delist":
+                nft = self.__class__.nft
+                if not nft:
+                    self._error(503, "NFT not enabled"); return
+                token_id = body.get("token_id", "")
+                owner = body.get("owner", "")
+                if not token_id or not owner:
+                    self._error(400, "token_id and owner required"); return
+                body = dict(body)
+                body.setdefault("action", "nft_delist")
+                auth_err = _nft_mutation_authorized(cfg, body, owner)
+                if auth_err:
+                    self._error(403, auth_err); return
+                if hasattr(nft, "delist"):
+                    result = nft.delist(token_id, owner)
+                    if isinstance(result, dict) and result.get("success"):
+                        self._json(result)
+                    else:
+                        error = result.get("error", "Could not delist") if isinstance(result, dict) else "Could not delist"
+                        self._error(400, error)
+                else:
+                    self._error(501, "Delist not supported")
+
             elif path == "/nft/finalize-auction":
                 nft = self.__class__.nft
                 if not nft:
@@ -6823,6 +6951,18 @@ class RESTHandler(BaseHTTPRequestHandler):
                 auction_id = body.get("auction_id", "")
                 if not auction_id:
                     self._error(400, "auction_id required"); return
+                # Finalize is settlement — require actor (seller or admin JWT).
+                actor = str(body.get("actor") or body.get("seller") or "").strip()
+                if actor:
+                    body = dict(body)
+                    body.setdefault("action", "nft_finalize_auction")
+                    body.setdefault("token_id", auction_id)
+                    auth_err = _nft_mutation_authorized(cfg, body, actor)
+                    if auth_err:
+                        self._error(403, auth_err); return
+                elif not bool(getattr(cfg, "jwt_enforce_admin", False)):
+                    self._error(403, "nft finalize requires actor+signature (or jwt_enforce_admin)")
+                    return
                 if hasattr(nft, "finalize_auction"):
                     result = nft.finalize_auction(auction_id)
                     if isinstance(result, dict) and result.get("success"):

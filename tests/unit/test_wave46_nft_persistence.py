@@ -94,6 +94,7 @@ def test_nft_auction_finalize_fails_if_token_missing():
     assert nft.place_bid(auction_id, buyer, 60.0)["success"] is True
 
     del nft.tokens[tid]
+    nft.auctions[auction_id]["ends_at"] = 0  # window elapsed before missing-token settle
     finalized = nft.finalize_auction(auction_id)
 
     assert finalized == {"success": False, "error": "Auction token not found"}

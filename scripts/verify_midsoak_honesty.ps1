@@ -135,6 +135,7 @@ $Core = @(
     "tests/unit/test_exp_tx_from_dict_fee_honesty.py",
     "tests/unit/test_exp_p2p_builder_schema_honesty.py",
     "tests/unit/test_exp_wallet_tx_gas_required.py",
+    "tests/unit/test_exp_ai_nft_marketplace_wave.py",
     "tests/unit/test_exp_list_and_wallet_honesty.py",
     "tests/unit/test_wave_o_honesty_fixes.py",
     "tests/unit/test_wave_q_honesty_fixes.py",

@@ -44,7 +44,7 @@ def test_multisig_wasm_use_http_amount_abs():
         assert "_http_amount_abs" in chunk, marker
 
 
-def test_nft_ports_enabled_follows_module():
+def test_nft_ports_enabled_follows_execution_bound():
     from features.nft_ports import NftMarketplaceAdapter
 
     class _M:
@@ -54,7 +54,16 @@ def test_nft_ports_enabled_follows_module():
             return {"token_count": 0}
 
     port = NftMarketplaceAdapter(_M())
-    assert port.get_stats()["enabled"] is True
+    # Honesty: do not invent enabled=True without execution_bound/balance_backend.
+    assert port.get_stats()["enabled"] is False
+
+    class _M2:
+        tokens = {}
+
+        def get_stats(self):
+            return {"token_count": 0, "execution_bound": True, "balance_backend": True}
+
+    assert NftMarketplaceAdapter(_M2()).get_stats()["enabled"] is True
 
 
 def test_rocks_metrics_receipts_capability_needle():

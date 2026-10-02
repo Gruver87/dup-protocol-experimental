@@ -98,6 +98,8 @@ def test_nft_offer_auction_settle_under_uow():
     )
     assert aid
     assert nft.place_bid(aid, buyer, amount=2.0)["success"]
+    # Window must elapse before finalize (honesty guard).
+    nft.auctions[aid]["ends_at"] = int(__import__("time").time()) - 1
     fin = nft.finalize_auction(aid)
     assert fin["success"] is True
     assert fin.get("uow_atomic") is True

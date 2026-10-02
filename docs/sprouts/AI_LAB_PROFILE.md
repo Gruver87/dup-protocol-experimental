@@ -18,8 +18,16 @@
 ```powershell
 python scripts/ai_lab.py
 python scripts/ai_ops_anomaly.py --offline-only
-pytest tests/unit/test_ai_sprout_harden.py tests/unit/test_wave43_ai_agents.py -q
+pytest tests/unit/test_ai_sprout_harden.py tests/unit/test_wave43_ai_agents.py tests/unit/test_exp_ai_nft_marketplace_wave.py -q
 ```
+
+## Honesty (2026-10-03)
+
+- HTTP `/ai/*` `enabled` only when `feature_ai_validator` and not prod-blocked
+- Forge path does **not** call `ai_validator.update_performance`
+- `/status` exposes `ai_agents_loaded` (loaded ≠ enabled)
+- `ai_ops.HONESTY` + `simulation_only` triage
+- SDK: `get_ai_validators` / `get_ai_proposer` (read-only)
 
 ## Forbidden
 

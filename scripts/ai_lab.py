@@ -162,12 +162,28 @@ def main() -> int:
         if st.get("consensus_wired") is not False:
             return _fail("MEV analyzer must not claim consensus_wired")
 
+        from features import ai_ops
+
+        if "not consensus" not in ai_ops.HONESTY.lower():
+            return _fail("ai_ops.HONESTY missing")
+        findings = ai_ops.classify_anomaly(
+            ready={"status": "not_ready", "checks": {"state_consistent": False}},
+            status={},
+        )
+        if not findings:
+            return _fail("ai_ops must flag not_ready")
+
+        # Forge must not wire AI validator performance (source needle).
+        main_py = (ROOT / "main.py").read_text(encoding="utf-8")
+        if "ai_validator.update_performance" in main_py:
+            return _fail("forge must not call ai_validator.update_performance")
+
         try:
             db.close()
         except Exception:
             pass
 
-    print("OK: ai_lab agents + model port + validator + mev honesty")
+    print("OK: ai_lab agents + model port + validator + mev + ai_ops honesty")
     print("RESULT: PASS ai_lab")
     return 0
 

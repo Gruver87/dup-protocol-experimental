@@ -280,13 +280,7 @@ class Client:
             raise ValueError("token_id required")
         out = self.get(f"/nft/token/{tid}")
         if isinstance(out, dict):
-            # Prefer satoshi twin when present
-            if out.get("price_satoshi") is None and out.get("price") is not None:
-                try:
-                    out = dict(out)
-                    out["price_satoshi"] = to_satoshi(out["price"])
-                except Exception:
-                    pass
+            # Honesty: never invent price_satoshi from float price.
             return out
         return {"raw": out}
 
@@ -295,6 +289,16 @@ class Client:
         if not addr:
             raise ValueError("owner required")
         return self.get(f"/nft/owner/{addr}")
+
+    # ── AI sprout (read-only; simulation_only) ────────────────────────────
+
+    def get_ai_validators(self) -> JsonDict:
+        out = self.get("/ai/validators")
+        return out if isinstance(out, dict) else {"raw": out}
+
+    def get_ai_proposer(self) -> JsonDict:
+        out = self.get("/ai/proposer")
+        return out if isinstance(out, dict) else {"raw": out}
 
     def get_balance_satoshi(self, address: str) -> int:
         """Prefer REST ``/wallet/balance/{addr}``; fall back to eth_getBalance wei→sat."""
