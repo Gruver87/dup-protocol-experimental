@@ -62,7 +62,7 @@ def test_signed_tx_accepted(chain_env):
     mp = Mempool()
     mp.set_blockchain(bc)
 
-    raw = sender.sign_transaction("0x" + "b" * 40, 1, nonce=0, chain_id=cfg.chain_id)
+    raw = sender.sign_transaction("0x" + "b" * 40, 1, nonce=0, chain_id=cfg.chain_id, gas_limit=21000)
     tx = MempoolTransaction(
         tx_hash=raw["hash"],
         from_addr=raw["from"],
@@ -157,7 +157,7 @@ def test_add_block_rejects_invalid_signed_tx_before_execution(chain_env):
     recipient = "0x" + "b" * 40
     db.set_balance(sender.address, 1000.0)
 
-    raw = sender.sign_transaction(recipient, 1, nonce=0, chain_id=cfg.chain_id)
+    raw = sender.sign_transaction(recipient, 1, nonce=0, chain_id=cfg.chain_id, gas_limit=21000)
     bad_sig = ("00" if raw["signature"][:2] != "00" else "01") + raw["signature"][2:]
     tx = Transaction(
         from_addr=raw["from"],

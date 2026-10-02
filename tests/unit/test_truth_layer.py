@@ -185,7 +185,7 @@ def test_wallet_sign_verify_with_calldata():
     data = "0x600160005260206000f3"
     signed = w.sign_transaction(zero, 0, 0, chain_id=77777, data=data, gas_limit=500000)
     assert verify_transaction_signature(signed)
-    plain = w.sign_transaction("0x" + "b" * 40, 1, 0, chain_id=77777)
+    plain = w.sign_transaction("0x" + "b" * 40, 1, 0, chain_id=77777, gas_limit=21000)
     assert verify_transaction_signature(plain)
 
 

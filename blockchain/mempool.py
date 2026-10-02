@@ -433,12 +433,17 @@ class Mempool:
 
             if self.blockchain and not chain_prevalidated:
                 from core.blockchain import Transaction
+                gas_chain = int(getattr(tx, "gas", 0) or 0)
+                # Refuse invent gas via base_gas_price when unset.
+                if gas_chain <= 0:
+                    self._rejected_count += 1
+                    return False
                 chain_tx = Transaction(
                     from_addr=tx.from_addr,
                     to_addr=tx.to_addr,
                     value=tx.amount,
                     nonce=tx.nonce,
-                    gas=int(getattr(tx, "gas", 0) or 0) or self.blockchain.config.base_gas_price,
+                    gas=gas_chain,
                     data=getattr(tx, "data", "") or "",
                     tx_hash=tx.tx_hash,
                     signature=tx.signature,

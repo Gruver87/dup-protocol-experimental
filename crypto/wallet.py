@@ -81,16 +81,22 @@ class Wallet:
         nonce: int,
         chain_id: int = 1,
         data: str = "",
-        gas_limit: int = 21000,
+        gas_limit: int | None = None,
     ) -> dict:
-        """Create and sign a transaction (optional calldata + gas for EVM deploy/call)."""
+        """Create and sign a transaction (optional calldata + explicit gas)."""
+        # Refuse invent gas_limit=21000 — callers must pass a positive limit.
+        if gas_limit is None:
+            raise ValueError("gas_limit_required")
+        gas_i = int(gas_limit)
+        if gas_i <= 0:
+            raise ValueError("gas_limit_required")
         tx = {
             "from": self.address,
             "to": to,
             "value": value,
             "nonce": nonce,
             "chain_id": chain_id,
-            "gas_limit": int(gas_limit),
+            "gas_limit": gas_i,
             "data": data or "",
         }
 

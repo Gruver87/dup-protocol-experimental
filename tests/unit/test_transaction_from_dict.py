@@ -37,6 +37,7 @@ def test_from_dict_preserves_provided_hash_and_quantizes():
         to_addr="0x" + "b" * 40,
         value=1.0,
         nonce=1,
+        gas=21000,
         timestamp=1_700_000_000,
     )
     payload = tx.to_dict()

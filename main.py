@@ -2237,12 +2237,13 @@ class NodeOrchestrator:
             txs = []
             for mp_tx in pending:
                 tx_gas = int(getattr(mp_tx, "gas", 0) or 0)
-                if not tx_gas:
-                    tx_gas = (
-                        self.config.evm_gas_limit
-                        if getattr(mp_tx, "data", "")
-                        else self.config.base_gas_price
+                # Refuse invent gas via config defaults when unset.
+                if tx_gas <= 0:
+                    _node_log.warning(
+                        "[Mining] skip tx %s: gas_required (no invent)",
+                        getattr(mp_tx, "tx_hash", "")[:16],
                     )
+                    continue
                 txs.append(Transaction(
                     from_addr=mp_tx.from_addr,
                     to_addr=mp_tx.to_addr,

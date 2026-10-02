@@ -60,7 +60,8 @@ $CoreHonesty = @(
     "tests/unit/test_exp_consensus_stake_required.py",
     "tests/unit/test_exp_proposer_mev_zk_honesty.py",
     "tests/unit/test_exp_tx_from_dict_fee_honesty.py",
-    "tests/unit/test_exp_p2p_builder_schema_honesty.py"
+    "tests/unit/test_exp_p2p_builder_schema_honesty.py",
+    "tests/unit/test_exp_wallet_tx_gas_required.py"
 )
 
 $UnitFiles = @(

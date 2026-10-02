@@ -72,18 +72,27 @@ class Transaction:
         to_addr: str,
         value: float,
         nonce: int = 0,
-        gas: int = 21_000,
+        gas: int | None = None,
         data: str = "",
         tx_hash: str = "",
         signature: str = "",
         public_key: str = "",
         timestamp: int = 0,
     ):
+        # Refuse invent gas=21000 — callers must pass a positive gas limit.
+        if gas is None:
+            raise ValueError("gas_required")
+        try:
+            gas_i = int(gas)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"gas_required: {exc}") from exc
+        if gas_i <= 0:
+            raise ValueError("gas_required")
         self.from_addr = from_addr
         self.to_addr = to_addr
         self.value = value
         self.nonce = nonce
-        self.gas = gas
+        self.gas = gas_i
         self.data = data
         self.signature = signature
         self.public_key = public_key
@@ -92,7 +101,7 @@ class Transaction:
 
         # Заполняется при включении в блок
         self.block_height: int = 0
-        self.gas_used: int = gas
+        self.gas_used: int = gas_i
         self.fee: float = 0.0
         self.burned: float = 0.0
         # Receipt status: set to 1 only after successful apply (omit → fail-closed 0).
