@@ -56,6 +56,7 @@ class FeatureFlags:
     pq: bool = False
     mev: bool = False
     ai_agents: bool = False
+    ai_validator: bool = False
 
     @classmethod
     def from_config(cls, config) -> "FeatureFlags":
@@ -72,6 +73,7 @@ class FeatureFlags:
             pq=getattr(config, "feature_pq", False),
             mev=getattr(config, "feature_mev", False),
             ai_agents=getattr(config, "feature_ai_agents", False),
+            ai_validator=getattr(config, "feature_ai_validator", False),
         )
 
     def to_api_dict(self, instances: Optional[Dict[str, Any]] = None, config=None) -> Dict:

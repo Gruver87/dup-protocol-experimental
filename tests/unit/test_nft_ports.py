@@ -41,8 +41,11 @@ def test_adapter_wraps_real_marketplace_mint() -> None:
     assert port.get_token("p1")["owner"] == creator
     st = port.get_stats()
     assert st.get("enabled") is True
-    assert st.get("offers_escrow") is False
-
+    assert st.get("offers_escrow") is True
+    assert st.get("auction_escrow") is True
+    null = NullNftMarketplacePort()
+    assert null.cancel_auction("a", "s")["error"] == "nft_disabled"
+    assert port.cancel_auction("missing", creator)["success"] is False
 
 def test_adapter_wraps_simple_marketplace() -> None:
     class _Tok:

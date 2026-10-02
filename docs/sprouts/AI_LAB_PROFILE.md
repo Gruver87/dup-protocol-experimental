@@ -23,9 +23,11 @@ pytest tests/unit/test_ai_sprout_harden.py tests/unit/test_wave43_ai_agents.py t
 
 ## Honesty (2026-10-03)
 
-- HTTP `/ai/*` `enabled` only when `feature_ai_validator` and not prod-blocked
+- HTTP `/ai/*` and `/ai/register-validator` `enabled` only when `feature_ai_validator` ∧ loaded ∧ ¬prod_block
+- HTTP `/ai-agent/*` gated the same way on `feature_ai_agents` (loaded ≠ enabled)
+- `FeatureFlags.ai_validator` surfaced on `/features`
 - Forge path does **not** call `ai_validator.update_performance`
-- `/status` exposes `ai_agents_loaded` (loaded ≠ enabled)
+- `/status` exposes `ai_agents_loaded` / `ai_agents_enabled` via sprout gate
 - `ai_ops.HONESTY` + `simulation_only` triage
 - SDK: `get_ai_validators` / `get_ai_proposer` (read-only)
 

@@ -178,12 +178,23 @@ def main() -> int:
         if "ai_validator.update_performance" in main_py:
             return _fail("forge must not call ai_validator.update_performance")
 
+        http_py = (ROOT / "api" / "http.py").read_text(encoding="utf-8")
+        if "_ai_sprout_enabled" not in http_py:
+            return _fail("HTTP must gate AI sprouts via _ai_sprout_enabled")
+        if 'feature_attr="feature_ai_agents"' not in http_py:
+            return _fail("HTTP /ai-agent/* must gate on feature_ai_agents")
+
+        from features import FeatureFlags
+
+        if not hasattr(FeatureFlags(), "ai_validator"):
+            return _fail("FeatureFlags must include ai_validator")
+
         try:
             db.close()
         except Exception:
             pass
 
-    print("OK: ai_lab agents + model port + validator + mev + ai_ops honesty")
+    print("OK: ai_lab agents + model port + validator + mev + ai_ops + HTTP gate honesty")
     print("RESULT: PASS ai_lab")
     return 0
 

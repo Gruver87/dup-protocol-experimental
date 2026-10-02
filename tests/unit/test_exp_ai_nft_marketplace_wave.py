@@ -127,6 +127,49 @@ def test_nft_stats_enabled_follows_balance_backend():
     assert st["auction_escrow"] is False
 
 
+def test_soft_escrow_offer_and_cancel_auction():
+    from features.nft import NFTMarketplace
+    from runtime.amount import to_satoshi
+    from storage.database import Database
+
+    tmp = tempfile.mkdtemp()
+    db = Database(f"{tmp}/nft_escrow.db")
+    db.initialize()
+    seller = "0x" + "a" * 40
+    buyer = "0x" + "b" * 40
+    db.set_balance(seller, 1000.0)
+    db.set_balance(buyer, 1000.0)
+    m = NFTMarketplace(db=db)
+    m.tokens.clear()
+    assert m.mint("e1", "E", "d", "i", seller, price=5.0)["success"]
+    bal0 = db.get_balance(buyer)
+    oid = m.make_offer("e1", buyer, price_satoshi=int(to_satoshi(5)), hours=1)
+    assert oid
+    assert int(m.offers[oid]["held_satoshi"]) == int(to_satoshi(5))
+    assert abs(db.get_balance(buyer) - (bal0 - 5.0)) < 1e-9
+    assert m.cancel_offer(oid, buyer)["success"] is True
+    assert abs(db.get_balance(buyer) - bal0) < 1e-9
+
+    assert m.mint("e2", "E2", "d", "i", seller, price=5.0)["success"]
+    aid = m.create_auction(
+        "e2",
+        seller,
+        start_price_satoshi=int(to_satoshi(1)),
+        reserve_price_satoshi=int(to_satoshi(1)),
+        hours=1,
+    )
+    assert aid
+    assert m.place_bid(aid, buyer, amount_satoshi=int(to_satoshi(4)))["success"]
+    bal1 = db.get_balance(buyer)
+    out = m.cancel_auction(aid, seller)
+    assert out["success"] is True
+    assert int(out["refunded_satoshi"]) == int(to_satoshi(4))
+    assert abs(db.get_balance(buyer) - (bal1 + 4.0)) < 1e-9
+    st = m.get_stats()
+    assert st["offers_escrow"] is True
+    assert st["auction_escrow"] is True
+
+
 def test_main_no_ai_validator_forge_hook():
     src = (ROOT / "main.py").read_text(encoding="utf-8")
     assert "ai_validator.update_performance" not in src
@@ -135,8 +178,45 @@ def test_main_no_ai_validator_forge_hook():
 def test_ai_http_source_honesty_needles():
     src = (ROOT / "api" / "http.py").read_text(encoding="utf-8")
     chunk = src.split('path == "/ai/validators"')[1].split("elif path == \"/ai/proposer\"")[0]
-    assert "feature_ai_validator" in chunk
+    assert "feature_ai_validator" in chunk or "_ai_sprout_enabled" in chunk
     assert "honesty" in chunk
+    assert "_ai_sprout_enabled" in src
+    assert 'feature_attr="feature_ai_agents"' in src
+    assert "/ai-agent/stats" in src
+    agent_chunk = src.split('path == "/ai-agent/create"')[1].split("elif path == \"/ai-agent/predict\"")[0]
+    assert "feature_ai_agents" in agent_chunk
+    reg = src.split('path == "/ai/register-validator"')[1].split("elif path ==")[0]
+    assert "_ai_sprout_enabled" in reg
+    assert "feature_ai_validator" in reg
+
+
+def test_feature_flags_includes_ai_validator():
+    from features import FeatureFlags
+
+    flags = FeatureFlags()
+    assert flags.ai_validator is False
+    assert flags.ai_agents is False
+    cfg = MagicMock()
+    cfg.feature_ai_validator = True
+    cfg.feature_ai_agents = False
+    for attr in (
+        "evm_enabled",
+        "bridge_enabled",
+        "feature_nft",
+        "feature_zk",
+        "feature_sharding",
+        "feature_oracles",
+        "feature_wasm",
+        "feature_plasma",
+        "feature_lightning",
+        "feature_pq",
+        "feature_mev",
+    ):
+        setattr(cfg, attr, False)
+    cfg.evm_enabled = True
+    out = FeatureFlags.from_config(cfg)
+    assert out.ai_validator is True
+    assert out.ai_agents is False
 
 
 def test_sdk_no_invent_price_satoshi():

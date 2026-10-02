@@ -251,6 +251,41 @@ class NFTMarketplace:
             )
         )
 
+    def _debit_sat(self, addr: str, sat: int) -> None:
+        from runtime.amount import apply_store_delta_satoshi
+
+        need = int(sat)
+        if need <= 0:
+            raise RuntimeError("invalid debit")
+        if int(self._balance_sat(addr)) < need:
+            raise RuntimeError("insufficient balance or balance backend unavailable")
+        if not apply_store_delta_satoshi(
+            self.db, addr, -need, allow_float_fallback=False
+        ):
+            raise RuntimeError("nft_settle_failed: debit")
+
+    def _credit_sat(self, addr: str, sat: int) -> None:
+        from runtime.amount import apply_store_delta_satoshi
+
+        add = int(sat)
+        if add <= 0:
+            return
+        if not apply_store_delta_satoshi(
+            self.db, addr, add, allow_float_fallback=False
+        ):
+            raise RuntimeError("nft_settle_failed: credit")
+
+    def _credit_proceeds(self, seller: str, creator: str, price_sat: int) -> None:
+        """Credit seller (+ royalty) from already-held buyer funds."""
+        price_sat = int(price_sat)
+        if price_sat <= 0:
+            raise RuntimeError("invalid settle price")
+        royalty_sat = (price_sat * int(self.ROYALTY * 10_000)) // 10_000
+        seller_sat = price_sat - royalty_sat
+        self._credit_sat(seller, seller_sat)
+        if creator != seller and royalty_sat > 0:
+            self._credit_sat(creator, royalty_sat)
+
     def _require_paid_uow(self) -> None:
         """Paid NFT paths need atomic store — refuse silent multi-step commit."""
         if self._has_balance_backend() and not self._has_atomic_uow():
@@ -568,8 +603,14 @@ class NFTMarketplace:
                 "consensus_wired": False,
                 # enabled follows balance backend — never paint live marketplace without it.
                 "enabled": bool(balance_bound),
-                "offers_escrow": False,
-                "auction_escrow": False,
+                "offers_escrow": bool(balance_bound),
+                "auction_escrow": bool(balance_bound),
+                "escrow_note": (
+                    "soft satoshi hold on offer/bid (persisted held_satoshi); "
+                    "not L1 escrow contract"
+                    if balance_bound
+                    else "no balance backend"
+                ),
                 "tier": "app-profile",
                 "adr": "0016",
                 "honesty": HONESTY,
@@ -599,26 +640,34 @@ class NFTMarketplace:
             from runtime.amount import from_satoshi_float
 
             price_abs = float(from_satoshi_float(sat))
-            if not self._has_balance_backend() or self._balance(bidder) < price_abs:
+            if not self._has_balance_backend():
                 return None
             offer_id = native.sha256_hex(
                 f"{token_id}{bidder}{sat}{time.time()}".encode()
             )[:16]
-            self.offers[offer_id] = {
-                "offer_id": offer_id,
-                "token_id": token_id,
-                "bidder": bidder,
-                "price": price_abs,
-                "price_satoshi": sat,
-                "expires_at": int(time.time()) + hours * 3600,
-                "status": "pending",
-                "created_at": int(time.time()),
-            }
-            self._persist_offer(offer_id)
+            try:
+                self._require_paid_uow()
+                with self._uow():
+                    self._debit_sat(bidder, sat)
+                    self.offers[offer_id] = {
+                        "offer_id": offer_id,
+                        "token_id": token_id,
+                        "bidder": bidder,
+                        "price": price_abs,
+                        "price_satoshi": sat,
+                        "held_satoshi": sat,
+                        "expires_at": int(time.time()) + hours * 3600,
+                        "status": "pending",
+                        "created_at": int(time.time()),
+                    }
+                    self._persist_offer(offer_id)
+            except Exception:
+                self.offers.pop(offer_id, None)
+                return None
             return offer_id
 
     def cancel_offer(self, offer_id: str, bidder: str) -> Dict:
-        """Cancel a pending offer (bidder only). No escrow to refund."""
+        """Cancel a pending offer (bidder only); refund soft escrow hold."""
         with self.lock:
             offer = self.offers.get(offer_id)
             if not offer:
@@ -627,44 +676,82 @@ class NFTMarketplace:
                 return {"success": False, "error": "Offer not pending"}
             if str(offer.get("bidder") or "") != str(bidder or ""):
                 return {"success": False, "error": "Not offer bidder"}
-            offer["status"] = "cancelled"
-            self._persist_offer(offer_id)
+            held = int(offer.get("held_satoshi") or 0)
+            old_status = offer["status"]
+            try:
+                if held > 0:
+                    self._require_paid_uow()
+                with self._uow():
+                    if held > 0:
+                        self._credit_sat(bidder, held)
+                        offer["held_satoshi"] = 0
+                    offer["status"] = "cancelled"
+                    self._persist_offer(offer_id)
+            except Exception as exc:
+                offer["status"] = old_status
+                if held > 0:
+                    offer["held_satoshi"] = held
+                return {"success": False, "error": f"nft_uow_failed: {exc}"}
             return {
                 "success": True,
                 "offer_id": offer_id,
                 "status": "cancelled",
-                "offers_escrow": False,
+                "refunded_satoshi": held,
+                "offers_escrow": True,
             }
 
     def accept_offer(self, offer_id: str, seller: str) -> Dict:
-        """Accept an offer — transfer NFT to bidder (single UoW with balances)."""
+        """Accept an offer — settle from soft escrow hold in one UoW."""
         with self.lock:
             offer = self.offers.get(offer_id)
             if not offer or offer["status"] != "pending":
                 return {"success": False, "error": "Offer not found or expired"}
             if int(time.time()) > int(offer.get("expires_at") or 0):
-                offer["status"] = "expired"
-                self._persist_offer(offer_id)
+                held = int(offer.get("held_satoshi") or 0)
+                try:
+                    if held > 0:
+                        self._require_paid_uow()
+                        with self._uow():
+                            self._credit_sat(offer["bidder"], held)
+                            offer["held_satoshi"] = 0
+                            offer["status"] = "expired"
+                            self._persist_offer(offer_id)
+                    else:
+                        offer["status"] = "expired"
+                        self._persist_offer(offer_id)
+                except Exception as exc:
+                    return {"success": False, "error": f"nft_uow_failed: {exc}"}
                 return {"success": False, "error": "Offer expired"}
             token_id = offer["token_id"]
             t = self.tokens.get(token_id)
             if not t or t.owner != seller:
                 return {"success": False, "error": "Not token owner"}
             price = offer["price"]
-            price_sat = offer.get("price_satoshi")
+            price_sat = int(
+                offer.get("price_satoshi")
+                or resolve_price_satoshi(price=price)
+            )
+            held = int(offer.get("held_satoshi") or 0)
             old_owner = t.owner
             old_for_sale = t.for_sale
             old_status = offer["status"]
+            old_held = held
             try:
                 self._require_paid_uow()
                 with self._uow():
-                    self._settle_sale(
-                        offer["bidder"],
-                        seller,
-                        t.creator,
-                        price,
-                        price_satoshi=int(price_sat) if price_sat is not None else None,
-                    )
+                    if held == price_sat and held > 0:
+                        offer["held_satoshi"] = 0
+                        self._credit_proceeds(seller, t.creator, price_sat)
+                    else:
+                        # Legacy path (no hold) — full settle debit.
+                        self._settle_sale(
+                            offer["bidder"],
+                            seller,
+                            t.creator,
+                            price,
+                            price_satoshi=price_sat,
+                        )
+                        offer["held_satoshi"] = 0
                     t.owner = offer["bidder"]
                     t.for_sale = False
                     self._persist_token(token_id)
@@ -673,13 +760,14 @@ class NFTMarketplace:
                     self._record_sale({
                         "token_id": token_id, "from": old_owner,
                         "to": offer["bidder"], "price": price,
-                        "price_satoshi": int(price_sat or resolve_price_satoshi(price=price)),
+                        "price_satoshi": price_sat,
                         "type": "offer", "timestamp": int(time.time()),
                     })
             except Exception as exc:
                 t.owner = old_owner
                 t.for_sale = old_for_sale
                 offer["status"] = old_status
+                offer["held_satoshi"] = old_held
                 err = str(exc)
                 if "insufficient balance" in err or "balance backend" in err:
                     return {
@@ -756,6 +844,8 @@ class NFTMarketplace:
                 "current_bid": start_abs,
                 "current_bid_satoshi": start_sat,
                 "current_bidder": None,
+                "held_satoshi": 0,
+                "held_bidder": None,
                 "auction_type": auction_type,
                 "ends_at": int(time.time()) + hours * 3600,
                 "status": "active",
@@ -799,29 +889,94 @@ class NFTMarketplace:
             from runtime.amount import from_satoshi_float
 
             amount_abs = float(from_satoshi_float(bid_sat))
-            if not self._has_balance_backend() or self._balance_sat(bidder) < bid_sat:
+            if not self._has_balance_backend():
                 return {
                     "success": False,
                     "error": "insufficient balance or balance backend unavailable",
                 }
-            auction["bids"].append(
-                {
-                    "bidder": bidder,
-                    "amount": amount_abs,
-                    "amount_satoshi": bid_sat,
-                    "ts": int(time.time()),
-                }
-            )
-            auction["current_bid"] = amount_abs
-            auction["current_bid_satoshi"] = bid_sat
-            auction["current_bidder"] = bidder
-            self._persist_auction(auction_id)
+            prev_held = int(auction.get("held_satoshi") or 0)
+            prev_bidder = auction.get("held_bidder")
+            old_bid = auction.get("current_bid")
+            old_bid_sat = auction.get("current_bid_satoshi")
+            old_bidder = auction.get("current_bidder")
+            old_bids = list(auction.get("bids") or [])
+            try:
+                self._require_paid_uow()
+                with self._uow():
+                    if prev_held > 0 and prev_bidder:
+                        self._credit_sat(str(prev_bidder), prev_held)
+                    self._debit_sat(bidder, bid_sat)
+                    auction["bids"] = old_bids + [
+                        {
+                            "bidder": bidder,
+                            "amount": amount_abs,
+                            "amount_satoshi": bid_sat,
+                            "ts": int(time.time()),
+                        }
+                    ]
+                    auction["current_bid"] = amount_abs
+                    auction["current_bid_satoshi"] = bid_sat
+                    auction["current_bidder"] = bidder
+                    auction["held_satoshi"] = bid_sat
+                    auction["held_bidder"] = bidder
+                    self._persist_auction(auction_id)
+            except Exception as exc:
+                auction["bids"] = old_bids
+                auction["current_bid"] = old_bid
+                auction["current_bid_satoshi"] = old_bid_sat
+                auction["current_bidder"] = old_bidder
+                auction["held_satoshi"] = prev_held
+                auction["held_bidder"] = prev_bidder
+                err = str(exc)
+                if "insufficient balance" in err or "balance backend" in err:
+                    return {
+                        "success": False,
+                        "error": "insufficient balance or balance backend unavailable",
+                    }
+                return {"success": False, "error": f"nft_uow_failed: {exc}"}
             return {
                 "success": True,
                 "auction_id": auction_id,
                 "current_bid": amount_abs,
                 "current_bid_satoshi": bid_sat,
                 "bidder": bidder,
+                "auction_escrow": True,
+            }
+
+    def cancel_auction(self, auction_id: str, seller: str) -> Dict:
+        """Seller cancels active auction; refunds soft bid hold."""
+        with self.lock:
+            auction = self.auctions.get(auction_id)
+            if not auction:
+                return {"success": False, "error": "Auction not found"}
+            if auction.get("status") != "active":
+                return {"success": False, "error": "Auction not active"}
+            if str(auction.get("seller") or "") != str(seller or ""):
+                return {"success": False, "error": "Not auction seller"}
+            held = int(auction.get("held_satoshi") or 0)
+            held_bidder = auction.get("held_bidder")
+            old_status = auction["status"]
+            try:
+                if held > 0:
+                    self._require_paid_uow()
+                with self._uow():
+                    if held > 0 and held_bidder:
+                        self._credit_sat(str(held_bidder), held)
+                    auction["held_satoshi"] = 0
+                    auction["held_bidder"] = None
+                    auction["status"] = "cancelled"
+                    self._persist_auction(auction_id)
+            except Exception as exc:
+                auction["status"] = old_status
+                auction["held_satoshi"] = held
+                auction["held_bidder"] = held_bidder
+                return {"success": False, "error": f"nft_uow_failed: {exc}"}
+            return {
+                "success": True,
+                "auction_id": auction_id,
+                "status": "cancelled",
+                "refunded_satoshi": held,
+                "auction_escrow": True,
             }
 
     def finalize_auction(self, auction_id: str) -> Dict:
@@ -851,21 +1006,42 @@ class NFTMarketplace:
             )
             old_status = auction["status"]
             token_id = auction["token_id"]
+            held = int(auction.get("held_satoshi") or 0)
+            held_bidder = auction.get("held_bidder")
             t = self.tokens.get(token_id) if winner and price_sat >= reserve_sat else None
             old_owner = t.owner if t else None
             old_for_sale = t.for_sale if t else None
 
             try:
-                if winner and price_sat >= reserve_sat:
+                if held > 0 or (winner and price_sat >= reserve_sat):
                     self._require_paid_uow()
                 with self._uow():
                     if winner and price_sat >= reserve_sat:
                         if not t:
+                            if held > 0 and held_bidder:
+                                self._credit_sat(str(held_bidder), held)
+                                auction["held_satoshi"] = 0
+                                auction["held_bidder"] = None
                             raise RuntimeError("Auction token not found")
-                        # Re-check winner balance at settle (no bid escrow).
-                        self._settle_sale(
-                            winner, old_owner, t.creator, price, price_satoshi=price_sat
-                        )
+                        if (
+                            held == price_sat
+                            and held > 0
+                            and str(held_bidder or "") == str(winner)
+                        ):
+                            auction["held_satoshi"] = 0
+                            auction["held_bidder"] = None
+                            self._credit_proceeds(old_owner, t.creator, price_sat)
+                        else:
+                            # Legacy path without hold — full settle.
+                            self._settle_sale(
+                                winner,
+                                old_owner,
+                                t.creator,
+                                price,
+                                price_satoshi=price_sat,
+                            )
+                            auction["held_satoshi"] = 0
+                            auction["held_bidder"] = None
                         t.owner = winner
                         t.for_sale = False
                         self._persist_token(token_id)
@@ -878,6 +1054,11 @@ class NFTMarketplace:
                             "type": "auction",
                             "timestamp": int(time.time()),
                         })
+                    elif held > 0 and held_bidder:
+                        # Reserve not met — refund soft escrow.
+                        self._credit_sat(str(held_bidder), held)
+                        auction["held_satoshi"] = 0
+                        auction["held_bidder"] = None
                     auction["status"] = "finalized"
                     self._persist_auction(auction_id)
             except Exception as exc:

@@ -105,24 +105,31 @@ def main() -> int:
         if tok.get("price_satoshi") is None:
             return _fail("token missing price_satoshi")
 
-        # offer / cancel / expired accept
+        # offer / cancel / expired accept (soft escrow hold)
         db.set_balance(seller, 1000.0)
         db.set_balance(buyer, 1000.0)
         r2 = m.mint("lab2", "Lab2", "d", "img", seller, price=5.0)
         if not r2.get("success"):
             return _fail(f"mint lab2 failed: {r2}")
+        bal_b0 = db.get_balance(buyer)
         oid = m.make_offer("lab2", buyer, price_satoshi=int(to_satoshi(5)), hours=1)
         if not oid:
             return _fail("make_offer failed")
+        if int(m.offers[oid].get("held_satoshi") or 0) != int(to_satoshi(5)):
+            return _fail("offer soft escrow hold missing")
+        if abs(db.get_balance(buyer) - (bal_b0 - 5.0)) > 1e-9:
+            return _fail("make_offer did not debit soft escrow")
         if not m.cancel_offer(oid, buyer).get("success"):
             return _fail("cancel_offer failed")
+        if abs(db.get_balance(buyer) - bal_b0) > 1e-9:
+            return _fail("cancel_offer did not refund soft escrow")
         oid2 = m.make_offer("lab2", buyer, price_satoshi=int(to_satoshi(5)), hours=1)
         m.offers[oid2]["expires_at"] = 0
         exp = m.accept_offer(oid2, seller)
         if exp.get("success"):
             return _fail("expired offer must refuse")
 
-        # auction: refuse early finalize, then settle after ends_at
+        # auction: soft escrow bid hold, cancel refund, then finalize after ends_at
         db.set_balance(seller, 1000.0)
         db.set_balance(buyer, 1000.0)
         assert m.mint("lab3", "Lab3", "d", "img", seller, price=5.0).get("success")
@@ -138,6 +145,30 @@ def main() -> int:
         if m.finalize_auction(aid).get("success"):
             return _fail("early finalize must refuse")
         assert m.place_bid(aid, buyer, amount_satoshi=int(to_satoshi(2))).get("success")
+        held = int(m.auctions[aid].get("held_satoshi") or 0)
+        if held != int(to_satoshi(2)):
+            return _fail(f"auction soft escrow hold mismatch: {held}")
+
+        assert m.mint("lab3b", "Lab3b", "d", "img", seller, price=5.0).get("success")
+        aid2 = m.create_auction(
+            "lab3b",
+            seller,
+            start_price_satoshi=int(to_satoshi(1)),
+            reserve_price_satoshi=int(to_satoshi(1)),
+            hours=1,
+        )
+        if not aid2:
+            return _fail("create_auction lab3b failed")
+        assert m.place_bid(aid2, buyer, amount_satoshi=int(to_satoshi(3))).get("success")
+        bal_pre_cancel = db.get_balance(buyer)
+        cancel = m.cancel_auction(aid2, seller)
+        if not cancel.get("success"):
+            return _fail(f"cancel_auction failed: {cancel}")
+        if int(cancel.get("refunded_satoshi") or 0) != int(to_satoshi(3)):
+            return _fail("cancel_auction refund mismatch")
+        if abs(db.get_balance(buyer) - (bal_pre_cancel + 3.0)) > 1e-9:
+            return _fail("cancel_auction did not refund bidder balance")
+
         m.auctions[aid]["ends_at"] = 0
         fin = m.finalize_auction(aid)
         if not fin.get("success"):
@@ -159,8 +190,10 @@ def main() -> int:
         st = m.get_stats()
         if st.get("enabled") is not True:
             return _fail("enabled must follow balance backend")
-        if st.get("offers_escrow") is not False or st.get("auction_escrow") is not False:
-            return _fail("escrow honesty flags must be false")
+        if st.get("offers_escrow") is not True or st.get("auction_escrow") is not True:
+            return _fail("soft escrow flags must be true when balance-bound")
+        if "soft satoshi hold" not in str(st.get("escrow_note") or ""):
+            return _fail("escrow_note must disclose soft hold")
 
         try:
             db.close()
@@ -180,7 +213,7 @@ def main() -> int:
     else:
         print("SKIP: staging :19080 not open")
 
-    print("OK: nft_lab mint/list/buy/offer/auction/delist satoshi honesty")
+    print("OK: nft_lab mint/list/buy/offer/auction/cancel_auction soft-escrow honesty")
     print("RESULT: PASS nft_lab")
     return 0
 

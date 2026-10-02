@@ -91,6 +91,9 @@ class NftMarketplacePort(Protocol):
     def finalize_auction(self, auction_id: str) -> Dict[str, Any]:
         ...
 
+    def cancel_auction(self, auction_id: str, seller: str) -> Dict[str, Any]:
+        ...
+
     def get_token(self, token_id: str) -> Optional[Dict[str, Any]]:
         ...
 
@@ -189,6 +192,9 @@ class NullNftMarketplacePort:
 
     def finalize_auction(self, auction_id: str) -> Dict[str, Any]:
         return _disabled("finalize_auction")
+
+    def cancel_auction(self, auction_id: str, seller: str) -> Dict[str, Any]:
+        return _disabled("cancel_auction")
 
     def get_token(self, token_id: str) -> Optional[Dict[str, Any]]:
         return None
@@ -359,6 +365,13 @@ class NftMarketplaceAdapter:
         if not callable(fn):
             return {"success": False, "error": "finalize_unsupported"}
         result = fn(auction_id)
+        return result if isinstance(result, dict) else {"success": True, "result": result}
+
+    def cancel_auction(self, auction_id: str, seller: str) -> Dict[str, Any]:
+        fn = getattr(self._m, "cancel_auction", None)
+        if not callable(fn):
+            return {"success": False, "error": "cancel_auction_unsupported"}
+        result = fn(auction_id, seller)
         return result if isinstance(result, dict) else {"success": True, "result": result}
 
     def get_token(self, token_id: str) -> Optional[Dict[str, Any]]:
