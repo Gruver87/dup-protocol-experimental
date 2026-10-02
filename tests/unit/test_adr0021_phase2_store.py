@@ -14,10 +14,19 @@ if str(ROOT) not in sys.path:
 from blockchain.mempool import Mempool, MempoolTransaction
 from blockchain.ports import MempoolPort
 
+_FIXED_TS = 1_700_000_100.0
 
-def _mk_tx(h: str, fee: float, nonce: int = 0) -> MempoolTransaction:
+
+def _mk_tx(
+    label: str,
+    fee: float,
+    nonce: int = 0,
+    *,
+    timestamp: float = _FIXED_TS,
+) -> MempoolTransaction:
+    # label is harness-only; mempool rebinds to canonical identity (§7).
     return MempoolTransaction(
-        tx_hash=h,
+        tx_hash=label,
         from_addr="0x1111111111111111111111111111111111111111",
         to_addr="0x2222222222222222222222222222222222222222",
         amount=1.0,
@@ -27,22 +36,30 @@ def _mk_tx(h: str, fee: float, nonce: int = 0) -> MempoolTransaction:
         public_key="",
         data="",
         gas=21_000,
+        timestamp=timestamp,
     )
 
 
 def test_mempool_port_and_fee_sort() -> None:
     pool = Mempool(max_size=100, min_fee=0.0)
     assert isinstance(pool, MempoolPort)
-    assert pool.add(_mk_tx("low", 1.0), signature_preverified=True)
-    assert pool.add(_mk_tx("high", 9.0), signature_preverified=True)
-    assert pool.add(_mk_tx("mid", 5.0), signature_preverified=True)
+    low = _mk_tx("low", 1.0, timestamp=_FIXED_TS)
+    high = _mk_tx("high", 9.0, timestamp=_FIXED_TS + 1)
+    mid = _mk_tx("mid", 5.0, timestamp=_FIXED_TS + 2)
+    assert pool.add(low, signature_preverified=True)
+    assert pool.add(high, signature_preverified=True)
+    assert pool.add(mid, signature_preverified=True)
     assert pool.get_size() == 3
-    ordered = [t.tx_hash for t in pool.get(limit=10)]
-    assert ordered == ["high", "mid", "low"]
-    assert all(int(t.fee_satoshi) > 0 for t in pool.get(limit=10))
-    assert pool.transactions.get("high") is not None
-    assert pool.remove("mid")
-    assert not pool.has_transaction("mid")
+    ordered = pool.get(limit=10)
+    assert [int(t.fee_satoshi) for t in ordered] == [
+        int(high.fee_satoshi),
+        int(mid.fee_satoshi),
+        int(low.fee_satoshi),
+    ]
+    assert all(int(t.fee_satoshi) > 0 for t in ordered)
+    assert pool.transactions.get(high.tx_hash) is not None
+    assert pool.remove(mid.tx_hash)
+    assert not pool.has_transaction(mid.tx_hash)
     assert pool.get_size() == 2
     stats = pool.get_stats()
     assert stats["size"] == 2
@@ -52,13 +69,13 @@ def test_mempool_port_and_fee_sort() -> None:
 def test_fee_satoshi_sort_beats_float_ambiguity() -> None:
     """Canonical order is fee_satoshi, not ABS float."""
     pool = Mempool(max_size=16, min_fee=0.0)
-    a = _mk_tx("a", 0.000001)  # 1 sat
-    b = _mk_tx("b", 0.000002)  # 2 sat
+    a = _mk_tx("a", 0.000001, timestamp=_FIXED_TS)  # 1 sat
+    b = _mk_tx("b", 0.000002, timestamp=_FIXED_TS + 1)  # 2 sat
     assert a.fee_satoshi == 1
     assert b.fee_satoshi == 2
     assert pool.add(a, signature_preverified=True)
     assert pool.add(b, signature_preverified=True)
-    assert [t.tx_hash for t in pool.get(limit=10)] == ["b", "a"]
+    assert [int(t.fee_satoshi) for t in pool.get(limit=10)] == [2, 1]
 
 
 def test_rust_store_preferred_when_native_on() -> None:
@@ -82,9 +99,12 @@ def test_rust_store_preferred_when_native_on() -> None:
 
 def test_duplicate_and_min_fee_refuse() -> None:
     pool = Mempool(max_size=10, min_fee=1.0)
-    assert pool.add(_mk_tx("a", 2.0), signature_preverified=True)
-    assert not pool.add(_mk_tx("a", 3.0), signature_preverified=True)
-    assert not pool.add(_mk_tx("b", 0.5), signature_preverified=True)
+    first = _mk_tx("a", 2.0, timestamp=_FIXED_TS)
+    assert pool.add(first, signature_preverified=True)
+    # Same payload identity (same timestamp/nonce/value) → duplicate refuse.
+    dup = _mk_tx("a", 3.0, timestamp=_FIXED_TS)
+    assert not pool.add(dup, signature_preverified=True)
+    assert not pool.add(_mk_tx("b", 0.5, timestamp=_FIXED_TS + 1), signature_preverified=True)
     assert pool.get_size() == 1
 
 
@@ -105,7 +125,8 @@ def test_store_fault_demotes_to_python() -> None:
         reg._backends[NativeFamily.MEMPOOL_STORE] = "rust"
 
         pool = Mempool(max_size=16, min_fee=0.0)
-        assert pool.add(_mk_tx("keep", 3.0), signature_preverified=True)
+        keep = _mk_tx("keep", 3.0, timestamp=_FIXED_TS)
+        assert pool.add(keep, signature_preverified=True)
 
         class _Boom:
             def insert(self, *_a, **_k):
@@ -119,13 +140,13 @@ def test_store_fault_demotes_to_python() -> None:
 
         pool._native_store = _Boom()
         pool._store_backend = "rust"
-        # insert path demotes and accepts via python
-        assert pool.add(_mk_tx("after", 5.0), signature_preverified=True)
+        after = _mk_tx("after", 5.0, timestamp=_FIXED_TS + 1)
+        assert pool.add(after, signature_preverified=True)
         assert pool._native_store is None
         assert pool.get_stats().get("store_backend") == "python"
         assert pool.get_stats().get("store_demoted") is True
         assert int(pool.get_stats().get("demote_count") or 0) >= 1
-        assert pool.has_transaction("after")
+        assert pool.has_transaction(after.tx_hash)
         # prior tx may be lost if migrate failed on boom get_sorted — after must survive
         assert pool.get_size() >= 1
     finally:

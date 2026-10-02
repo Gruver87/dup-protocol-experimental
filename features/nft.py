@@ -812,6 +812,13 @@ class NFTMarketplace:
                         "error": "insufficient balance or balance backend unavailable",
                     }
                 if "token not found" in err.lower():
+                    # Fail-closed: token vanished mid-auction — mark settlement
+                    # failed (do not leave auction ``active`` after refuse).
+                    auction["status"] = "settlement_failed"
+                    try:
+                        self._persist_auction(auction_id)
+                    except Exception:
+                        pass
                     return {"success": False, "error": "Auction token not found"}
                 return {"success": False, "error": f"nft_uow_failed: {exc}"}
 
