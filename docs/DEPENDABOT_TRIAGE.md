@@ -1,7 +1,15 @@
 # Dependabot triage (industrial harden)
 
-**Updated:** 2026-09-21  
+**Updated:** 2026-10-02  
 **Rule:** no kitchen-sink merges — only bumps that keep CI green and reduce risk.
+
+## Closed on Experimental + pin (2026-10-02)
+
+| Item | Action |
+|------|--------|
+| pip-audit cryptography / PyJWT / wasmtime | Bumped runtime pins `cryptography==50.0.2`, `PyJWT==2.15.1`, `wasmtime==49.0.0` + hashed `requirements-runtime.lock`; CI audits runtime file |
+| Supply-chain ops | Digest-pinned `Dockerfile.prod` bases; cargo-audit ignores owner/expiry; CODEOWNERS on L1 paths |
+| `RUSTSEC-2026-0285` rustls | Already on **0.23.45** (prior wave) |
 
 ## Closed on Experimental (2026-09-21)
 
@@ -22,13 +30,12 @@
 | — | h2 0.3.27 via hyper 0.14 / igd-next | `RUSTSEC-2026-0258` ignored interim (libp2p UPnP lab; patch is h2≥0.4.16 → hyper 1.x). Prod mesh stays TCP+TLS. |
 | [#2](https://github.com/Gruver87/dup-protocol/pull/2) | rand 0.8→0.10 | Dev-dep churn; wait for pyo3 wave |
 | [#10](https://github.com/Gruver87/dup-protocol/pull/10) | socket2 0.5→0.6 | Native P2P surface; needs soak |
-| [#8](https://github.com/Gruver87/dup-protocol/pull/8) | wasmtime major | R&D FEATURE only; prod OFF |
-| [#14](https://github.com/Gruver87/dup-protocol/pull/14) | cryptography major | Needs full pytest |
 | [#12](https://github.com/Gruver87/dup-protocol/pull/12) | redis major | Mesh rate-limit path |
 | [#13](https://github.com/Gruver87/dup-protocol/pull/13) | websockets major | WS RPC path |
-| [#9](https://github.com/Gruver87/dup-protocol/pull/9) | pyjwt minor+ | Auth surface — CI required |
 | [#11](https://github.com/Gruver87/dup-protocol/pull/11) | serde_json patch | Usually safe — merge after Tests green |
 | [#15](https://github.com/Gruver87/dup-protocol/pull/15) | sha2 0.10→0.11 | Native hash surface — after pyo3 |
+
+~~[#8] wasmtime~~ / ~~[#14] cryptography~~ / ~~[#9] pyjwt~~ — closed via runtime pin bump 2026-10-02 (not Dependabot PR merge).
 
 ## Safe to merge when Actions CI is green (actions only)
 
