@@ -111,3 +111,5 @@ def test_p2p_no_gas_price_or_invent():
     src = (ROOT / "network" / "p2p_node.py").read_text(encoding="utf-8")
     assert "fee_gas_price_unset" in src
     assert 'gas_price_wei", 0.001) or 0.001' not in src
+    assert "p2p_mempool_require_explicit_gas" in src
+    assert "int(data.get(\"gas\", 0) or 0) or 21_000" not in src

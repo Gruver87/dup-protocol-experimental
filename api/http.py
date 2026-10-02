@@ -61,6 +61,45 @@ def _http_stake_abs(body: Dict[str, Any], cfg: Any) -> tuple[float, int]:
     return stake_abs, int(to_satoshi(stake_abs))
 
 
+def _http_amount_abs(
+    body: Dict[str, Any],
+    cfg: Any,
+    *,
+    field: str = "amount",
+    sat_keys: tuple[str, ...] = ("amount_satoshi", "value_satoshi"),
+    abs_keys: tuple[str, ...] = ("amount", "value"),
+) -> tuple[float, int]:
+    """Resolve REST money: prefer satoshi keys; prod refuses float-only."""
+    from runtime.amount import from_satoshi_float
+
+    for key in sat_keys:
+        raw_sat = body.get(key, None)
+        if raw_sat is None or str(raw_sat).strip() == "":
+            continue
+        try:
+            amount_sat = int(raw_sat)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"{key} must be an integer") from exc
+        if amount_sat <= 0:
+            raise ValueError(f"{key} must be positive")
+        return float(from_satoshi_float(amount_sat)), amount_sat
+
+    mode = str(getattr(cfg, "deployment_mode", "dev") or "dev").strip().lower()
+    if mode == "prod":
+        raise ValueError(f"{sat_keys[0]} required (prod refuse float-only {field})")
+    raw_abs = None
+    for key in abs_keys:
+        if key in body and body.get(key) is not None:
+            raw_abs = body.get(key)
+            break
+    if raw_abs is None:
+        raise ValueError(f"{sat_keys[0]} or {field} required")
+    amount_abs = _http_abs(raw_abs, field=field)
+    if amount_abs <= 0:
+        raise ValueError(f"{field} must be positive")
+    return amount_abs, int(to_satoshi(amount_abs))
+
+
 def _nft_mutation_authorized(cfg: Any, body: Dict[str, Any], actor: str) -> Optional[str]:
     """Wave L: when JWT admin is not enforced, require actor-bound signature.
 
@@ -6689,7 +6728,6 @@ class RESTHandler(BaseHTTPRequestHandler):
             elif path == "/tx/sign":
                 from_addr = body.get("from", "")
                 to_addr = body.get("to", "")
-                amount = _http_abs(body.get("amount", 0))
                 nonce = int(body.get("nonce", 0))
                 private_key = body.get("private_key", "")
                 if not private_key:
@@ -6702,6 +6740,9 @@ class RESTHandler(BaseHTTPRequestHandler):
                     from runtime.amount import from_satoshi_float, to_satoshi
                     from crypto.tx_signer import TransactionSigner
                     from crypto.keys import KeyGenerator
+                    amount, amount_sat = _http_amount_abs(
+                        body, self.__class__.config, field="amount"
+                    )
                     if body.get("fee_satoshi") is not None:
                         fee_sat = int(body["fee_satoshi"])
                         fee = from_satoshi_float(fee_sat)
@@ -6712,7 +6753,7 @@ class RESTHandler(BaseHTTPRequestHandler):
                         "from": from_addr,
                         "to": to_addr,
                         "amount": amount,
-                        "amount_satoshi": int(to_satoshi(amount)),
+                        "amount_satoshi": int(amount_sat),
                         "nonce": nonce,
                         "fee": fee,
                         "fee_satoshi": fee_sat,
@@ -6790,12 +6831,26 @@ class RESTHandler(BaseHTTPRequestHandler):
                 if not ln:
                     self._error(503, "Lightning not enabled"); return
                 peer = body.get("peer_address", "")
-                capacity = _http_abs(body.get("capacity", 0), field="capacity")
-                if not peer or capacity <= 0:
+                if not peer:
                     self._error(400, "peer_address and capacity required"); return
+                try:
+                    capacity, capacity_sat = _http_amount_abs(
+                        body,
+                        self.__class__.config,
+                        field="capacity",
+                        sat_keys=("capacity_satoshi", "amount_satoshi"),
+                        abs_keys=("capacity", "amount"),
+                    )
+                except ValueError as exc:
+                    self._error(400, str(exc)); return
                 cid = ln.open_channel(peer, capacity)
                 if cid:
-                    self._json({"success": True, "channel_id": cid, "capacity": capacity})
+                    self._json({
+                        "success": True,
+                        "channel_id": cid,
+                        "capacity": capacity,
+                        "capacity_satoshi": int(capacity_sat),
+                    })
                 else:
                     self._error(400, "Could not open channel (capacity out of range or insufficient balance)")
 
@@ -6816,12 +6871,22 @@ class RESTHandler(BaseHTTPRequestHandler):
                     self._error(503, "Lightning not enabled"); return
                 cid = body.get("channel_id", "")
                 to_node = body.get("to", "")
-                amount = _http_abs(body.get("amount", 0))
-                if not cid or not to_node or amount <= 0:
+                if not cid or not to_node:
                     self._error(400, "channel_id, to, amount required"); return
+                try:
+                    amount, amount_sat = _http_amount_abs(
+                        body, self.__class__.config, field="amount"
+                    )
+                except ValueError as exc:
+                    self._error(400, str(exc)); return
                 pid = ln.send_payment(cid, to_node, amount)
                 if pid:
-                    self._json({"success": True, "payment_id": pid, "amount": amount})
+                    self._json({
+                        "success": True,
+                        "payment_id": pid,
+                        "amount": amount,
+                        "amount_satoshi": int(amount_sat),
+                    })
                 else:
                     self._error(400, "Payment failed (insufficient balance or invalid channel)")
 
@@ -6899,15 +6964,25 @@ class RESTHandler(BaseHTTPRequestHandler):
                     self._error(503, "CryptoWill not enabled"); return
                 owner = body.get("owner", "")
                 heir = body.get("heir", "")
-                amount = _http_abs(body.get("amount", 0))
                 assets = body.get("assets", {})
                 delay = int(body.get("execution_delay", 86400))
                 witnesses = body.get("witnesses", [])
-                if not owner or not heir or amount <= 0:
+                if not owner or not heir:
                     self._error(400, "owner, heir, amount required"); return
+                try:
+                    amount, amount_sat = _http_amount_abs(
+                        body, self.__class__.config, field="amount"
+                    )
+                except ValueError as exc:
+                    self._error(400, str(exc)); return
                 wid = cw.create_will(owner, heir, amount, assets, delay, witnesses)
                 if wid:
-                    self._json({"success": True, "will_id": wid, "execution_delay_seconds": delay})
+                    self._json({
+                        "success": True,
+                        "will_id": wid,
+                        "execution_delay_seconds": delay,
+                        "amount_satoshi": int(amount_sat),
+                    })
                 else:
                     self._error(400, "Could not create will (insufficient balance?)")
 
@@ -6945,12 +7020,22 @@ class RESTHandler(BaseHTTPRequestHandler):
                 if not pl:
                     self._error(503, "Plasma not enabled"); return
                 from_addr = body.get("from", "")
-                amount = _http_abs(body.get("amount", 0))
-                if not from_addr or amount <= 0:
+                if not from_addr:
                     self._error(400, "from and amount required"); return
+                try:
+                    amount, amount_sat = _http_amount_abs(
+                        body, self.__class__.config, field="amount"
+                    )
+                except ValueError as exc:
+                    self._error(400, str(exc)); return
                 did = pl.deposit(from_addr, amount)
                 if did:
-                    self._json({"success": True, "deposit_id": did, "amount": amount})
+                    self._json({
+                        "success": True,
+                        "deposit_id": did,
+                        "amount": amount,
+                        "amount_satoshi": int(amount_sat),
+                    })
                 else:
                     self._error(400, "Deposit failed (insufficient L1 balance)")
 
@@ -6960,12 +7045,21 @@ class RESTHandler(BaseHTTPRequestHandler):
                     self._error(503, "Plasma not enabled"); return
                 from_addr = body.get("from", "")
                 to_addr = body.get("to", "")
-                amount = _http_abs(body.get("amount", 0))
-                if not from_addr or not to_addr or amount <= 0:
+                if not from_addr or not to_addr:
                     self._error(400, "from, to, amount required"); return
+                try:
+                    amount, amount_sat = _http_amount_abs(
+                        body, self.__class__.config, field="amount"
+                    )
+                except ValueError as exc:
+                    self._error(400, str(exc)); return
                 txh = pl.submit_transaction(from_addr, to_addr, amount)
                 if txh:
-                    self._json({"success": True, "tx_hash": txh})
+                    self._json({
+                        "success": True,
+                        "tx_hash": txh,
+                        "amount_satoshi": int(amount_sat),
+                    })
                 else:
                     self._error(400, "Transfer failed (insufficient L2 balance)")
 
@@ -9752,7 +9846,23 @@ def _handle_send_tx_with_wallet(tx_obj: Dict, bc, mp, cfg, wallet=None) -> str:
         to_addr = body.get("to", body.get("to_addr", ""))
         if not to_addr:
             raise ValueError("auto_sign requires 'to' address")
-        value = _parse_tx_value(body.get("value", body.get("amount", 0)))
+        from blockchain.mempool_wire import WireMoneyMissing, resolve_wire_amount_sat
+
+        try:
+            _amount_sat, value = resolve_wire_amount_sat(
+                body, require_satoshi=_is_production_cfg(cfg)
+            )
+        except WireMoneyMissing as exc:
+            raise ValueError(str(exc)) from exc
+        gas_raw = body.get("gas", body.get("gas_limit"))
+        if gas_raw is None or str(gas_raw).strip() == "":
+            raise ValueError("gas or gas_limit required for auto_sign")
+        if isinstance(gas_raw, str) and gas_raw.startswith("0x"):
+            gas_limit = int(gas_raw, 16)
+        else:
+            gas_limit = int(gas_raw)
+        if gas_limit <= 0:
+            raise ValueError("gas or gas_limit must be positive")
         nonce_raw = body.get("nonce")
         if nonce_raw is None:
             nonce = bc.db.get_nonce(wallet.address)
@@ -9766,7 +9876,7 @@ def _handle_send_tx_with_wallet(tx_obj: Dict, bc, mp, cfg, wallet=None) -> str:
             nonce,
             getattr(cfg, "chain_id", 1),
             data=body.get("data", body.get("input", "")),
-            gas_limit=int(body.get("gas", body.get("gas_limit", 21000))),
+            gas_limit=gas_limit,
         )
         body.update(signed)
         if "gas_limit" in body and "gas" not in body:
@@ -9797,17 +9907,33 @@ def _handle_send_tx(raw_hex: str, bc, mp, cfg) -> str:
 
 def _handle_send_tx_obj(tx_obj: Dict, bc, mp, cfg) -> str:
     """Принимает объект транзакции, валидирует, добавляет в мемпул."""
+    import math
+
     from core.blockchain import Transaction
     from core.tx_identity import bind_identity_from_fields
     from blockchain.mempool import MempoolTransaction
+    from blockchain.mempool_wire import WireMoneyMissing, resolve_wire_amount_sat
 
     from_addr = tx_obj.get("from", tx_obj.get("from_addr", ""))
     to_addr = tx_obj.get("to", tx_obj.get("to_addr", ""))
-    value_raw = tx_obj.get("value", tx_obj.get("amount", 0))
-    value = _parse_tx_value(value_raw)
+    try:
+        amount_sat, value = resolve_wire_amount_sat(
+            tx_obj, require_satoshi=_is_production_cfg(cfg)
+        )
+    except WireMoneyMissing as exc:
+        raise ValueError(str(exc)) from exc
 
-    gas = int(tx_obj.get("gas", cfg.base_gas_price), 16) if isinstance(
-        tx_obj.get("gas"), str) else int(tx_obj.get("gas", cfg.base_gas_price))
+    gas_raw = tx_obj.get("gas", tx_obj.get("gas_limit"))
+    if gas_raw is None or str(gas_raw).strip() == "":
+        raise ValueError("gas or gas_limit required")
+    if isinstance(gas_raw, str) and (
+        gas_raw.startswith("0x") or gas_raw.startswith("0X")
+    ):
+        gas = int(gas_raw, 16)
+    else:
+        gas = int(gas_raw)
+    if gas <= 0:
+        raise ValueError("gas or gas_limit must be positive")
     nonce = int(tx_obj.get("nonce", 0), 16) if isinstance(
         tx_obj.get("nonce"), str) else int(tx_obj.get("nonce", 0))
     data = tx_obj.get("data", tx_obj.get("input", ""))
@@ -9854,12 +9980,24 @@ def _handle_send_tx_obj(tx_obj: Dict, bc, mp, cfg) -> str:
     from runtime.amount import from_satoshi_float, plan_transfer_fees_sat
 
     adapter = DatabaseStateAdapter(bc.db)
-    fee_plan = plan_transfer_fees_sat(
-        int(gas),
-        getattr(cfg, "gas_price_wei", 0) or 0,
-        getattr(cfg, "burn_rate", 0) or 0,
-        value,
-    )
+    # Do not invent gas_price via `or 0` when unset/zero.
+    _gp_raw = getattr(cfg, "gas_price_wei", None)
+    if _gp_raw is None:
+        raise ValueError("fee_gas_price_unset")
+    try:
+        _gp = float(_gp_raw)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("fee_gas_price_unparseable") from exc
+    if (not math.isfinite(_gp)) or _gp <= 0:
+        raise ValueError("fee_gas_price_unset")
+    _br_raw = getattr(cfg, "burn_rate", 0)
+    try:
+        _br = float(_br_raw if _br_raw is not None else 0.0)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("fee_burn_rate_unparseable") from exc
+    if (not math.isfinite(_br)) or _br < 0:
+        raise ValueError("fee_burn_rate_invalid")
+    fee_plan = plan_transfer_fees_sat(int(gas), _gp, _br, value)
     fee_satoshi = int(fee_plan["fee_sat"])
     fee = from_satoshi_float(fee_satoshi)
     tx_dict = {
@@ -9867,6 +10005,7 @@ def _handle_send_tx_obj(tx_obj: Dict, bc, mp, cfg) -> str:
         "to": to_addr,
         "amount": value,
         "value": value,
+        "amount_satoshi": int(amount_sat),
         "nonce": nonce,
         "fee": fee,
         "fee_satoshi": fee_satoshi,
@@ -9898,6 +10037,7 @@ def _handle_send_tx_obj(tx_obj: Dict, bc, mp, cfg) -> str:
         data=tx_obj.get("data", tx_obj.get("input", "")),
         gas=gas,
         fee_satoshi=fee_satoshi,
+        amount_satoshi=int(amount_sat),
         timestamp=float(tx.timestamp),
     )
     if not mp.add(mp_tx):
