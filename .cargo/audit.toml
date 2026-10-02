@@ -1,34 +1,48 @@
-# cargo-audit project config — industrial harden (2026-08-02)
-# Full pyo3 0.22 → 0.29 migration is tracked via Dependabot PR #7 (386+ API breaks).
-# These advisories do not apply to call sites we use (no PyString::from_object,
-# no PyCFunction::new_closure). Remove ignores when pyo3 >= 0.29 lands.
+# cargo-audit project config — industrial / experimental harden
+# Each ignore: owner · reachability · mitigation · clear condition · review-by
+# Green cargo-audit with ignores ≠ absence of advisories (audit 2026-10-02 §16).
 
 [advisories]
 ignore = [
-    # Risk of buffer overflow in PyString::from_object — unused API; fix >=0.24.1
+    # RUSTSEC-2025-0020 — pyo3 PyString::from_object buffer overflow
+    # owner: @Gruver87 | reachability: unused API (no from_object call sites)
+    # mitigation: do not call PyString::from_object | clear: pyo3 >= 0.24.1 / PR #7
+    # review-by: 2026-12-31
     "RUSTSEC-2025-0020",
-    # Missing Sync on PyCFunction::new_closure — unused API; fix >=0.29.0
+
+    # RUSTSEC-2026-0177 — pyo3 PyCFunction::new_closure missing Sync
+    # owner: @Gruver87 | reachability: unused API
+    # mitigation: do not call new_closure | clear: pyo3 >= 0.29.0 / PR #7
+    # review-by: 2026-12-31
     "RUSTSEC-2026-0177",
-    # rkyv OOB via Rc/Arc archives — optional dep of rust_decimal; our crate uses
-    # rust_decimal with default-features=false + features=["std"] only (no rkyv
-    # feature). cargo-audit still scans the lock entry. Clear when rust_decimal
-    # drops unused optional lock edges or we migrate off decimal serialization paths.
+
+    # RUSTSEC-2026-0235 — rkyv OOB via Rc/Arc (optional rust_decimal feature)
+    # owner: @Gruver87 | reachability: rust_decimal default-features=false + std only
+    # mitigation: rkyv feature not enabled | clear: drop unused lock edges
+    # review-by: 2026-12-31
     "RUSTSEC-2026-0235",
-    # --- ADR 0019 rust-libp2p opt-in (FEATURE_LIBP2P); prod mesh remains TCP+TLS ---
-    # hickory-proto via libp2p-mdns (Slice F LAN discovery). Fix needs hickory>=0.26
-    # which libp2p-mdns 0.46 has not adopted. Lab-only; not industrial default mesh.
+
+    # --- ADR 0019 rust-libp2p opt-in (FEATURE_LIBP2P); prod mesh = TCP+TLS ---
+
+    # RUSTSEC-2026-0119 — hickory-proto via libp2p-mdns
+    # owner: @Gruver87 | reachability: lab mDNS only (feature_libp2p)
+    # mitigation: prod feature_libp2p=false | clear: libp2p-mdns → hickory>=0.26
+    # review-by: 2026-12-31
     "RUSTSEC-2026-0119",
-    # ring 0.16 / rustls-webpki 0.101 via stale optional libp2p-tls lock edges
-    # (we enable Noise+TCP only; tls/quic/websocket features OFF). Clear when
-    # Cargo.lock is regenerated without unused libp2p-tls / rcgen 0.11 edges or
-    # when upstream libp2p-tls bumps webpki.
+
+    # RUSTSEC-2025-0009 / 2026-0098 / 0099 / 0104 — ring/webpki via stale libp2p-tls
+    # owner: @Gruver87 | reachability: optional tls lock edges; Noise+TCP path only
+    # mitigation: tls/quic/websocket features OFF; prod libp2p=false
+    # clear: regenerate lock without libp2p-tls / upstream bump
+    # review-by: 2026-12-31
     "RUSTSEC-2025-0009",
     "RUSTSEC-2026-0098",
     "RUSTSEC-2026-0099",
     "RUSTSEC-2026-0104",
-    # h2 0.3.27 unbounded empty DATA frames (RUSTSEC-2026-0258, issued 2026-08-18).
-    # Comes from hyper 0.14 via igd-next (libp2p UPnP/NAT lab). Patch is h2>=0.4.16
-    # which needs hyper 1.x; libp2p 0.54 has not moved that edge. Prod mesh is
-    # TCP+TLS (feature_libp2p=false). Clear when libp2p drops hyper 0.14 / igd-next.
+
+    # RUSTSEC-2026-0258 — h2 0.3.27 via hyper 0.14 / igd-next (UPnP lab)
+    # owner: @Gruver87 | reachability: libp2p UPnP lab only
+    # mitigation: prod feature_libp2p=false | clear: libp2p drops hyper 0.14
+    # review-by: 2026-12-31
     "RUSTSEC-2026-0258",
 ]
