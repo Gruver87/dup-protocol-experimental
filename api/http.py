@@ -6060,13 +6060,32 @@ class RESTHandler(BaseHTTPRequestHandler):
                 nft = self.__class__.nft
                 if not nft:
                     self._error(503, "NFT module not enabled"); return
+                # Omit price → 0 satoshi list price (do not invent defaults).
+                has_price = any(
+                    body.get(k) is not None and str(body.get(k)).strip() != ""
+                    for k in ("price_satoshi", "amount_satoshi", "price", "amount")
+                )
+                if has_price:
+                    try:
+                        price, price_sat = _http_amount_abs(
+                            body,
+                            cfg,
+                            field="price",
+                            sat_keys=("price_satoshi", "amount_satoshi"),
+                            abs_keys=("price", "amount"),
+                        )
+                    except ValueError as exc:
+                        self._error(400, str(exc)); return
+                else:
+                    price, price_sat = 0.0, 0
                 result = nft.mint(
                     token_id=body.get("token_id", ""),
                     name=body.get("name", ""),
                     description=body.get("description", ""),
                     image_url=body.get("image_url", ""),
                     creator=body.get("creator", ""),
-                    price=_http_abs(body.get("price", 0), field="price"),
+                    price=price,
+                    price_satoshi=int(price_sat),
                 )
                 self._json(result)
 
@@ -6098,10 +6117,21 @@ class RESTHandler(BaseHTTPRequestHandler):
                 if auth_err:
                     self._error(401, auth_err)
                     return
+                try:
+                    price, price_sat = _http_amount_abs(
+                        body,
+                        cfg,
+                        field="price",
+                        sat_keys=("price_satoshi", "amount_satoshi"),
+                        abs_keys=("price", "amount"),
+                    )
+                except ValueError as exc:
+                    self._error(400, str(exc)); return
                 result = nft.list_for_sale(
                     token_id=body.get("token_id", ""),
                     owner=owner,
-                    price=_http_abs(body.get("price", 0), field="price"),
+                    price=price,
+                    price_satoshi=int(price_sat),
                 )
                 self._json(result)
 
@@ -6248,22 +6278,13 @@ class RESTHandler(BaseHTTPRequestHandler):
                 except Exception as e:
                     self._error(500, str(e))
 
-            # ── NFT mint ──────────────────────────────────────────────────────
-            elif path == "/nft/mint":
-                nft = self.__class__.nft
-                if not nft:
-                    self._error(503, "NFT module not enabled"); return
-                name  = body.get("name", "Unnamed NFT")
-                owner = body.get("owner", "")
-                price = _http_abs(body.get("price", 1.0), field="price")
-                desc  = body.get("description", "")
-                if not owner:
-                    self._error(400, "owner is required"); return
-                token = nft.mint(owner=owner, name=name, description=desc, price=price)
-                if token:
-                    self._json({"token_id": getattr(token, "token_id", str(token)), "name": name})
-                else:
-                    self._error(500, "Mint failed")
+            # Dead duplicate of canonical /nft/mint (Wave L path above).
+            elif path == "/nft/mint-legacy":
+                self._error(
+                    410,
+                    "use POST /nft/mint with price_satoshi (legacy invent-price path removed)",
+                )
+                return
 
             # ── MiniVM contract deploy ─────────────────────────────────────────
             elif path == "/minivm/compile":
@@ -6526,16 +6547,50 @@ class RESTHandler(BaseHTTPRequestHandler):
                     self._error(503, "NFT not enabled"); return
                 token_id    = body.get("token_id", "")
                 seller      = body.get("seller", "")
-                start_price = _http_abs(body.get("start_price", 1.0), field="start_price")
-                reserve     = _http_abs(body.get("reserve_price", start_price), field="reserve_price")
                 hours       = int(body.get("hours", 24))
                 if not token_id or not seller:
                     self._error(400, "token_id and seller required"); return
                 try:
+                    start_price, start_sat = _http_amount_abs(
+                        body,
+                        cfg,
+                        field="start_price",
+                        sat_keys=("start_price_satoshi", "price_satoshi", "amount_satoshi"),
+                        abs_keys=("start_price", "price", "amount"),
+                    )
+                    if any(
+                        body.get(k) is not None and str(body.get(k)).strip() != ""
+                        for k in ("reserve_price_satoshi", "reserve_price")
+                    ):
+                        reserve, reserve_sat = _http_amount_abs(
+                            body,
+                            cfg,
+                            field="reserve_price",
+                            sat_keys=("reserve_price_satoshi",),
+                            abs_keys=("reserve_price",),
+                        )
+                    else:
+                        reserve, reserve_sat = start_price, start_sat
+                except ValueError as exc:
+                    self._error(400, str(exc)); return
+                try:
                     if hasattr(nft, "create_auction"):
-                        aid = nft.create_auction(token_id, seller, start_price, reserve, hours)
+                        aid = nft.create_auction(
+                            token_id,
+                            seller,
+                            start_price,
+                            reserve,
+                            hours,
+                            start_price_satoshi=int(start_sat),
+                            reserve_price_satoshi=int(reserve_sat),
+                        )
                         if aid:
-                            self._json({"success": True, "auction_id": aid})
+                            self._json({
+                                "success": True,
+                                "auction_id": aid,
+                                "start_price_satoshi": int(start_sat),
+                                "reserve_price_satoshi": int(reserve_sat),
+                            })
                         else:
                             self._error(400, "Could not create auction")
                     else:
@@ -6549,12 +6604,22 @@ class RESTHandler(BaseHTTPRequestHandler):
                     self._error(503, "NFT not enabled"); return
                 auction_id = body.get("auction_id", "")
                 bidder     = body.get("bidder", "")
-                amount     = _http_abs(body.get("amount", 0))
                 if not auction_id or not bidder:
                     self._error(400, "auction_id and bidder required"); return
                 try:
+                    amount, amount_sat = _http_amount_abs(
+                        body, cfg, field="amount"
+                    )
+                except ValueError as exc:
+                    self._error(400, str(exc)); return
+                try:
                     if hasattr(nft, "place_bid"):
-                        result = nft.place_bid(auction_id, bidder, amount)
+                        result = nft.place_bid(
+                            auction_id,
+                            bidder,
+                            amount,
+                            amount_satoshi=int(amount_sat),
+                        )
                         if isinstance(result, dict) and result.get("success"):
                             self._json({"success": True, "result": result})
                         else:
@@ -6565,39 +6630,14 @@ class RESTHandler(BaseHTTPRequestHandler):
                 except Exception as e:
                     self._error(500, str(e))
 
-            elif path == "/nft/list":
-                nft = self.__class__.nft
-                if not nft:
-                    self._error(503, "NFT not enabled"); return
-                token_id = body.get("token_id", "")
-                seller   = body.get("seller", "")
-                price    = _http_abs(body.get("price", 1.0), field="price")
-                if not token_id or not seller:
-                    self._error(400, "token_id and seller required"); return
-                try:
-                    if hasattr(nft, "create_listing"):
-                        lid = nft.create_listing(token_id, seller, price)
-                        if lid:
-                            self._json({"success": True, "listing_id": lid})
-                        else:
-                            self._error(400, "Could not create listing")
-                    elif hasattr(nft, "list_token"):
-                        lid = nft.list_token(token_id, seller, price)
-                        if lid:
-                            self._json({"success": True, "listing_id": lid})
-                        else:
-                            self._error(400, "Could not create listing")
-                    elif hasattr(nft, "list_for_sale"):
-                        result = nft.list_for_sale(token_id, seller, price)
-                        if isinstance(result, dict) and result.get("success"):
-                            self._json(result)
-                        else:
-                            error = result.get("error", "Could not list token") if isinstance(result, dict) else "Could not list token"
-                            self._error(400, error)
-                    else:
-                        self._error(501, "Listings not supported")
-                except Exception as e:
-                    self._error(500, str(e))
+            elif path == "/nft/list-legacy":
+                # Dead-path honesty: former second /nft/list handler invented price=1.0.
+                # Canonical listing is the earlier /nft/list (Wave L auth + satoshi).
+                self._error(
+                    410,
+                    "use POST /nft/list with price_satoshi (legacy invent-price path removed)",
+                )
+                return
 
             # ── Immutable State: credit (dev/genesis only — not L1 canonical) ─
             elif path == "/state/credit":
@@ -6676,14 +6716,27 @@ class RESTHandler(BaseHTTPRequestHandler):
                     self._error(503, "NFT not enabled"); return
                 token_id = body.get("token_id", "")
                 bidder = body.get("bidder", "")
-                price = _http_abs(body.get("price", 0), field="price")
                 hours = int(body.get("hours", 24))
-                if not token_id or not bidder or price <= 0:
+                if not token_id or not bidder:
                     self._error(400, "token_id, bidder, price required"); return
+                try:
+                    price, price_sat = _http_amount_abs(
+                        body,
+                        cfg,
+                        field="price",
+                        sat_keys=("price_satoshi", "amount_satoshi"),
+                        abs_keys=("price", "amount"),
+                    )
+                except ValueError as exc:
+                    self._error(400, str(exc)); return
                 if hasattr(nft, "make_offer"):
                     oid = nft.make_offer(token_id, bidder, price, hours)
                     if oid:
-                        self._json({"success": True, "offer_id": oid})
+                        self._json({
+                            "success": True,
+                            "offer_id": oid,
+                            "price_satoshi": int(price_sat),
+                        })
                     else:
                         self._error(400, "Could not create offer")
                 else:
@@ -6896,14 +6949,23 @@ class RESTHandler(BaseHTTPRequestHandler):
                     self._error(503, "Lightning not enabled"); return
                 cid = body.get("channel_id", "")
                 receiver = body.get("receiver", body.get("to", ""))
-                amount = _http_abs(body.get("amount", 0))
                 preimage_hash = body.get("payment_hash", body.get("preimage_hash", ""))
                 expiry = body.get("expiry")
-                if not cid or not receiver or amount <= 0 or not preimage_hash:
+                if not cid or not receiver or not preimage_hash:
                     self._error(400, "channel_id, receiver, amount, payment_hash required"); return
+                try:
+                    amount, amount_sat = _http_amount_abs(
+                        body, self.__class__.config, field="amount"
+                    )
+                except ValueError as exc:
+                    self._error(400, str(exc)); return
                 htlc_id = ln.add_htlc(cid, receiver, amount, preimage_hash, expiry=expiry)
                 if htlc_id:
-                    self._json({"success": True, "htlc_id": htlc_id})
+                    self._json({
+                        "success": True,
+                        "htlc_id": htlc_id,
+                        "amount_satoshi": int(amount_sat),
+                    })
                 else:
                     self._error(400, "HTLC add failed")
 
@@ -6933,10 +6995,15 @@ class RESTHandler(BaseHTTPRequestHandler):
                 if not ln:
                     self._error(503, "Lightning not enabled"); return
                 destination = body.get("destination", body.get("to", ""))
-                amount = _http_abs(body.get("amount", 0))
                 preimage = body.get("preimage", "")
-                if not destination or amount <= 0 or not preimage:
+                if not destination or not preimage:
                     self._error(400, "destination, amount, preimage required"); return
+                try:
+                    amount, _amount_sat = _http_amount_abs(
+                        body, self.__class__.config, field="amount"
+                    )
+                except ValueError as exc:
+                    self._error(400, str(exc)); return
                 path_ids = ln.find_route(destination, amount) if hasattr(ln, "find_route") else []
                 if len(path_ids) != 1:
                     self._error(
@@ -7183,10 +7250,21 @@ class RESTHandler(BaseHTTPRequestHandler):
                     self._error(503, "AI Manager not enabled"); return
                 agent_id = body.get("agent_id", "")
                 trade_type = body.get("type", "buy")
-                amount = _http_abs(body.get("amount", 0))
-                price = _http_abs(body.get("price", 0), field="price")
-                if not agent_id or amount <= 0:
+                if not agent_id:
                     self._error(400, "agent_id, amount, price required"); return
+                try:
+                    amount, _amount_sat = _http_amount_abs(
+                        body, self.__class__.config, field="amount"
+                    )
+                    price, _price_sat = _http_amount_abs(
+                        body,
+                        self.__class__.config,
+                        field="price",
+                        sat_keys=("price_satoshi",),
+                        abs_keys=("price",),
+                    )
+                except ValueError as exc:
+                    self._error(400, str(exc)); return
                 result = am.trade(agent_id, trade_type, amount, price)
                 if isinstance(result, dict) and result.get("error") == "Trade execution backend not configured":
                     self._error(503, result["error"])
@@ -7205,10 +7283,15 @@ class RESTHandler(BaseHTTPRequestHandler):
                 to_chain = body.get("to_chain", "absolute")
                 from_addr = body.get("from_address", "")
                 to_addr = body.get("to_address", "")
-                amount = _http_abs(body.get("amount", 0))
                 l1_tx = (body.get("l1_tx_hash") or "").strip()
-                if not from_addr or not to_addr or amount <= 0:
+                if not from_addr or not to_addr:
                     self._error(400, "from_address, to_address, amount required"); return
+                try:
+                    amount, _amount_sat = _http_amount_abs(
+                        body, cfg, field="amount"
+                    )
+                except ValueError as exc:
+                    self._error(400, str(exc)); return
                 if _is_production_cfg(cfg) and not (
                     rust_br and getattr(rust_br, "_mode", "") == "rust"
                 ):
@@ -7339,12 +7422,17 @@ class RESTHandler(BaseHTTPRequestHandler):
                 if not db:
                     self._error(503, "database unavailable"); return
                 address = (body.get("address", "") or "").strip()
-                amount = _http_abs(body.get("amount", 100))
                 if not address:
                     self._error(400, "address required"); return
-                if amount <= 0 or amount > 1000:
+                # Do not invent amount=100 when omitted.
+                try:
+                    amount, amount_sat = _http_amount_abs(
+                        body, cfg, field="amount"
+                    )
+                except ValueError as exc:
+                    self._error(400, str(exc)); return
+                if amount > 1000 or amount_sat > int(to_satoshi(1000)):
                     self._error(400, "amount must be 0 < amount <= 1000"); return
-                amount_sat = int(to_satoshi(amount))
                 if not apply_store_delta_satoshi(
                     db, address, amount_sat, allow_float_fallback=False
                 ):
@@ -7491,11 +7579,20 @@ class RESTHandler(BaseHTTPRequestHandler):
                 db.set_meta("bridge_l1_proofs", proofs[-500:])
                 br = getattr(self.__class__, "bridge", None)
                 recipient = (body.get("recipient") or body.get("to_address") or "").strip()
-                try:
-                    amount = _http_abs(body.get("amount", 0) or 0, field="amount")
-                except ValueError as exc:
-                    self._error(400, str(exc))
-                    return
+                # Amount optional on register-only; required only when enqueueing.
+                amount = 0.0
+                has_money = any(
+                    body.get(k) is not None and str(body.get(k)).strip() != ""
+                    for k in ("amount_satoshi", "value_satoshi", "amount", "value")
+                )
+                if has_money:
+                    try:
+                        amount, _amount_sat = _http_amount_abs(
+                            body, cfg, field="amount"
+                        )
+                    except ValueError as exc:
+                        self._error(400, str(exc))
+                        return
                 if br and hasattr(br, "enqueue_l1_incoming") and recipient and amount > 0:
                     br.enqueue_l1_incoming(
                         l1_tx,
@@ -7544,7 +7641,9 @@ class RESTHandler(BaseHTTPRequestHandler):
                 target_chain = body.get("target_chain", body.get("to_chain", "ethereum"))
                 l1_tx = (body.get("l1_tx_hash") or "").strip()
                 try:
-                    amount = _http_abs(body.get("amount", 0), field="amount")
+                    amount, _amount_sat = _http_amount_abs(
+                        body, cfg, field="amount"
+                    )
                 except ValueError as exc:
                     self._error(400, str(exc))
                     return
@@ -9765,15 +9864,13 @@ def _handle_devnet_pool_spend(body: Dict, bc, db, cfg, pool_locks) -> Dict:
 
     pool_id = (body.get("pool_id", body.get("pool", "ecosystem")) or "").strip().lower()
     to_addr = (body.get("to", body.get("recipient", "")) or "").strip()
-    amount = _http_abs(body.get("amount", 0))
+    amount, amount_sat = _http_amount_abs(body, cfg, field="amount")
     if pool_id not in ("ecosystem", "treasury", "staking"):
         raise ValueError("pool_id must be ecosystem, treasury, or staking")
     if not to_addr:
         raise ValueError("to address required")
-    if amount <= 0:
-        raise ValueError("amount must be positive")
 
-    from runtime.amount import apply_store_delta_satoshi, from_satoshi_float, money_abs, to_satoshi
+    from runtime.amount import apply_store_delta_satoshi, from_satoshi_float, money_abs
     from runtime.tokenomics import build_allocations, resolve_founder_address
 
     founder = resolve_founder_address(
@@ -9785,7 +9882,7 @@ def _handle_devnet_pool_spend(body: Dict, bc, db, cfg, pool_locks) -> Dict:
     if not from_addr:
         raise ValueError("pool address not found")
 
-    amount_sat = int(to_satoshi(amount))
+    amount_sat = int(amount_sat)
     if hasattr(db, "get_balance_satoshi"):
         balance = float(from_satoshi_float(int(db.get_balance_satoshi(from_addr) or 0)))
     else:
@@ -9827,6 +9924,7 @@ def _handle_devnet_pool_spend(body: Dict, bc, db, cfg, pool_locks) -> Dict:
         "from": from_addr,
         "to": to_addr,
         "amount": amount,
+        "amount_satoshi": amount_sat,
         "pool_balance": db.get_balance(from_addr),
         "recipient_balance": db.get_balance(to_addr),
         "spendable_remaining": pool_locks.spendable_balance(from_addr, db.get_balance(from_addr)),

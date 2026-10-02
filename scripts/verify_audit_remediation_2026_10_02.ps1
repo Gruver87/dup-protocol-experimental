@@ -51,7 +51,8 @@ $CoreHonesty = @(
     "tests/unit/test_wave_n_honesty_fixes.py",
     "tests/unit/test_wave_i_honesty_fixes.py",
     "tests/unit/test_exp_list_and_wallet_honesty.py",
-    "tests/unit/test_exp_send_gas_amount_honesty.py"
+    "tests/unit/test_exp_send_gas_amount_honesty.py",
+    "tests/unit/test_exp_rest_amount_honesty.py"
 )
 
 $UnitFiles = @(

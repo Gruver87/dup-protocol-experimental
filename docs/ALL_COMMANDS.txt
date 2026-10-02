@@ -326,6 +326,14 @@ python scripts/prod_gate.py
 pytest tests/unit/ -q
 pytest tests/ -q --ignore=tests/legacy
 
+# [EXP] Mid-soak honesty (disk units + needles; НЕ рестартит soak / Docker):
+cd C:\Users\vovun\Desktop\Absolute_Blockchain_Experimental
+.\scripts\verify_midsoak_honesty.ps1 -Quick
+.\scripts\verify_midsoak_honesty.ps1 -WithSoakStatus
+.\scripts\verify_midsoak_honesty.ps1 -All
+.\scripts\verify_audit_remediation_2026_10_02.ps1 -Quick
+# Soak claim: NOT asserted by these scripts.
+
 # [EXP] Параллельный R&D batch (labs, не soak):
 python scripts/verify_parallel_rd_batch.py
 python scripts/verify_experimental_rd.py
