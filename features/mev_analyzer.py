@@ -178,6 +178,7 @@ class MEVAnalyzer:
             "estimated_profit_satoshi": int(profit_sat),
             "model_estimate_profit": round(model_est, 4),
             "executed": False,
+            "simulation_only": True,
             "consensus_wired": False,
             "attack_types": {
                 "sandwich": sum(

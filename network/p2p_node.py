@@ -3957,7 +3957,13 @@ class P2PNode:
         if address.lower() in known:
             return
         if hasattr(self._consensus, "add_validator"):
-            if self._consensus.add_validator(address, stake):
+            try:
+                ok = self._consensus.add_validator(
+                    address, stake, stake_satoshi=int(stake_sat)
+                )
+            except TypeError:
+                ok = self._consensus.add_validator(address, stake)
+            if ok:
                 print(f"[P2P] Registered peer validator {address[:12]}… from {peer.peer_id[:8]}")
                 await self._relay_validator_register(
                     {

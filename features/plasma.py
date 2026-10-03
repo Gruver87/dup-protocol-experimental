@@ -102,12 +102,18 @@ class PlasmaChain:
 
         return float(from_satoshi_float(self._l1_balance_sat(addr)))
 
-    def _debit_l1(self, addr: str, amount: float) -> bool:
-        from runtime.amount import apply_store_delta_satoshi, to_satoshi, try_debit_satoshi
+    def _debit_l1(
+        self, addr: str, amount: float, *, amount_satoshi: int | None = None
+    ) -> bool:
+        from runtime.amount import (
+            apply_store_delta_satoshi,
+            resolve_amount_satoshi,
+            try_debit_satoshi,
+        )
 
         try:
-            need = int(to_satoshi(amount))
-            try_debit_satoshi(self._l1_balance_sat(addr), amount)
+            need, _ = resolve_amount_satoshi(amount, amount_satoshi)
+            try_debit_satoshi(self._l1_balance_sat(addr), debit_satoshi=need)
         except (TypeError, ValueError):
             return False
         if need <= 0:
@@ -119,11 +125,13 @@ class PlasmaChain:
             )
         )
 
-    def _credit_l1(self, addr: str, amount: float) -> bool:
-        from runtime.amount import apply_store_delta_satoshi, to_satoshi
+    def _credit_l1(
+        self, addr: str, amount: float, *, amount_satoshi: int | None = None
+    ) -> bool:
+        from runtime.amount import apply_store_delta_satoshi, resolve_amount_satoshi
 
         try:
-            add = int(to_satoshi(amount))
+            add, _ = resolve_amount_satoshi(amount, amount_satoshi)
         except (TypeError, ValueError):
             return False
         if add <= 0:
@@ -224,20 +232,33 @@ class PlasmaChain:
 
         return float(from_satoshi_float(self._l2_balance_sat(addr)))
 
-    def deposit(self, from_addr: str, amount: float,
-                main_tx_hash: str = "") -> Optional[str]:
-        if amount <= 0:
+    def deposit(
+        self,
+        from_addr: str,
+        amount: float,
+        main_tx_hash: str = "",
+        *,
+        amount_satoshi: int | None = None,
+    ) -> Optional[str]:
+        from runtime.amount import resolve_amount_satoshi
+
+        try:
+            amt_sat, amount = resolve_amount_satoshi(amount, amount_satoshi)
+        except (TypeError, ValueError):
             return None
-        if not self._debit_l1(from_addr, amount):
+        if amt_sat <= 0:
+            return None
+        if not self._debit_l1(from_addr, amount, amount_satoshi=amt_sat):
             return None
         deposit_id = native.sha256_hex(
-            f"{from_addr}{amount}{main_tx_hash}{time.time()}".encode()
+            f"{from_addr}{amt_sat}{main_tx_hash}{time.time()}".encode()
         )[:16]
         with self._lock:
             dep = {
                 "id": deposit_id,
                 "from": from_addr,
                 "amount": amount,
+                "amount_satoshi": amt_sat,
                 "main_tx_hash": main_tx_hash or deposit_id,
                 "created_at": int(time.time()),
                 "status": "confirmed",
@@ -248,6 +269,7 @@ class PlasmaChain:
                 "from": from_addr,
                 "to": from_addr,
                 "amount": amount,
+                "amount_satoshi": amt_sat,
                 "deposit_id": deposit_id,
                 "timestamp": int(time.time()),
             })
@@ -283,16 +305,18 @@ class PlasmaChain:
         signature: str = "",
         public_key: str = "",
         private_key: bytes = b"",
+        *,
+        amount_satoshi: int | None = None,
     ) -> Optional[str]:
-        if amount <= 0 or not from_addr or not to_addr:
+        from runtime.amount import resolve_amount_satoshi
+
+        try:
+            need, amount = resolve_amount_satoshi(amount, amount_satoshi)
+        except (TypeError, ValueError):
+            return None
+        if need <= 0 or not from_addr or not to_addr:
             return None
         with self._lock:
-            from runtime.amount import to_satoshi
-
-            try:
-                need = int(to_satoshi(amount))
-            except (TypeError, ValueError):
-                return None
             if self._l2_balance_sat(from_addr) < need:
                 return None
             tx = {
@@ -300,6 +324,7 @@ class PlasmaChain:
                 "from": from_addr,
                 "to": to_addr,
                 "amount": amount,
+                "amount_satoshi": need,
                 "timestamp": int(time.time()),
             }
             if private_key and public_key:
@@ -379,10 +404,13 @@ class PlasmaChain:
             dep = self.deposits.get(deposit_id)
             if not dep or dep["status"] != "confirmed" or dep["from"] != user:
                 return None
-            from runtime.amount import to_satoshi
+            from runtime.amount import resolve_amount_satoshi
 
             try:
-                dep_sat = int(to_satoshi(dep.get("amount", 0) or 0))
+                dep_sat, dep_amt = resolve_amount_satoshi(
+                    dep.get("amount"),
+                    dep.get("amount_satoshi"),
+                )
             except (TypeError, ValueError):
                 return None
             if self._l2_balance_sat(user) < dep_sat:
@@ -394,7 +422,8 @@ class PlasmaChain:
                 "id": exit_id,
                 "deposit_id": deposit_id,
                 "user": user,
-                "amount": dep["amount"],
+                "amount": dep_amt,
+                "amount_satoshi": dep_sat,
                 "created_at": int(time.time()),
                 "status": "pending",
             }
@@ -411,7 +440,13 @@ class PlasmaChain:
                 return False
             if not force and time.time() - req["created_at"] < self.CHALLENGE_PERIOD:
                 return False
-            if not self._credit_l1(req["user"], req["amount"]):
+            try:
+                credit_sat = int(req.get("amount_satoshi")) if req.get("amount_satoshi") is not None else None
+            except (TypeError, ValueError):
+                return False
+            if not self._credit_l1(
+                req["user"], req["amount"], amount_satoshi=credit_sat
+            ):
                 return False
             req["status"] = "finalized"
             dep = self.deposits.get(req["deposit_id"])

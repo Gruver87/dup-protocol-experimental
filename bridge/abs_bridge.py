@@ -348,11 +348,18 @@ class RustBridge:
         amount: float,
         from_chain: str,
         tx_id: str = "",
+        *,
+        amount_satoshi: int | None = None,
     ) -> None:
         """Append incoming L1 proof watch entry for bridge relayer."""
         from bridge.l1_rpc import load_l1_queue, save_l1_queue
+        from runtime.amount import resolve_amount_satoshi
 
-        if not l1_tx_hash or not recipient or amount <= 0:
+        try:
+            amt_sat, amt_abs = resolve_amount_satoshi(amount, amount_satoshi)
+        except ValueError:
+            return
+        if not l1_tx_hash or not recipient or amt_sat <= 0:
             return
         path = getattr(self.config, "bridge_l1_queue_path", "data/bridge_l1_queue.json")
         queue = load_l1_queue(path)
@@ -362,7 +369,8 @@ class RustBridge:
             "tx_hash": l1_tx_hash,
             "tx_id": tx_id or l1_tx_hash,
             "recipient": recipient,
-            "amount": money_abs(amount, field="amount"),
+            "amount": amt_abs,
+            "amount_satoshi": amt_sat,
             "from_chain": self._normalize_chain(from_chain),
             "queued_at": int(time.time()),
         }
@@ -414,7 +422,12 @@ class RustBridge:
 
         if l1_tx_hash:
             self.enqueue_l1_incoming(
-                l1_tx_hash, recipient, amount, from_chain, tx_id=tx_hash
+                l1_tx_hash,
+                recipient,
+                amount,
+                from_chain,
+                tx_id=tx_hash,
+                amount_satoshi=credit_sats,
             )
 
         if self._mode == "rust":

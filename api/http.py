@@ -3053,6 +3053,8 @@ class RESTHandler(BaseHTTPRequestHandler):
                     "nft_loaded": _nft_sprout_enabled(cfg, self.__class__.nft)[1],
                     "nft_enabled": _nft_sprout_enabled(cfg, self.__class__.nft)[0],
                     "mev_enabled": self.__class__.mev_simulator is not None,
+                    "mev_simulation_only": True,
+                    "mev_consensus_wired": False,
                     "reorg_predictor_enabled": self.__class__.reorg_predictor is not None,
                     "core_receipts_enabled": bool(
                         db and hasattr(db, "get_tx_receipt")
@@ -4177,7 +4179,9 @@ class RESTHandler(BaseHTTPRequestHandler):
                             "enabled": True,
                             "persistent": False,
                             "execution_bound": False,
+                            "l1_wired": False,
                             "in_memory_registry": True,
+                            "honesty": "multisig registry is in-memory — not L1 execution-bound",
                         })
                     except Exception as e:
                         self._error(503, f"multisig list failed: {e}")
@@ -4188,6 +4192,8 @@ class RESTHandler(BaseHTTPRequestHandler):
                         "enabled": False,
                         "persistent": False,
                         "execution_bound": False,
+                        "l1_wired": False,
+                        "honesty": "multisig registry is in-memory — not L1 execution-bound",
                     })
 
             # ── Chain storage (JSON file backup) ──────────────────────────────
@@ -4520,21 +4526,42 @@ class RESTHandler(BaseHTTPRequestHandler):
             elif path == "/mev/stats":
                 mev = self.__class__.mev_simulator
                 if mev:
-                    self._json(mev.get_statistics())
+                    stats = mev.get_statistics()
+                    stats.setdefault("simulation_only", True)
+                    stats.setdefault("consensus_wired", False)
+                    stats.setdefault("executed", False)
+                    self._json(stats)
                 else:
                     from features import probe_optional_module
 
                     probe = probe_optional_module("features.mev_analyzer", "MEVAnalyzer")
-                    self._json({"enabled": False, **probe})
+                    self._json({
+                        "enabled": False,
+                        "simulation_only": True,
+                        "consensus_wired": False,
+                        "executed": False,
+                        **probe,
+                    })
 
             elif path == "/mev/history":
                 mev = self.__class__.mev_simulator
                 limit = int(qs.get("limit", ["50"])[0])
                 if mev and hasattr(mev, "get_history"):
                     hist = mev.get_history(limit)
-                    self._json({"count": len(hist), "history": hist})
+                    self._json({
+                        "count": len(hist),
+                        "history": hist,
+                        "simulation_only": True,
+                        "consensus_wired": False,
+                    })
                 else:
-                    self._json({"count": 0, "history": [], "enabled": False})
+                    self._json({
+                        "count": 0,
+                        "history": [],
+                        "enabled": False,
+                        "simulation_only": True,
+                        "consensus_wired": False,
+                    })
 
             # ── Merkle proofs / Light client SPV ─────────────────────────────
             elif path.startswith("/merkle/root/"):
@@ -5948,6 +5975,9 @@ class RESTHandler(BaseHTTPRequestHandler):
                 if mev and target and hasattr(mev, "simulate_frontrun"):
                     result = mev.simulate_frontrun(target, bot_balance=1000.0)
                     result["dev_only"] = True
+                    result["simulation_only"] = True
+                    result["consensus_wired"] = False
+                    result["executed"] = False
                     result["tx_hash"] = tx_hash
                     self._json(result)
                 else:
@@ -5955,6 +5985,9 @@ class RESTHandler(BaseHTTPRequestHandler):
                         "success": False,
                         "feasible": False,
                         "dev_only": True,
+                        "simulation_only": True,
+                        "consensus_wired": False,
+                        "executed": False,
                         "enabled": bool(mev),
                         "error": "tx not in mempool" if tx_hash else "tx_hash required",
                     })
@@ -6559,6 +6592,9 @@ class RESTHandler(BaseHTTPRequestHandler):
                         "required": required,
                         "value_satoshi": int(value_sat),
                         "amount_satoshi": int(value_sat),
+                        "execution_bound": False,
+                        "l1_wired": False,
+                        "honesty": "multisig registry is in-memory — not L1 execution-bound",
                     })
                 except ValueError as e:
                     self._error(400, str(e))
@@ -7318,7 +7354,9 @@ class RESTHandler(BaseHTTPRequestHandler):
                     )
                 except ValueError as exc:
                     self._error(400, str(exc)); return
-                cid = ln.open_channel(peer, capacity)
+                cid = ln.open_channel(
+                    peer, capacity, capacity_satoshi=int(capacity_sat)
+                )
                 if cid:
                     self._json({
                         "success": True,
@@ -7354,7 +7392,9 @@ class RESTHandler(BaseHTTPRequestHandler):
                     )
                 except ValueError as exc:
                     self._error(400, str(exc)); return
-                pid = ln.send_payment(cid, to_node, amount)
+                pid = ln.send_payment(
+                    cid, to_node, amount, amount_satoshi=int(amount_sat)
+                )
                 if pid:
                     self._json({
                         "success": True,
@@ -7381,7 +7421,14 @@ class RESTHandler(BaseHTTPRequestHandler):
                     )
                 except ValueError as exc:
                     self._error(400, str(exc)); return
-                htlc_id = ln.add_htlc(cid, receiver, amount, preimage_hash, expiry=expiry)
+                htlc_id = ln.add_htlc(
+                    cid,
+                    receiver,
+                    amount,
+                    preimage_hash,
+                    expiry=expiry,
+                    amount_satoshi=int(amount_sat),
+                )
                 if htlc_id:
                     self._json({
                         "success": True,
@@ -7426,7 +7473,13 @@ class RESTHandler(BaseHTTPRequestHandler):
                     )
                 except ValueError as exc:
                     self._error(400, str(exc)); return
-                path_ids = ln.find_route(destination, amount) if hasattr(ln, "find_route") else []
+                path_ids = (
+                    ln.find_route(
+                        destination, amount, amount_satoshi=int(_amount_sat)
+                    )
+                    if hasattr(ln, "find_route")
+                    else []
+                )
                 if len(path_ids) != 1:
                     self._error(
                         501,
@@ -7434,7 +7487,12 @@ class RESTHandler(BaseHTTPRequestHandler):
                         "(direct channel only)",
                     )
                     return
-                htlc_id = ln.route_payment(destination, amount, preimage)
+                htlc_id = ln.route_payment(
+                    destination,
+                    amount,
+                    preimage,
+                    amount_satoshi=int(_amount_sat),
+                )
                 if htlc_id:
                     self._json({
                         "success": True,
@@ -7517,7 +7575,9 @@ class RESTHandler(BaseHTTPRequestHandler):
                     )
                 except ValueError as exc:
                     self._error(400, str(exc)); return
-                did = pl.deposit(from_addr, amount)
+                did = pl.deposit(
+                    from_addr, amount, amount_satoshi=int(amount_sat)
+                )
                 if did:
                     self._json({
                         "success": True,
@@ -7542,7 +7602,12 @@ class RESTHandler(BaseHTTPRequestHandler):
                     )
                 except ValueError as exc:
                     self._error(400, str(exc)); return
-                txh = pl.submit_transaction(from_addr, to_addr, amount)
+                txh = pl.submit_transaction(
+                    from_addr,
+                    to_addr,
+                    amount,
+                    amount_satoshi=int(amount_sat),
+                )
                 if txh:
                     self._json({
                         "success": True,
@@ -8080,9 +8145,10 @@ class RESTHandler(BaseHTTPRequestHandler):
                     body.get(k) is not None and str(body.get(k)).strip() != ""
                     for k in ("amount_satoshi", "value_satoshi", "amount", "value")
                 )
+                amount_sat = 0
                 if has_money:
                     try:
-                        amount, _amount_sat = _http_amount_abs(
+                        amount, amount_sat = _http_amount_abs(
                             body, cfg, field="amount"
                         )
                     except ValueError as exc:
@@ -8095,6 +8161,7 @@ class RESTHandler(BaseHTTPRequestHandler):
                         amount,
                         chain,
                         tx_id=body.get("tx_id", l1_tx),
+                        amount_satoshi=int(amount_sat),
                     )
                     entry["queued_incoming"] = True
                 elif br and abs_lock and hasattr(br, "_enqueue_l1_outbound"):

@@ -2098,24 +2098,26 @@ class NodeOrchestrator:
             # 1) RANDAO-style selection if validators registered
             if not proposer and self.validator_selection and self.db:
                 try:
-                    # Refuse invent stake=100 — skip validators with missing/non-positive stake.
+                    # Prefer stake_satoshi ints for weighted selection (ADR 0021).
                     validators_dict = {}
                     for v in (self.db.get_validators() or []):
                         addr = v.get("address")
                         if not addr:
                             continue
-                        raw = v.get("stake")
-                        if raw is None and v.get("stake_satoshi") is not None:
-                            from runtime.amount import from_satoshi_float
-
-                            raw = from_satoshi_float(int(v["stake_satoshi"]))
                         try:
-                            stake = float(raw) if raw is not None else 0.0
+                            if v.get("stake_satoshi") is not None:
+                                stake_w = int(v["stake_satoshi"])
+                            elif v.get("stake") is not None:
+                                from runtime.amount import to_satoshi
+
+                                stake_w = int(to_satoshi(v["stake"]))
+                            else:
+                                continue
                         except (TypeError, ValueError):
                             continue
-                        if stake <= 0:
+                        if stake_w <= 0:
                             continue
-                        validators_dict[addr] = stake
+                        validators_dict[addr] = stake_w
                     if validators_dict and _mine_only:
                         validators_dict = {
                             k: v

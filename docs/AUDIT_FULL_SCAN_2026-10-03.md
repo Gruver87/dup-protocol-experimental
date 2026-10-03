@@ -63,6 +63,9 @@
 | P1 (fixed) | Cross-shard L1 debit/credit float-only; supply gate float ABS | Twin on `CrossShardTransaction`; `_total_supply_satoshi` |
 | P1 (fixed) | Pool-lock admit re-to_satoshi(display) | `is_outgoing_allowed_sat` on tx_pipeline / state_service |
 | P1 (fixed) | Multisig HTTP discarded `value_sat`; validator register re-to_satoshi(stake) | Pass `amount_satoshi` / `stake_satoshi` into create/add/save/register |
+| P1 (fixed) | Lightning/Plasma HTTP discarded sat after resolve; bridge L1 queue float-only | Pass twin into open/pay/htlc/route/deposit/submit; exit finalize credits sat; enqueue carries `amount_satoshi` |
+| P1 (fixed) | P2P/`main` proposer used float stake weights | `add_validator(stake_satoshi=)`; weighted select prefers `stake_satoshi` |
+| P1 (fixed) | MEV status/`mev_enabled` green-paint without simulation_only | `/status` + `/mev/*` paint `simulation_only` / `consensus_wired=false`; multisig `execution_bound=false` |
 | Residual MED | Full type erase of `Transaction.value: float` | Later ADR — satoshi twin is authority when present |
 | Residual HIGH (known) | Experimental mesh `feature_libp2p=true` + `p2p_tls_enabled=false` | ADR 0020 Noise; pin stays TCP+TLS — do not sell as pin parity |
 | Residual org **P0 for mainnet** | Pen-test scheduled + third-party L1/EVM audit PDF | **Not code** — Phase 6 firm kickoff |
