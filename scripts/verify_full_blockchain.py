@@ -194,6 +194,11 @@ def main() -> int:
     ap.add_argument("--require-baked-root", action="store_true")
     ap.add_argument("--pytest-timeout", type=int, default=1200)
     ap.add_argument("--p2p-wait", type=int, default=90)
+    ap.add_argument(
+        "--force-during-soak",
+        action="store_true",
+        help="Allow live mesh probes while soak_monitor is ALIVE (unsafe; default refuse)",
+    )
     args = ap.parse_args()
 
     if args.hard:
@@ -385,6 +390,17 @@ def main() -> int:
     )
 
     if not args.skip_live:
+        guard_path = ROOT / "scripts" / "soak_guard.py"
+        gspec = importlib.util.spec_from_file_location("soak_guard", guard_path)
+        if gspec is None or gspec.loader is None:
+            print("FAIL: scripts/soak_guard.py missing")
+            return 1
+        gmod = importlib.util.module_from_spec(gspec)
+        gspec.loader.exec_module(gmod)
+        gmod.refuse_live_mesh_if_soak_alive(
+            force=bool(args.force_during_soak),
+            context="verify_full_blockchain live mesh",
+        )
         _bind_prod_smoke_wallet()
         rc = step(
             "live mesh probe (deep)",

@@ -80,8 +80,8 @@ def test_tx_money_satoshi_backfill():
         db.conn.execute(
             "INSERT INTO transactions "
             "(hash, block_height, from_addr, to_addr, value, fee, burned, "
-            "value_satoshi, fee_satoshi, burned_satoshi, nonce, status, timestamp) "
-            "VALUES ('0xlegacy', 1, '0xa', '0xb', 3.0, 0.1, 0.05, NULL, NULL, NULL, 0, 1, 1)"
+            "value_satoshi, fee_satoshi, burned_satoshi, nonce, status, timestamp, gas, gas_used) "
+            "VALUES ('0xlegacy', 1, '0xa', '0xb', 3.0, 0.1, 0.05, NULL, NULL, NULL, 0, 1, 1, 21000, 21000)"
         )
         db.conn.execute(
             "INSERT INTO tx_receipts "

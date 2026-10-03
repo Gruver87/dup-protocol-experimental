@@ -55,6 +55,7 @@ def test_tx_validator_runtime_error_message():
             "amount": 1,
             "fee": 1,
             "nonce": 0,
+            "gas": 21_000,
             "signature": "ab" * 32,
             "public_key": "cd" * 33,
         }

@@ -161,6 +161,7 @@ class TestSystemA_Mempool:
             amount=1.0,
             fee=0.001,
             nonce=0,
+            gas=21_000,
         )
         result = mempool.add(tx)
         assert result is True
@@ -174,6 +175,7 @@ class TestSystemA_Mempool:
             amount=1.0,
             fee=0.001,
             nonce=0,
+            gas=21_000,
         )
         result = mempool.add(tx)
         assert result is False  # duplicate
@@ -187,6 +189,7 @@ class TestSystemA_Mempool:
                 to_addr="0x" + "b" * 40,
                 amount=1.0,
                 fee=float(i + 1) * 0.001,
+                gas=21_000,
                 nonce=i + 1,
             ))
         txs = mempool.get(limit=10)

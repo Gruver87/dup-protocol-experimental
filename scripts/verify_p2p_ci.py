@@ -331,7 +331,10 @@ def _post_json(base_url: str, path: str, body: dict | None = None, timeout: floa
         if exc.code not in (401, 403) or (
             "JWT" not in raw and "jwt" not in raw.lower() and "Bearer" not in raw
         ):
-            raise
+            # Surface body — gas/signature/amount refusals must not be opaque 400s.
+            raise RuntimeError(
+                f"HTTP {exc.code} {path}: {raw[:400] if raw else exc.reason}"
+            ) from exc
         _ADMIN_TOKENS.pop(base, None)
         token = _admin_token(base, timeout=min(timeout, 10))
         req = urllib.request.Request(
@@ -340,8 +343,14 @@ def _post_json(base_url: str, path: str, body: dict | None = None, timeout: floa
             method="POST",
             headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"},
         )
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return json.loads(resp.read().decode())
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                return json.loads(resp.read().decode())
+        except urllib.error.HTTPError as exc2:
+            raw2 = exc2.read().decode(errors="replace")
+            raise RuntimeError(
+                f"HTTP {exc2.code} {path}: {raw2[:400] if raw2 else exc2.reason}"
+            ) from exc2
 
 
 def _oracle_post(base_url: str, path: str, body: dict, secret: str, timeout: float = 15) -> dict:
@@ -1609,19 +1618,36 @@ def _send_propagation_tx_signed(
     last_exc: Exception | None = None
     for i in range(4):
         recipient = _unique_recipient(f"{attempt}-{i}")
+        # 1 ABS — explicit gas + satoshi for prod wire (no invent / no float-only).
+        value_abs = 1
+        amount_sat = int(to_satoshi(value_abs))
         signed = wallet.sign_transaction(
             recipient,
-            1,
+            value_abs,
             nonce,
             chain_id=chain_id,
             gas_limit=21000,
         )
-        body = {**signed, "gas": 21000}
+        body = {
+            **signed,
+            "gas": 21000,
+            "gas_limit": 21000,
+            "amount_satoshi": amount_sat,
+            "value_satoshi": amount_sat,
+        }
         try:
             return _post_json(url1, "/tx/send", body, timeout=20)
         except Exception as exc:
             last_exc = exc
             msg = str(exc).lower()
+            detail = ""
+            if hasattr(exc, "read"):
+                try:
+                    detail = exc.read().decode("utf-8", errors="replace")[:300]
+                except Exception:
+                    detail = ""
+            if detail:
+                print(f"WARN: /tx/send rejected: {exc} body={detail}")
             if "already in mempool" in msg or "500" in msg:
                 time.sleep(0.2)
                 continue

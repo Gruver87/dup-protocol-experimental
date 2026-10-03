@@ -368,7 +368,7 @@ def test_prod_bridge_does_not_fallback_to_simulator(tmp_path, monkeypatch):
                 "to_chain": "ethereum",
                 "from_address": "0x" + "1" * 40,
                 "to_address": "0x" + "2" * 40,
-                "amount": 1,
+                "amount_satoshi": 1_000_000,
             },
         )
         assert st == 503

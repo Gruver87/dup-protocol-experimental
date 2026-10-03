@@ -45,8 +45,9 @@ def _start_server(bc, mp, db, cfg, pool_locks=None, validator_registry=None):
     RESTHandler.pool_locks = pool_locks
     RESTHandler.validator_registry = validator_registry
     configure_rate_limiter(cfg)
-    port = 18083
-    server = ThreadedHTTPServer(("127.0.0.1", port), RESTHandler)
+    # Ephemeral port — fixed 18083 races under parallel/CI (Errno 98).
+    server = ThreadedHTTPServer(("127.0.0.1", 0), RESTHandler)
+    port = int(server.server_address[1])
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     time.sleep(0.2)

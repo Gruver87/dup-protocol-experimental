@@ -184,6 +184,11 @@ def main() -> int:
         action="store_true",
         help="also run probe_prod_mesh -Quick (no docker rebuild)",
     )
+    ap.add_argument(
+        "--force-during-soak",
+        action="store_true",
+        help="Allow Max/live mesh stages while soak_monitor is ALIVE (unsafe)",
+    )
     ap.add_argument("--keep-going", action="store_true")
     ap.add_argument("-q", "--quiet", action="store_true")
     args = ap.parse_args()
@@ -327,6 +332,19 @@ def main() -> int:
 
         # --- Optional mesh probe (no docker recreate) ---
         if args.with_mesh_probe or args.mode == "max":
+            # Fail-closed: do not starve an ALIVE soak with Max/probe hammering.
+            import importlib.util
+
+            guard_path = experimental / "scripts" / "soak_guard.py"
+            gspec = importlib.util.spec_from_file_location("soak_guard", guard_path)
+            if gspec is None or gspec.loader is None:
+                raise SystemExit("FAIL: scripts/soak_guard.py missing")
+            gmod = importlib.util.module_from_spec(gspec)
+            gspec.loader.exec_module(gmod)
+            gmod.refuse_live_mesh_if_soak_alive(
+                force=bool(args.force_during_soak),
+                context=f"verify_dup_suite mode={args.mode} live mesh",
+            )
             probe = experimental / "scripts" / "probe_prod_mesh.ps1"
             if probe.is_file():
                 ok = _run_stage(
@@ -348,10 +366,13 @@ def main() -> int:
 
         # --- Max: full hard blockchain verify ---
         if args.mode == "max":
+            hard_cmd = [py, "scripts/verify_full_blockchain.py", "--hard"]
+            if args.force_during_soak:
+                hard_cmd.append("--force-during-soak")
             ok = _run_stage(
                 name="experimental:verify_full_blockchain_hard",
                 cwd=experimental,
-                cmd=[py, "scripts/verify_full_blockchain.py", "--hard"],
+                cmd=hard_cmd,
                 keep_going=args.keep_going,
                 steps=steps,
             )

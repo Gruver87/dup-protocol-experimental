@@ -10260,6 +10260,10 @@ def _handle_deploy_tx(body: Dict, bc, mp, cfg, wallet=None, evm=None) -> str:
     """Queue EVM contract deploy as a signed mempool transaction."""
     from core.blockchain import Transaction
 
+    tx_body = dict(body or {})
+    # Prod auto_sign refuse before gas/bytecode — security policy must win the error.
+    _reject_auto_sign_in_prod(tx_body, cfg)
+
     bytecode = body.get("bytecode", body.get("data", ""))
     if not bytecode:
         raise ValueError("bytecode required")
@@ -10284,9 +10288,6 @@ def _handle_deploy_tx(body: Dict, bc, mp, cfg, wallet=None, evm=None) -> str:
         gas = int(gas_raw)
     if gas <= 0:
         raise ValueError("gas or gas_limit must be positive")
-
-    tx_body = dict(body or {})
-    _reject_auto_sign_in_prod(tx_body, cfg)
     if wallet and (body.get("auto_sign") or not from_addr):
         nonce = bc.db.get_nonce(wallet.address)
         signed = wallet.sign_transaction(
@@ -10330,6 +10331,10 @@ def _handle_deploy_tx(body: Dict, bc, mp, cfg, wallet=None, evm=None) -> str:
 
 def _handle_call_tx(body: Dict, bc, mp, cfg, wallet=None) -> str:
     """Queue EVM contract call as a signed mempool transaction."""
+    tx_body = dict(body or {})
+    # Prod auto_sign refuse before gas/calldata — security policy must win the error.
+    _reject_auto_sign_in_prod(tx_body, cfg)
+
     to_addr = body.get("to", body.get("contract", body.get("to_addr", "")))
     data = body.get("data", body.get("input", body.get("calldata", "")))
     if not to_addr:
@@ -10348,9 +10353,6 @@ def _handle_call_tx(body: Dict, bc, mp, cfg, wallet=None) -> str:
         gas = int(gas_raw)
     if gas <= 0:
         raise ValueError("gas or gas_limit must be positive")
-
-    tx_body = dict(body or {})
-    _reject_auto_sign_in_prod(tx_body, cfg)
     if wallet and (body.get("auto_sign") or not from_addr):
         nonce = bc.db.get_nonce(wallet.address)
         signed = wallet.sign_transaction(
@@ -10436,6 +10438,8 @@ def _handle_devnet_pool_spend(body: Dict, bc, db, cfg, pool_locks) -> Dict:
         "value": amount,
         "block_height": height,
         "fee": 0.0,
+        "gas": 21_000,
+        "gas_used": 21_000,
         "status": 1,
         "timestamp": int(_time.time()),
     })

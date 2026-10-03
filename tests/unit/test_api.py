@@ -456,7 +456,9 @@ def test_sync_status_real(api_server):
     status, body = _get(f"{base}/sync/status")
     data = json.loads(body)
     assert status == 200
-    assert data["enabled"] is True
+    # Fail-closed without SyncEngine — do not paint enabled:true.
+    assert data["enabled"] is False
+    assert data.get("sync_engine_missing") is True
     assert "local_height" in data
     assert data["solo_mode"] is True
 
@@ -486,7 +488,7 @@ def test_tx_send_alias(api_server, industrial_config):
     sender = "0x" + "a" * 40
     recipient = "0x" + "b" * 40
     db.set_balance(sender, 100.0)
-    body = {"from": sender, "to": recipient, "value": 1.0, "nonce": 0}
+    body = {"from": sender, "to": recipient, "value": 1.0, "nonce": 0, "gas": 21_000}
     status, raw = _post(f"{base}/tx/send", body)
     data = json.loads(raw)
     assert status == 200

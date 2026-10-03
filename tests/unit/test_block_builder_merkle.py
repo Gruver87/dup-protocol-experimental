@@ -35,12 +35,14 @@ def test_block_builder_tx_root_matches_block():
             to_addr="0x" + "b" * 40,
             value=1.0,
             nonce=0,
+            gas=21_000,
         ),
         Transaction(
             from_addr="0x" + "c" * 40,
             to_addr="0x" + "d" * 40,
             value=2.0,
             nonce=1,
+            gas=21_000,
         ),
     ]
     builder = BlockBuilder(_FakeMempool(), _FakeState())

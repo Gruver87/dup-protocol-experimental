@@ -3570,11 +3570,30 @@ class P2PNode:
                     bump(why or "unknown")
                 except Exception as exc:
                     logger.debug("[P2P] soft-refuse shape counter failed: %s", exc)
-            logger.info(
-                "[P2P] soft-refuse %s from %s (no ban; mesh-safe)",
-                why[:80],
-                (getattr(peer, "peer_id", None) or "?")[:16],
-            )
+            # Debounce INFO spam on libp2p mid-session HS reconnect storms —
+            # host contention + reconnect loops flooded logs and starved /status.
+            peer_key = str(getattr(peer, "peer_id", None) or "?")[:32]
+            why_key = str(why or "unknown")[:80]
+            now = time.time()
+            bucket = getattr(self, "_soft_refuse_log_at", None)
+            if not isinstance(bucket, dict):
+                bucket = {}
+                self._soft_refuse_log_at = bucket
+            stamp_key = (why_key, peer_key)
+            last = float(bucket.get(stamp_key, 0.0) or 0.0)
+            if (now - last) >= 30.0:
+                bucket[stamp_key] = now
+                logger.info(
+                    "[P2P] soft-refuse %s from %s (no ban; mesh-safe)",
+                    why_key,
+                    peer_key[:16],
+                )
+            else:
+                logger.debug(
+                    "[P2P] soft-refuse %s from %s (debounced)",
+                    why_key,
+                    peer_key[:16],
+                )
             return False
         return self.peer_manager.strike(peer, reason)
 
@@ -4614,7 +4633,14 @@ class P2PNode:
                 getattr(self, "_mempool_gas_unparseable_refuse_total", 0) or 0
             ) + 1
             return None
-        if gas <= 0:
+        if gas < 0:
+            # Distinguish negative from missing/zero — gas_negative is a separate soft-refuse.
+            self._last_tx_wire_reject = "gas_negative"
+            self._mempool_gas_negative_refuse_total = int(
+                getattr(self, "_mempool_gas_negative_refuse_total", 0) or 0
+            ) + 1
+            return None
+        if gas == 0:
             self._last_tx_wire_reject = "gas_missing"
             self._mempool_gas_missing_refuse_total = int(
                 getattr(self, "_mempool_gas_missing_refuse_total", 0) or 0
