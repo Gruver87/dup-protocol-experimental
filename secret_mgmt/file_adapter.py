@@ -25,10 +25,10 @@ class FileSecretAdapter:
         wallet_path: str,
         *,
         deployment_mode: str = "dev",
-        allow_prod: bool = False,
     ) -> None:
         mode = (deployment_mode or "dev").strip().lower()
-        if mode in ("prod", "production") and not allow_prod:
+        # No allow_prod bypass — prod must use Vault/K8s SecretManagerPort (ADR 0015).
+        if mode in ("prod", "production"):
             raise RuntimeError("FileSecretAdapter refused in production (ADR 0015)")
         self._path = Path(wallet_path)
         self._deployment_mode = mode

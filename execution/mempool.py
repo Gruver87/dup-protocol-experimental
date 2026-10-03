@@ -1,5 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 """Execution mempool compatibility layer for legacy tests."""
+import os
 import time
 from dataclasses import dataclass
 from typing import Dict, List, Union
@@ -7,6 +8,20 @@ from typing import Dict, List, Union
 from blockchain.mempool import Mempool as _BaseMempool, MempoolTransaction
 MempoolTransaction = MempoolTransaction  # re-export for secure_mempool / legacy imports
 from crypto import native
+
+
+def _require_wire_satoshi() -> bool:
+    """Prod/staging refuse float-only money on this legacy layer (ADR 0021).
+
+    Honors ``ABS_DEPLOYMENT_MODE`` first, then ``DEPLOYMENT_MODE`` (same as
+    ``runtime.config``). Unit tests that need lab float path must clear both.
+    """
+    mode = (
+        os.environ.get("ABS_DEPLOYMENT_MODE")
+        or os.environ.get("DEPLOYMENT_MODE")
+        or ""
+    ).strip().lower()
+    return mode in ("prod", "production", "staging")
 
 
 @dataclass
@@ -17,6 +32,7 @@ class Transaction:
     gas_price: float = 0.0  # must be set positive by callers; 0 is invalid for add
     nonce: int = 0
     hash: str = ""
+    amount_satoshi: int = -1
 
     def __post_init__(self):
         if not self.hash:
@@ -30,6 +46,8 @@ def create_transaction(
     amount: float,
     gas_price: float | None = None,
     nonce: int = 0,
+    *,
+    amount_satoshi: int | None = None,
 ) -> Transaction:
     # Refuse invent gas_price=1.0 when omitted.
     if gas_price is None:
@@ -37,15 +55,25 @@ def create_transaction(
     fee = float(gas_price)
     if fee <= 0:
         raise ValueError("gas_price_required")
-    return Transaction(sender, recipient, amount, fee, nonce)
+    sat = -1 if amount_satoshi is None else int(amount_satoshi)
+    return Transaction(sender, recipient, amount, fee, nonce, amount_satoshi=sat)
 
 
 class Mempool(_BaseMempool):
     def add_transaction(self, tx: Union[Transaction, Dict]) -> Union[bool, str]:
         if isinstance(tx, dict):
+            from blockchain.mempool_wire import WireMoneyMissing, resolve_wire_amount_sat
+            from runtime.amount import from_satoshi_float
+
             sender = tx.get("from", tx.get("from_addr", ""))
             recipient = tx.get("to", tx.get("to_addr", ""))
-            amount = float(tx.get("value", tx.get("amount", 0)))
+            try:
+                amount_sat, amount = resolve_wire_amount_sat(
+                    tx, require_satoshi=_require_wire_satoshi()
+                )
+            except WireMoneyMissing:
+                return False
+            amount = float(from_satoshi_float(int(amount_sat))) if amount_sat is not None else float(amount)
             nonce = int(tx.get("nonce", 0))
             # Refuse invent fee=1 when gas_price/fee omitted.
             raw_fee = tx.get("gas_price", tx.get("gasPrice", tx.get("fee")))
@@ -68,11 +96,19 @@ class Mempool(_BaseMempool):
                 fee=fee,
                 nonce=nonce,
                 timestamp=time.time(),
+                amount_satoshi=int(amount_sat),
             )
             if self.add_raw(mempool_tx):
                 return tx_hash
             return False
 
+        from runtime.amount import to_satoshi
+
+        amt_sat = int(getattr(tx, "amount_satoshi", -1))
+        if amt_sat < 0:
+            if _require_wire_satoshi():
+                return False
+            amt_sat = int(to_satoshi(tx.amount))
         mempool_tx = MempoolTransaction(
             tx_hash=tx.hash,
             from_addr=tx.sender,
@@ -81,6 +117,7 @@ class Mempool(_BaseMempool):
             fee=tx.gas_price,
             nonce=tx.nonce,
             timestamp=time.time(),
+            amount_satoshi=amt_sat,
         )
         return self.add_raw(mempool_tx)
 

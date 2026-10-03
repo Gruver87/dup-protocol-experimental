@@ -57,9 +57,12 @@ def test_from_dict_binds_explicit_gas():
     assert tx.gas == 65000
 
 
-def test_execution_mempool_refuses_missing_fee():
+def test_execution_mempool_refuses_missing_fee(monkeypatch):
     from execution.mempool import Mempool
 
+    # Lab float path — clear ambient prod shell env (operator mesh hosts).
+    monkeypatch.delenv("ABS_DEPLOYMENT_MODE", raising=False)
+    monkeypatch.delenv("DEPLOYMENT_MODE", raising=False)
     mp = Mempool()
     assert (
         mp.add_transaction(
@@ -84,13 +87,15 @@ def test_execution_mempool_refuses_missing_fee():
     assert isinstance(h, str) and h.startswith("0x")
 
 
-def test_secure_mempool_fee_required():
+def test_secure_mempool_fee_required(monkeypatch):
     from execution.secure_mempool import SecureMempool
 
     class _State:
         def get_balance(self, _addr):
             return 100.0
 
+    monkeypatch.delenv("ABS_DEPLOYMENT_MODE", raising=False)
+    monkeypatch.delenv("DEPLOYMENT_MODE", raising=False)
     sm = SecureMempool(_State())
     ok, reason = sm.add_transaction(
         {"from": "alice", "to": "bob", "value": 1, "nonce": 0}

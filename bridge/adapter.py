@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import replace
 from typing import Any, Dict, Optional, Union
 
 from bridge.ports import (
@@ -108,7 +109,18 @@ class RustBridgeAdapter:
         return self._wrap_lock(raw)
 
     def confirm_incoming(self, *args, **kwargs) -> BridgeOpResult:
-        envelope = self._coerce_envelope(*args, **kwargs)
+        try:
+            envelope = self._coerce_envelope(*args, **kwargs)
+        except ValueError as exc:
+            return BridgeOpResult(
+                ok=False,
+                status=InboundStatus.REJECTED.value,
+                detail={
+                    "confirmed": False,
+                    "error": str(exc) or "amount_satoshi_required",
+                    "reason": str(exc) or "amount_satoshi_required",
+                },
+            )
         vr = self.validator.validate(envelope)
         if not vr.ok:
             emit_failed = ""
@@ -155,13 +167,20 @@ class RustBridgeAdapter:
             )
             or ""
         ).strip()
-        # Prefer integer satoshi twin; derive ABS float only for legacy inner API.
-        if envelope.amount_satoshi is not None:
-            from runtime.amount import from_satoshi_float
+        # Satoshi is canonical — never credit from float-only authority.
+        if envelope.amount_satoshi is None:
+            return BridgeOpResult(
+                ok=False,
+                status=InboundStatus.REJECTED.value,
+                detail={
+                    "confirmed": False,
+                    "error": "amount_satoshi_required",
+                    "reason": "amount_satoshi_required",
+                },
+            )
+        from runtime.amount import from_satoshi_float
 
-            amount_abs = float(from_satoshi_float(int(envelope.amount_satoshi)))
-        else:
-            amount_abs = float(envelope.amount)
+        amount_abs = float(from_satoshi_float(int(envelope.amount_satoshi)))
         raw = self._inner.confirm_incoming(
             abs_tx,
             envelope.to_addr,
@@ -202,12 +221,30 @@ class RustBridgeAdapter:
 
     @staticmethod
     def _coerce_envelope(*args, **kwargs) -> InboundEnvelope:
+        from runtime.amount import from_satoshi_float, to_satoshi
+
         if args and isinstance(args[0], InboundEnvelope):
-            return args[0]
+            env = args[0]
+            if env.amount_satoshi is not None:
+                return env
+            # Legacy envelopes: derive satoshi twin from display ABS (fail closed if unparseable).
+            try:
+                sat = int(to_satoshi(env.amount))
+            except (TypeError, ValueError) as exc:
+                raise ValueError("amount_satoshi_required") from exc
+            return replace(
+                env,
+                amount_satoshi=sat,
+                amount=float(from_satoshi_float(sat)),
+            )
         # Legacy: confirm_incoming(tx_hash, recipient, amount, from_chain, ...)
         tx_hash = str(args[0] if len(args) > 0 else kwargs.get("tx_hash", "") or "")
         recipient = str(args[1] if len(args) > 1 else kwargs.get("recipient", "") or "")
-        amount = float(args[2] if len(args) > 2 else kwargs.get("amount", 0) or 0)
+        amount_raw = args[2] if len(args) > 2 else kwargs.get("amount", 0)
+        try:
+            amount = float(amount_raw or 0)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("amount_satoshi_required") from exc
         from_chain = str(
             args[3] if len(args) > 3 else kwargs.get("from_chain", "ethereum") or "ethereum"
         )
@@ -218,18 +255,14 @@ class RustBridgeAdapter:
         if l1_tx:
             meta.setdefault("l1_tx_hash", l1_tx)
         amount_satoshi = kwargs.get("amount_satoshi")
-        if amount_satoshi is None and amount:
-            try:
-                from runtime.amount import to_satoshi
-
+        try:
+            if amount_satoshi is not None:
+                amount_satoshi = int(amount_satoshi)
+            else:
                 amount_satoshi = int(to_satoshi(amount))
-            except (TypeError, ValueError):
-                amount_satoshi = None
-        else:
-            try:
-                amount_satoshi = int(amount_satoshi) if amount_satoshi is not None else None
-            except (TypeError, ValueError):
-                amount_satoshi = None
+        except (TypeError, ValueError) as exc:
+            raise ValueError("amount_satoshi_required") from exc
+        amount = float(from_satoshi_float(int(amount_satoshi)))
         return InboundEnvelope(
             from_chain=from_chain,
             to_addr=recipient,
