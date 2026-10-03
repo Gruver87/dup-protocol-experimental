@@ -57,6 +57,7 @@
 | P1 (fixed) | Mining/P2P/HTTP dropped `amount_satoshi` on Mempool→Transaction | Bound on `main` forge, mempool validate, P2P ingest, `/tx/send`+deploy/call; `get_sorted_transactions` emits satoshi |
 | P1 (fixed) | Native `apply_simple` / host_effects ignored `amount_satoshi` (float `value` authority) | `tx_amount_sat` on apply path; `state_service` JSON + `plan_*` bind satoshi |
 | P1 (fixed) | EVM host `call`/`deploy` float `value` → satoshi / wei | `amount_satoshi=` kwarg; wei via `WEI_PER_SATOSHI`; block_validator prefers twin |
+| P1 (fixed) | Dual-write mismatch silent satoshi-win (`Transaction.__init__`, HTTP deploy/call, `tx_validator`) | Refuse `value_satoshi_mismatch`; HTTP deploy/call via `resolve_wire_amount_sat` |
 | Residual MED | Full type erase of `Transaction.value: float` | Later ADR — satoshi twin is authority when present |
 | Residual HIGH (known) | Experimental mesh `feature_libp2p=true` + `p2p_tls_enabled=false` | ADR 0020 Noise; pin stays TCP+TLS — do not sell as pin parity |
 | Residual org **P0 for mainnet** | Pen-test scheduled + third-party L1/EVM audit PDF | **Not code** — Phase 6 firm kickoff |

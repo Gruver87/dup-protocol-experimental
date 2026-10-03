@@ -107,6 +107,12 @@ class Transaction:
                 raise ValueError("amount_satoshi_invalid") from exc
             if self.amount_satoshi < 0:
                 raise ValueError("value_negative")
+            # Dual-write honesty: refuse ABS float that disagrees with satoshi twin.
+            from runtime.amount import to_satoshi
+
+            abs_sat = int(to_satoshi(value))
+            if abs_sat != self.amount_satoshi:
+                raise ValueError("value_satoshi_mismatch")
         else:
             self.amount_satoshi = None
         self.hash = tx_hash or self._compute_hash()

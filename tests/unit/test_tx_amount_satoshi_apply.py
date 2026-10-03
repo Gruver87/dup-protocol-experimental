@@ -19,12 +19,27 @@ def test_resolve_tx_value_prefers_amount_satoshi():
     tx = Transaction(
         "0xa",
         "0xb",
-        value=99.0,
+        value=1.0,
         nonce=0,
         gas=21000,
         amount_satoshi=1_000_000,
     )
     assert resolve_tx_value_satoshi(tx) == 1_000_000
+    # Float-only fallback when twin absent.
+    tx2 = Transaction("0xa", "0xb", value=2.0, nonce=0, gas=21000)
+    assert resolve_tx_value_satoshi(tx2) == int(to_satoshi(2.0))
+
+
+def test_transaction_init_refuses_value_satoshi_mismatch():
+    with pytest.raises(ValueError, match="value_satoshi_mismatch"):
+        Transaction(
+            "0xa",
+            "0xb",
+            value=99.0,
+            nonce=0,
+            gas=21000,
+            amount_satoshi=1_000_000,
+        )
 
 
 def test_from_dict_binds_amount_satoshi():
@@ -106,8 +121,37 @@ def test_block_validator_prefers_amount_satoshi():
             "from": "0xa",
             "to": "0xb",
             "nonce": 0,
-            "value": 99.0,
+            "value": 0.5,
             "amount_satoshi": 500_000,
         }
     )
     assert ok is True
+
+
+def test_tx_validator_refuses_value_satoshi_mismatch():
+    from blockchain.tx_validator import TransactionValidator
+
+    class _SM:
+        def get_account(self, _a):
+            return type("A", (), {"nonce": 0})()
+
+        def get_balance_satoshi(self, _a):
+            return 10_000_000
+
+    ok, reason = TransactionValidator.validate(
+        {
+            "from": "0x" + "a" * 40,
+            "to": "0x" + "b" * 40,
+            "value": 2.0,
+            "amount_satoshi": 1_000_000,
+            "nonce": 0,
+            "gas": 21000,
+            "fee": 0.001,
+            "fee_satoshi": 1000,
+            "hash": "0x1",
+        },
+        _SM(),
+        require_signature=False,
+    )
+    assert ok is False
+    assert reason == "value_satoshi_mismatch"

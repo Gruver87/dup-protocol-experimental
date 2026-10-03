@@ -10305,13 +10305,26 @@ def _handle_deploy_tx(body: Dict, bc, mp, cfg, wallet=None, evm=None) -> str:
         raise ValueError("from address required (or auto_sign with wallet)")
 
     nonce = int(tx_body.get("nonce", bc.db.get_nonce(from_addr)))
-    from runtime.amount import to_satoshi
+    from blockchain.mempool_wire import (
+        WireMoneyMismatch,
+        WireMoneyMissing,
+        resolve_wire_amount_sat,
+    )
 
-    amount_sat = int(to_satoshi(value))
-    if body.get("amount_satoshi") is not None:
-        amount_sat = int(body.get("amount_satoshi"))
-    elif body.get("value_satoshi") is not None:
-        amount_sat = int(body.get("value_satoshi"))
+    mode = str(getattr(cfg, "deployment_mode", "dev") or "dev").strip().lower()
+    money = {
+        "value": body.get("value", body.get("amount", value)),
+        "amount_satoshi": body.get("amount_satoshi"),
+        "value_satoshi": body.get("value_satoshi"),
+    }
+    try:
+        amount_sat, value = resolve_wire_amount_sat(
+            money, require_satoshi=(mode == "prod")
+        )
+    except WireMoneyMissing as exc:
+        raise ValueError("amount_satoshi_required") from exc
+    except WireMoneyMismatch as exc:
+        raise ValueError("value_satoshi_mismatch") from exc
     tx = Transaction(
         from_addr=from_addr,
         to_addr=zero_addr,
@@ -10379,13 +10392,26 @@ def _handle_call_tx(body: Dict, bc, mp, cfg, wallet=None) -> str:
         raise ValueError("from address required (or auto_sign with wallet)")
 
     nonce = int(tx_body.get("nonce", bc.db.get_nonce(from_addr)))
-    from runtime.amount import to_satoshi
+    from blockchain.mempool_wire import (
+        WireMoneyMismatch,
+        WireMoneyMissing,
+        resolve_wire_amount_sat,
+    )
 
-    amount_sat = int(to_satoshi(value))
-    if body.get("amount_satoshi") is not None:
-        amount_sat = int(body.get("amount_satoshi"))
-    elif body.get("value_satoshi") is not None:
-        amount_sat = int(body.get("value_satoshi"))
+    mode = str(getattr(cfg, "deployment_mode", "dev") or "dev").strip().lower()
+    money = {
+        "value": body.get("value", body.get("amount", value)),
+        "amount_satoshi": body.get("amount_satoshi"),
+        "value_satoshi": body.get("value_satoshi"),
+    }
+    try:
+        amount_sat, value = resolve_wire_amount_sat(
+            money, require_satoshi=(mode == "prod")
+        )
+    except WireMoneyMissing as exc:
+        raise ValueError("amount_satoshi_required") from exc
+    except WireMoneyMismatch as exc:
+        raise ValueError("value_satoshi_mismatch") from exc
     tx_body = {
         "from": from_addr,
         "to": to_addr,

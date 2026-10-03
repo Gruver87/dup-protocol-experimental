@@ -5344,6 +5344,28 @@ def _check_fail_loud_surfaces() -> tuple[list[str], list[str]]:
             errors.append(
                 "mempool_wire must emit amount_satoshi / fee_satoshi (ADR 0021 cutover)"
             )
+        bc_tx_py = (ROOT / "core" / "blockchain.py").read_text(
+            encoding="utf-8", errors="replace"
+        )
+        if "value_satoshi_mismatch" not in bc_tx_py:
+            errors.append(
+                "Transaction.__init__ must refuse value_satoshi_mismatch (ADR 0021)"
+            )
+        tx_val_py = (ROOT / "blockchain" / "tx_validator.py").read_text(
+            encoding="utf-8", errors="replace"
+        )
+        if "value_satoshi_mismatch" not in tx_val_py:
+            errors.append("tx_validator must refuse value_satoshi_mismatch")
+        http_deploy = (ROOT / "api" / "http.py").read_text(
+            encoding="utf-8", errors="replace"
+        )
+        if (
+            "resolve_wire_amount_sat" not in http_deploy
+            or "amount_satoshi_required" not in http_deploy
+        ):
+            errors.append(
+                "HTTP deploy/call must resolve_wire_amount_sat (prod float-only refuse)"
+            )
         if "resolve_wire_fee_sat" not in wire_py or "WireMoneyMismatch" not in wire_py:
             errors.append(
                 "mempool_wire must resolve satoshi + refuse mismatch (ADR 0021 cutover)"

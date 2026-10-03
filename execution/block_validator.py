@@ -99,6 +99,10 @@ class BlockValidator:
             raw_sat = tx.get("amount_satoshi", tx.get("value_satoshi"))
             if raw_sat is not None and raw_sat != "":
                 value_sat = int(raw_sat)
+                raw_abs = tx.get("value", tx.get("amount"))
+                if raw_abs is not None and raw_abs != "":
+                    if int(to_satoshi(raw_abs)) != value_sat:
+                        return False, "value_satoshi_mismatch"
             else:
                 value_sat = int(to_satoshi(tx.get("value", tx.get("amount", 0))))
         except (TypeError, ValueError):
