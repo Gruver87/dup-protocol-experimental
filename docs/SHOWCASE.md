@@ -41,6 +41,18 @@ Deck outline (not slides): [INVESTOR_DECK_SKELETON.md](INVESTOR_DECK_SKELETON.md
 
 Do **not** present Exp libp2p demo as the pin transport. Do **not** claim a soak from a live demo session.
 
+## Verify both repos (key surfaces)
+
+```powershell
+# From Experimental root — pin + Exp in one scoreboard
+.\scripts\verify_dup_suite.ps1 -Mode Quick      # daily
+.\scripts\verify_dup_suite.ps1 -Mode Standard  # recommended
+.\scripts\verify_dup_suite.ps1 -Mode Full
+.\scripts\verify_dup_suite.ps1 -Mode Max       # needs live mesh :18180-18182
+```
+
+Detail: [VERIFY_SUITE.md](VERIFY_SUITE.md). Does **not** start 48h soak.
+
 ---
 
 ## Security story (transport honesty)

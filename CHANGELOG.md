@@ -15,6 +15,7 @@ Canonical language for this repository is **English**. Older inherited entries b
 
 ### Experimental R&D
 
+- **Verify suite (2026-10-03):** dual-repo operator entry [`scripts/verify_dup_suite.ps1`](scripts/verify_dup_suite.ps1) / [`verify_dup_suite.py`](scripts/verify_dup_suite.py) (Quick→Max); doc [`VERIFY_SUITE.md`](docs/VERIFY_SUITE.md); legacy `verify_absolute_unified` aliases. Pin helper `verify_dup_both.ps1`. **Does not** start soak / **not** mainnet.
 - **Showcase pack (2026-10-03):** funds/ПВТ/demo front door — [`docs/SHOWCASE.md`](docs/SHOWCASE.md), [`FAQ.md`](docs/FAQ.md), [`ONE_PAGER.md`](docs/ONE_PAGER.md) / [`ONE_PAGER_RU.md`](docs/ONE_PAGER_RU.md), [`ELEVATOR_PITCH.md`](docs/ELEVATOR_PITCH.md); threat-model transport honesty; README/AT_A_GLANCE/DILIGENCE wired. **Not** soak PASS / **not** mainnet.
 - **P1 AI+NFT mid-soak wave CLOSED (2026-10-03):** docs sync — EVIDENCE_MATRIX / README / AT_A_GLANCE / EXECUTION_ORDER / lab profiles mark disk wave closed at `6fb5640`. Live EVM STRICT soak still independent (no PASS claim). **Not** prod flag flip.
 - **P1 AI+NFT HTTP paint honesty (2026-10-03):** mid-soak disk — `_nft_sprout_enabled` + disabled GET envelopes; POST `/nft/offer` no longer hardcodes `offers_escrow:false`; `/status` `nft_*` / `ai_validator_*`; SDK `get_ai_agent_stats` / `get_ai_mev_scan`; `main.py` AI/NFT `getattr` defaults False; NFT lab profile soft-escrow docs. Labs/units updated. **Does not** restart soak / **not** prod flag flip / **not** soak PASS.

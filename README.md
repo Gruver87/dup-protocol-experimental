@@ -219,6 +219,7 @@ Default Hybrid CI / prod mesh builds **without** the `libp2p` feature.
 | Need | Open |
 |------|------|
 | **Showcase front door (funds / ПВТ / demo)** | [SHOWCASE](docs/SHOWCASE.md) |
+| **Verify pin + Exp (one suite)** | [VERIFY_SUITE](docs/VERIFY_SUITE.md) · `.\scripts\verify_dup_suite.ps1 -Mode Standard` |
 | FAQ / one-pager EN+RU / elevator | [FAQ](docs/FAQ.md) · [ONE_PAGER](docs/ONE_PAGER.md) · [ONE_PAGER_RU](docs/ONE_PAGER_RU.md) · [ELEVATOR_PITCH](docs/ELEVATOR_PITCH.md) |
 | Vision (industrial pin) | [VISION](https://github.com/Gruver87/dup-protocol/blob/master/docs/VISION.md) |
 | One-screen card | [AT_A_GLANCE](docs/AT_A_GLANCE.md) |
