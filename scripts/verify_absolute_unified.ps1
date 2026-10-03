@@ -1,4 +1,4 @@
-# Legacy alias → verify_dup_suite.ps1
+# Legacy alias -> verify_dup_suite.ps1
 param(
     [ValidateSet("Quick", "Standard", "Full", "Max")]
     [string]$Mode = "Standard",
@@ -16,7 +16,7 @@ param(
 $ErrorActionPreference = "Stop"
 $here = $PSScriptRoot
 $fwd = Join-Path $here "verify_dup_suite.ps1"
-Write-Host "NOTE: verify_absolute_unified.ps1 → verify_dup_suite.ps1" -ForegroundColor DarkYellow
+Write-Host "NOTE: verify_absolute_unified.ps1 -> verify_dup_suite.ps1" -ForegroundColor DarkYellow
 & $fwd -Mode $Mode -PinRoot $HybridRoot -MinSoakHours $MinSoakHours `
     -SkipPin:$SkipHybrid -SkipExperimentalRd:$SkipExperimentalRd `
     -SkipLibp2p:$SkipLibp2p -RebuildLibp2p:$RebuildLibp2p `

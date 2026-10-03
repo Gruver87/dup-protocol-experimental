@@ -1,4 +1,4 @@
-# DUP Protocol — ONE operator entry for pin + Experimental verify
+# DUP Protocol - ONE operator entry for pin + Experimental verify
 #
 # Does NOT start 48h soak. Does NOT rebuild Docker (except optional -RebuildLibp2p).
 # PASS != public mainnet / firm audit / invented soak PASS.
@@ -85,7 +85,7 @@ if ($WithMeshProbe) { $pyArgs += "--with-mesh-probe" }
 if ($KeepGoing) { $pyArgs += "--keep-going" }
 if ($Quiet) { $pyArgs += "-q" }
 
-Write-Host "DUP SUITE: python $($pyArgs -join ' ')" -ForegroundColor Cyan
-Write-Host "honesty: pin TCP+TLS + Exp R&D — not one merged prod tree; soak NOT started" -ForegroundColor DarkYellow
+Write-Host ("DUP SUITE: python " + ($pyArgs -join " ")) -ForegroundColor Cyan
+Write-Host "honesty: pin TCP+TLS + Exp R and D - not one merged prod tree; soak NOT started" -ForegroundColor DarkYellow
 & python @pyArgs
 exit $LASTEXITCODE
