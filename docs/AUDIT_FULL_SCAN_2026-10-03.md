@@ -73,6 +73,8 @@
 | Residual MED | Lightning in-channel balances still float fields (twins on persist) | Deeper channel-state sat authority later |
 | P2 (fixed) | `/bridge2/fee` invent amount=100; pool-spend float gate + invent gas=21000 | Require amount/sat; `is_outgoing_allowed_sat`; admin gas=1/used=0; auto_sign satoshi; WASM nonzero value refuse; AI trade twins |
 | Prep | Fund demo operator pack | [`FUND_DEMO_OPERATOR_PACK.md`](FUND_DEMO_OPERATOR_PACK.md) — verify scripts + open org gaps |
+| P1 (fixed) | CryptoWill ungated + `getattr(feature_*, True)` fail-open | `feature_crypto_will` OFF; getattr defaults False; NFT/AI list honesty; `/pq/keygen` prod-blocked |
+| P2 (docs) | Pin SHA conflict + Phase 5 wording + Absolute header | Engagement pin `0531995d…`; EO Phase 5 clarified; MAINNET_GAP brand DUP |
 | Residual HIGH (known) | Experimental mesh `feature_libp2p=true` + `p2p_tls_enabled=false` | ADR 0020 Noise; pin stays TCP+TLS — do not sell as pin parity |
 | Residual org **P0 for mainnet** | Pen-test scheduled + third-party L1/EVM audit PDF | **Not code** — Phase 6 firm kickoff |
 | Residual org | Bridge L1 contracts / cutover env placeholders | Keep bridge OFF on live mesh |

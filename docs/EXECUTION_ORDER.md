@@ -31,7 +31,7 @@ Phase 3   EVM regression + post-prep mesh 48h PASS (evm48pass1)
     ↓
 Phase 4   Mempool/validation Rust (ADR 0021 phases 0→3, mesh gate each sub-phase)
     ↓
-Phase 5   Optional EVM lab waves 11+ (reorg/logs, compat matrix closure)
+Phase 5   Industrial tip + Phase-5 labs (ind48pass1 / phase5reverify2); EVM waves 11+ optional
     ↓
 Phase 6   External audit / mainnet gap (out of repo scope until scheduled)
 ```
@@ -145,7 +145,11 @@ Detail: [adr/0021-mempool-validation-rust-phases.md](adr/0021-mempool-validation
 
 ---
 
-## Phase 5+ — Optional depth (lab-only, parallel-safe)
+## Phase 5 — Labs + industrial tip (DONE for diligence) / optional depth
+
+**Diligence meaning of Phase 5 (closed):** industrial tip soak [`ind48pass1`](evidence/runs/ind48pass1/) + host lab re-verify [`phase5reverify2`](evidence/runs/phase5reverify2/) + oracle/shard/bridge-OFF packs. Prod flags stay false.
+
+**Master-sequence “Phase 5” historically also meant** optional EVM waves 11+ — those labs are done for now; further COMPAT_MATRIX chase is deferred (not a blocker).
 
 **Oracles + cross-shard** — code exists; prod mesh keeps `feature_oracles=false` and
 `feature_sharding=false`. Safe work:
@@ -155,14 +159,14 @@ Detail: [adr/0021-mempool-validation-rust-phases.md](adr/0021-mempool-validation
 | Oracle HMAC + persist + quorum | `scripts/oracle_lab.py` | aux SQLite ([ORACLE_LAB_PROFILE.md](sprouts/ORACLE_LAB_PROFILE.md)) |
 | Cross-shard ACK + 2/3 quorum | `scripts/cross_shard_lab.py` | E ([SHARD_LAB_PROFILE.md](sprouts/SHARD_LAB_PROFILE.md)) |
 | Shard docker mesh | `scripts/start_shard_devnet.ps1` | E — separate compose only |
-| Long-Range lab compose | `docker-compose.long_range.lab.yml` + `long_range_lab_2h_harness.py` | F companion ([LONG_RANGE_LAB_PROFILE.md](sprouts/LONG_RANGE_LAB_PROFILE.md)) — 2h **not** started |
+| Long-Range lab compose | `docker-compose.long_range.lab.yml` | F companion — **48h+STRICT DONE** (Phase 2); do not re-arm on prod JSON |
 
 **Forbidden:** `feature_oracles=true` or `feature_sharding=true` on prod `778888` JSON during libp2p 48h.
 
 Other optional depth:
 
 - EVM: waves 8–11 labs + `verify_evm_depth_lab.ps1` ([`evmlab1`](evidence/runs/evmlab1/)); `evm_rpc_lab` / `evm_logs_lab` / `evm_filters_lab` (polling filters; not WS)
-- Long-Range: `scripts/long_range_lab_2h_harness.py` preflight (2h **not** started); BLS design-only in ADR 0017
+- Long-Range: Phase 2 CLOSED ([`lr48pass1`](evidence/runs/lr48pass1/) / [`lrstrict1`](evidence/runs/lrstrict1/)); BLS design-only in ADR 0017; prod `feature_long_range=false`
 - libp2p: post-48h hardening from soak WARN patterns; operator prep [LIBP2P_48H_PREP.md](sprouts/LIBP2P_48H_PREP.md)
 - Parallel batch verify (no soak): `python scripts/verify_parallel_rd_batch.py`
 - Hybrid (audit pin): engagement prep only — see Hybrid `docs/AUDITS.md` § Safe Hybrid work

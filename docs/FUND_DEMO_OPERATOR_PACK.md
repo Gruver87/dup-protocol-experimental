@@ -82,6 +82,7 @@ Pin demo (firm narrative): follow pin `DEMO_RUNBOOK_PIN.md` / pin SHOWCASE — *
 | Lightning in-channel float fields | MED residual | Twins on persist; deeper sat state later |
 | ADR 0020 Exp libp2p vs pin TCP+TLS | Intentional | Do not sell as pin parity |
 | Long-Range / BLS / listed token | Not claimed | Lab-only / off in prod JSON |
+| CryptoWill / Lightning / Plasma / MEV | Feature flags default **OFF** | Demo must set `FEATURE_*` explicitly; do not imply prod inheritance L1 |
 
 ---
 

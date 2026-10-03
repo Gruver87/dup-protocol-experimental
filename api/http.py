@@ -584,6 +584,7 @@ _PROD_BLOCKED_PATHS = frozenset({
     "/pq/decapsulate",
     "/pq/hybrid-decrypt",
     "/pq/hybrid-sign",
+    "/pq/keygen",
     "/pq/sphincs/sign",
     "/pools/dao/vote",
     "/pools/spend",
@@ -4495,12 +4496,19 @@ class RESTHandler(BaseHTTPRequestHandler):
                     try:
                         auctions = {k: (v.__dict__ if hasattr(v, "__dict__") else v)
                                     for k, v in nft.auctions.items()}
-                        self._json({
+                        stats = nft.get_stats() if hasattr(nft, "get_stats") else {}
+                        base = _nft_disabled_payload(loaded=True)
+                        base.update({
                             "auctions": auctions,
                             "count": len(auctions),
                             "enabled": True,
                             "loaded": True,
+                            "execution_bound": bool(stats.get("execution_bound", False)),
+                            "consensus_wired": False,
+                            "auction_escrow": bool(stats.get("auction_escrow", False)),
+                            "honesty": stats.get("honesty") or base["honesty"],
                         })
+                        self._json(base)
                     except Exception as e:
                         self._json({"auctions": {}, "enabled": False, "error": str(e)})
                 else:
@@ -4795,12 +4803,18 @@ class RESTHandler(BaseHTTPRequestHandler):
                     self._json(payload)
                 else:
                     offers = nft.get_offers(token_id) if hasattr(nft, "get_offers") else []
-                    self._json({
+                    stats = nft.get_stats() if hasattr(nft, "get_stats") else {}
+                    base = _nft_disabled_payload(loaded=True)
+                    base.update({
                         "offers": offers,
                         "enabled": True,
                         "loaded": True,
-                        "offers_escrow": True,
+                        "execution_bound": bool(stats.get("execution_bound", False)),
+                        "consensus_wired": False,
+                        "offers_escrow": bool(stats.get("offers_escrow", False)),
+                        "honesty": stats.get("honesty") or base["honesty"],
                     })
+                    self._json(base)
 
             elif path == "/nft/sales":
                 nft = self.__class__.nft
@@ -4817,7 +4831,17 @@ class RESTHandler(BaseHTTPRequestHandler):
                         if hasattr(nft, "get_sales_history")
                         else []
                     )
-                    self._json({"sales": sales, "enabled": True, "loaded": True})
+                    stats = nft.get_stats() if hasattr(nft, "get_stats") else {}
+                    base = _nft_disabled_payload(loaded=True)
+                    base.update({
+                        "sales": sales,
+                        "enabled": True,
+                        "loaded": True,
+                        "execution_bound": bool(stats.get("execution_bound", False)),
+                        "consensus_wired": False,
+                        "honesty": stats.get("honesty") or base["honesty"],
+                    })
+                    self._json(base)
 
             elif path == "/nft/marketplace":
                 nft = self.__class__.nft
@@ -5108,6 +5132,9 @@ class RESTHandler(BaseHTTPRequestHandler):
                         "agents": am.get_user_agents(owner),
                         "enabled": True,
                         "loaded": True,
+                        "simulation_only": True,
+                        "consensus_wired": False,
+                        "execution_bound": bool(getattr(am, "trade_executor", None)),
                         "honesty": _AI_AGENT_HONESTY,
                     })
                 elif am and enabled:
@@ -5115,6 +5142,9 @@ class RESTHandler(BaseHTTPRequestHandler):
                         "agents": am.get_all_agents(),
                         "enabled": True,
                         "loaded": True,
+                        "simulation_only": True,
+                        "consensus_wired": False,
+                        "execution_bound": bool(getattr(am, "trade_executor", None)),
                         "honesty": _AI_AGENT_HONESTY,
                     })
                 else:
@@ -5122,6 +5152,9 @@ class RESTHandler(BaseHTTPRequestHandler):
                         "agents": [],
                         "enabled": False,
                         "loaded": loaded,
+                        "simulation_only": True,
+                        "consensus_wired": False,
+                        "execution_bound": False,
                         "honesty": _AI_AGENT_HONESTY,
                     })
 

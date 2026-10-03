@@ -25,10 +25,10 @@ Prefer the **pin** for firm scope. Experimental packs (libp2p / LR lab / EVM STR
 
 | Tree | Ref | SHA (object) |
 |------|-----|----------------|
-| Industrial pin | tag `v1.3.1339-tip-v2-industrial` | `3e91a5922277916636102aeacf111a16ac21b476` |
-| Experimental (this repo, Phase 6 prep refresh 2026-10-01) | `main` | `a9783285e82b3317b402ca4dcef746b441c66ed6` |
+| Industrial pin | tag `v1.3.1339-tip-v2-industrial` | `0531995d41673a807b5c21ddf1beb7b5034eab07` |
+| Experimental (this repo) | `main` at kickoff | **re-record:** `git rev-parse HEAD` (prep pack `phase6prep1` recorded `a978328` historically) |
 
-Re-record Experimental SHA at firm kickoff: `git rev-parse HEAD`. Prep pack: [`evidence/runs/phase6prep1/`](evidence/runs/phase6prep1/). Human checklist: [`FIRM_KICKOFF_CHECKLIST.md`](FIRM_KICKOFF_CHECKLIST.md). Firm one-pager: [`AUDIT_ENGAGEMENT_BRIEF.md`](AUDIT_ENGAGEMENT_BRIEF.md).
+Pin SHA verified locally 2026-10-03 via `git rev-list -n 1 v1.3.1339-tip-v2-industrial` on [`dup-protocol`](https://github.com/Gruver87/dup-protocol). Prep pack: [`evidence/runs/phase6prep1/`](evidence/runs/phase6prep1/). Human checklist: [`FIRM_KICKOFF_CHECKLIST.md`](FIRM_KICKOFF_CHECKLIST.md). Firm one-pager: [`AUDIT_ENGAGEMENT_BRIEF.md`](AUDIT_ENGAGEMENT_BRIEF.md).
 
 ### Evidence pack IDs to list in the engagement letter
 

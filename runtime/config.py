@@ -222,6 +222,7 @@ class Config:
     feature_wasm: bool = False
     feature_plasma: bool = False
     feature_lightning: bool = False
+    feature_crypto_will: bool = False
     feature_pq: bool = False
     feature_mev: bool = False
     feature_ai_agents: bool = False
@@ -849,6 +850,9 @@ class Config:
         self.feature_wasm = env_bool("FEATURE_WASM", self.feature_wasm)
         self.feature_plasma = env_bool("FEATURE_PLASMA", self.feature_plasma)
         self.feature_lightning = env_bool("FEATURE_LIGHTNING", self.feature_lightning)
+        self.feature_crypto_will = env_bool(
+            "FEATURE_CRYPTO_WILL", self.feature_crypto_will
+        )
         self.feature_pq = env_bool("FEATURE_PQ", self.feature_pq)
         self.feature_mev = env_bool("FEATURE_MEV", self.feature_mev)
         self.feature_ai_agents = env_bool("FEATURE_AI_AGENTS", self.feature_ai_agents)
@@ -940,6 +944,7 @@ class Config:
             self.feature_wasm = env_bool("FEATURE_WASM", False)
             self.feature_plasma = env_bool("FEATURE_PLASMA", False)
             self.feature_lightning = env_bool("FEATURE_LIGHTNING", False)
+            self.feature_crypto_will = env_bool("FEATURE_CRYPTO_WILL", False)
             self.feature_pq = env_bool("FEATURE_PQ", False)
             self.feature_nft = env_bool("FEATURE_NFT", False)
             self.feature_mev = env_bool("FEATURE_MEV", False)
@@ -1083,6 +1088,7 @@ class Config:
                 "FEATURE_WASM": self.feature_wasm,
                 "FEATURE_PLASMA": self.feature_plasma,
                 "FEATURE_LIGHTNING": self.feature_lightning,
+                "FEATURE_CRYPTO_WILL": self.feature_crypto_will,
                 "FEATURE_PQ": self.feature_pq,
                 "FEATURE_NFT": self.feature_nft,
                 "FEATURE_MEV": self.feature_mev,
