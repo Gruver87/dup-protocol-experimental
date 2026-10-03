@@ -44,13 +44,18 @@
 | Sev | Finding | Action |
 |-----|---------|--------|
 | P1 (fixed) | `pre_mainnet_audit.py` painted all 8 external checklist rows `[ ]` even when live evaluate / tracker had 6/8 PASS — diligence under-claim / confusion for fund decks | Now uses `runtime.external_audit.evaluate`; report JSON includes `external_audit` summary; prints `[x]`/`[ ]` + notes |
+| P1 (fixed) | `Wallet.export` / plaintext `import_wallet` allowed bare calls (ops footgun — critical-path scan HIGH) | Require `allow_plaintext=True` or password keystore; ceremony/mesh/dev callers explicit |
 | P2 (docs) | `FUND_READINESS.md` CI tip still said `719deb4` while `main` moved | Clarified: current CI tip `9944c55`; soak pack tip stays `719deb4` |
+| Residual HIGH (known) | `Transaction.value: float` + display dual-write on apply | Wave C satoshi ledger authority; full type cutover = later ADR, not this pass |
+| Residual HIGH (known) | Experimental mesh `feature_libp2p=true` + `p2p_tls_enabled=false` | ADR 0020 Noise; pin stays TCP+TLS — do not sell as pin parity |
+| Residual MED | `execution/mempool.py` float amount (legacy layer) | Industrial path uses `mempool_wire` satoshi refuse |
 | Residual org **P0 for mainnet** | Pen-test scheduled + third-party L1/EVM audit PDF | **Not code** — Phase 6 firm kickoff |
 | Residual org | Bridge L1 contracts / cutover env placeholders | Keep bridge OFF on live mesh |
-| Residual intentional | Experimental `feature_libp2p=true` on prod mesh JSON | ADR 0020 — pin remains TCP+TLS |
 | Residual intentional | `feature_long_range=false` on prod | ADR 0017 lab-only |
 | Residual R&D | Absolute-VM ≠ Yellow Paper; EVM subset | Disclosed in matrix / ADR 0023 |
 | Benign | `/market/fx` uses float for FX display amounts | Not ledger money |
+
+Critical-path search (no CRITICAL green-paint): [Critical-path security scan](556bf27c-14b0-46dc-a1de-2a2064fab99a).
 
 ---
 
