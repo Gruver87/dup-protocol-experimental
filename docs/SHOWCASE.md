@@ -8,6 +8,8 @@
 
 This is the **single front door** for grant officers, HTP / ПВТ reviewers, and technical diligence.
 
+**Operator max-prep checklist (2026-10-03):** [FUND_DEMO_OPERATOR_PACK.md](FUND_DEMO_OPERATOR_PACK.md)
+
 ---
 
 ## 60 seconds

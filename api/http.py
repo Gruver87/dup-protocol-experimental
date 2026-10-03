@@ -3013,8 +3013,17 @@ class RESTHandler(BaseHTTPRequestHandler):
                         "note": "runtime capability flags — not external audit certification",
                     },
                     "lightning_enabled": self.__class__.lightning is not None,
+                    "lightning_execution_bound": bool(
+                        getattr(self.__class__.lightning, "db", None)
+                    ),
                     "plasma_enabled": self.__class__.plasma is not None,
+                    "plasma_execution_bound": bool(
+                        getattr(self.__class__.plasma, "db", None)
+                    ),
                     "crypto_will_enabled": self.__class__.crypto_will is not None,
+                    "crypto_will_execution_bound": bool(
+                        getattr(self.__class__.crypto_will, "db", None)
+                    ),
                     "wasm_enabled": self.__class__.wasm_vm is not None,
                     "wasm_operational": bool(
                         self.__class__.wasm_vm is not None
@@ -5201,16 +5210,25 @@ class RESTHandler(BaseHTTPRequestHandler):
                 cb = self.__class__.cross_bridge
                 chain = qs.get("chain", ["ethereum"])[0]
                 raw_sat = qs.get("amount_satoshi", qs.get("value_satoshi", [None]))[0]
+                raw_amt = qs.get("amount", [None])[0]
                 try:
+                    if (
+                        (raw_sat is None or str(raw_sat).strip() == "")
+                        and (raw_amt is None or str(raw_amt).strip() == "")
+                    ):
+                        self._error(
+                            400,
+                            "amount_satoshi or amount required "
+                            "(no invent amount=100)",
+                        )
+                        return
                     if raw_sat is not None and str(raw_sat).strip() != "":
-                        abs_for = qs["amount"][0] if "amount" in qs else None
+                        abs_for = raw_amt if raw_amt is not None else None
                         amount_sat, amount = resolve_amount_satoshi(
                             abs_for, int(raw_sat)
                         )
                     else:
-                        amount = money_abs(
-                            qs.get("amount", ["100"])[0], field="amount"
-                        )
+                        amount = money_abs(raw_amt, field="amount")
                         amount_sat = int(to_satoshi(amount))
                 except (TypeError, ValueError) as exc:
                     self._error(400, f"invalid amount: {exc}")
@@ -7699,9 +7717,10 @@ class RESTHandler(BaseHTTPRequestHandler):
                     body.get(k) is not None and str(body.get(k)).strip() != ""
                     for k in ("value_satoshi", "amount_satoshi", "value", "amount")
                 )
+                value_sat = 0
                 if has_value:
                     try:
-                        value, _value_sat = _http_amount_abs(
+                        value, value_sat = _http_amount_abs(
                             body,
                             self.__class__.config,
                             field="value",
@@ -7710,9 +7729,21 @@ class RESTHandler(BaseHTTPRequestHandler):
                         )
                     except ValueError as exc:
                         self._error(400, str(exc)); return
+                    if int(value_sat) != 0:
+                        self._error(
+                            400,
+                            "wasm call value not L1-bound "
+                            "(pseudo host — omit value; use /tx/send for money)",
+                        )
+                        return
                 else:
                     value = 0.0
                 result = vm.call(contract_addr, fn, params, caller, value)
+                if isinstance(result, dict):
+                    result = dict(result)
+                    result.setdefault("value_satoshi", int(value_sat))
+                    result.setdefault("l1_value_applied", False)
+                    result.setdefault("pseudo_token_host", True)
                 self._json(result)
 
             # ── AI Agent Manager ──────────────────────────────────────────────
@@ -7810,10 +7841,10 @@ class RESTHandler(BaseHTTPRequestHandler):
                 if not agent_id:
                     self._error(400, "agent_id, amount, price required"); return
                 try:
-                    amount, _amount_sat = _http_amount_abs(
+                    amount, amount_sat = _http_amount_abs(
                         body, self.__class__.config, field="amount"
                     )
-                    price, _price_sat = _http_amount_abs(
+                    price, price_sat = _http_amount_abs(
                         body,
                         self.__class__.config,
                         field="price",
@@ -7822,7 +7853,17 @@ class RESTHandler(BaseHTTPRequestHandler):
                     )
                 except ValueError as exc:
                     self._error(400, str(exc)); return
-                result = am.trade(agent_id, trade_type, amount, price)
+                try:
+                    result = am.trade(
+                        agent_id,
+                        trade_type,
+                        amount,
+                        price,
+                        amount_satoshi=int(amount_sat),
+                        price_satoshi=int(price_sat),
+                    )
+                except TypeError:
+                    result = am.trade(agent_id, trade_type, amount, price)
                 if isinstance(result, dict) and result.get("error") == "Trade execution backend not configured":
                     self._error(503, result["error"])
                     return
@@ -7832,6 +7873,10 @@ class RESTHandler(BaseHTTPRequestHandler):
                     return
                 if isinstance(result, dict):
                     result = dict(result)
+                    result.setdefault("amount_satoshi", int(amount_sat))
+                    result.setdefault("price_satoshi", int(price_sat))
+                    result.setdefault("simulation_only", True)
+                    result.setdefault("execution_bound", bool(getattr(am, "trade_executor", None)))
                     result.setdefault("honesty", _AI_AGENT_HONESTY)
                     result.setdefault("simulation_only", True)
                     result.setdefault("consensus_wired", False)
@@ -10587,7 +10632,7 @@ def _handle_devnet_pool_spend(body: Dict, bc, db, cfg, pool_locks) -> Dict:
     if not to_addr:
         raise ValueError("to address required")
 
-    from runtime.amount import apply_store_delta_satoshi, from_satoshi_float, money_abs
+    from runtime.amount import apply_store_delta_satoshi, to_satoshi
     from runtime.tokenomics import build_allocations, resolve_founder_address
 
     founder = resolve_founder_address(
@@ -10601,10 +10646,12 @@ def _handle_devnet_pool_spend(body: Dict, bc, db, cfg, pool_locks) -> Dict:
 
     amount_sat = int(amount_sat)
     if hasattr(db, "get_balance_satoshi"):
-        balance = float(from_satoshi_float(int(db.get_balance_satoshi(from_addr) or 0)))
+        bal_sat = int(db.get_balance_satoshi(from_addr) or 0)
     else:
-        balance = money_abs(db.get_balance(from_addr), field="balance")
-    allowed, reason = pool_locks.is_outgoing_allowed(from_addr, amount, balance)
+        bal_sat = int(to_satoshi(db.get_balance(from_addr)))
+    allowed, reason = pool_locks.is_outgoing_allowed_sat(
+        from_addr, amount_sat, bal_sat
+    )
     if not allowed:
         raise ValueError(reason)
 
@@ -10617,23 +10664,28 @@ def _handle_devnet_pool_spend(body: Dict, bc, db, cfg, pool_locks) -> Dict:
         )
     ):
         raise ValueError("satoshi_store_required")
-    pool_locks.record_outgoing(from_addr, amount)
+    pool_locks.record_outgoing_sat(from_addr, amount_sat)
 
     tx_hash = native.sha256_hex(
-        f"pool-spend|{from_addr}|{to_addr}|{amount}|{_time.time()}".encode()
+        f"pool-spend|{from_addr}|{to_addr}|{amount_sat}|{_time.time()}".encode()
     )[:16]
     height = bc.get_height() if bc and hasattr(bc, "get_height") else 0
+    # Admin pool-spend is not an EVM transfer — never invent gas=21000.
     db.save_transaction({
         "hash": tx_hash,
         "from_addr": from_addr,
         "to_addr": to_addr,
         "value": amount,
+        "amount_satoshi": amount_sat,
+        "value_satoshi": amount_sat,
         "block_height": height,
         "fee": 0.0,
-        "gas": 21_000,
-        "gas_used": 21_000,
+        "fee_satoshi": 0,
+        "gas": 1,
+        "gas_used": 0,
         "status": 1,
         "timestamp": int(_time.time()),
+        "data": "devnet_pool_spend_admin",
     })
 
     return {
@@ -10647,6 +10699,7 @@ def _handle_devnet_pool_spend(body: Dict, bc, db, cfg, pool_locks) -> Dict:
         "pool_balance": db.get_balance(from_addr),
         "recipient_balance": db.get_balance(to_addr),
         "spendable_remaining": pool_locks.spendable_balance(from_addr, db.get_balance(from_addr)),
+        "honesty": "devnet_pool_spend_admin — not EVM forge gas",
     }
 
 
@@ -10694,6 +10747,7 @@ def _handle_send_tx_with_wallet(tx_obj: Dict, bc, mp, cfg, wallet=None) -> str:
             getattr(cfg, "chain_id", 1),
             data=body.get("data", body.get("input", "")),
             gas_limit=gas_limit,
+            amount_satoshi=int(_amount_sat),
         )
         body.update(signed)
         if "gas_limit" in body and "gas" not in body:

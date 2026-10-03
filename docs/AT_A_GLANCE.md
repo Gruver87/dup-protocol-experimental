@@ -1,6 +1,6 @@
 # At a glance — DUP Protocol Experimental (DUP Labs)
 
-One-screen card. **Show / funds / ПВТ:** [SHOWCASE](SHOWCASE.md) · Brand: [BRAND](BRAND.md) · Full detail: [README](../README.md) · sandbox rules: [EXPERIMENTAL_SANDBOX](../EXPERIMENTAL_SANDBOX.md).
+One-screen card. **Show / funds / ПВТ:** [SHOWCASE](SHOWCASE.md) · [FUND_DEMO_OPERATOR_PACK](FUND_DEMO_OPERATOR_PACK.md) · Brand: [BRAND](BRAND.md) · Full detail: [README](../README.md) · sandbox rules: [EXPERIMENTAL_SANDBOX](../EXPERIMENTAL_SANDBOX.md).
 
 ## What this is
 
