@@ -4,7 +4,8 @@
 **Date:** 2026-10-01 · Language: English (canonical)  
 **Brand:** [BRAND.md](BRAND.md) — **DUP Labs** (org) · **DUP Protocol** (product) · Uladzimir Dabranski (D.U.P.)  
 **Repos:** [`Gruver87/dup-protocol-experimental`](https://github.com/Gruver87/dup-protocol-experimental) (R&D) · [`Gruver87/dup-protocol`](https://github.com/Gruver87/dup-protocol) (industrial pin)  
-**Former name:** Absolute Blockchain (same trees / evidence).
+**Former name:** Absolute Blockchain (same trees / evidence).  
+**Showcase front door:** [SHOWCASE.md](SHOWCASE.md) · FAQ: [FAQ.md](FAQ.md) · one-pager: [ONE_PAGER.md](ONE_PAGER.md) / [ONE_PAGER_RU.md](ONE_PAGER_RU.md)
 
 This page is the **15-minute path**. Claims below map to **on-disk evidence packs** under [`docs/evidence/runs/`](evidence/runs/). Soft marketing language is refused.
 

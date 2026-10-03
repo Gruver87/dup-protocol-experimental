@@ -18,7 +18,7 @@ Canonical docs language is **English**. If GitHub shows a translation, open **Vi
 > **Industrial pin lives next door:** [`dup-protocol`](https://github.com/Gruver87/dup-protocol) (**DUP Protocol** industrial pin) · tag [`v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/dup-protocol/releases/tag/v1.3.1339-tip-v2-industrial)  
 > **This repo:** Profile F labs. Do not port these kernels onto the industrial pin.
 
-**Skimmer (60s):** [AT_A_GLANCE](docs/AT_A_GLANCE.md) · **Funds / ПВТ (15 min):** [DILIGENCE_BRIEF](docs/DILIGENCE_BRIEF.md) · **Fund card:** [FUND_READINESS](docs/FUND_READINESS.md) · **Brand:** [BRAND](docs/BRAND.md) · **What runs when:** [EXECUTION_ORDER](docs/EXECUTION_ORDER.md) · **Evidence:** [EVIDENCE_MATRIX](docs/EVIDENCE_MATRIX.md)  
+**Showcase front door:** [SHOWCASE](docs/SHOWCASE.md) · **Skimmer (60s):** [AT_A_GLANCE](docs/AT_A_GLANCE.md) · **Funds / ПВТ (15 min):** [DILIGENCE_BRIEF](docs/DILIGENCE_BRIEF.md) · **Fund card:** [FUND_READINESS](docs/FUND_READINESS.md) · **FAQ:** [FAQ](docs/FAQ.md) · **One-pager:** [ONE_PAGER](docs/ONE_PAGER.md) / [RU](docs/ONE_PAGER_RU.md) · **Brand:** [BRAND](docs/BRAND.md) · **Evidence:** [EVIDENCE_MATRIX](docs/EVIDENCE_MATRIX.md)  
 **Project vision (industrial pin, honest scope):** [VISION](https://github.com/Gruver87/dup-protocol/blob/master/docs/VISION.md)
 
 ---
@@ -28,7 +28,7 @@ Canonical docs language is **English**. If GitHub shows a translation, open **Vi
 | Audience | Start here |
 |----------|------------|
 | **Architects / principals** | [AT_A_GLANCE](docs/AT_A_GLANCE.md) → [ARCHITECTURE](docs/ARCHITECTURE.md) → ADR [0017](docs/adr/0017-long-range-research.md) / [0019](docs/adr/0019-rust-libp2p-industrial.md) / [0020](docs/adr/0020-libp2p-industrial-mesh.md) |
-| **Grant officers / diligence / ПВТ** | [DILIGENCE_BRIEF](docs/DILIGENCE_BRIEF.md) · [FUND_READINESS](docs/FUND_READINESS.md) · pin [VISION](https://github.com/Gruver87/dup-protocol/blob/master/docs/VISION.md) · [EVIDENCE_MATRIX](docs/EVIDENCE_MATRIX.md) · [EXECUTION_ORDER](docs/EXECUTION_ORDER.md) (Phases 1–5 + LR STRICT [`lrstrict1`](docs/evidence/runs/lrstrict1/) + EVM STRICT [`evmstrict1`](docs/evidence/runs/evmstrict1/) + libp2p STRICT [`lp2pstrict1`](docs/evidence/runs/lp2pstrict1/) + tip [`ind48pass1`](docs/evidence/runs/ind48pass1/); next Phase 6 org) |
+| **Grant officers / diligence / ПВТ** | [SHOWCASE](docs/SHOWCASE.md) → [DILIGENCE_BRIEF](docs/DILIGENCE_BRIEF.md) · [FUND_READINESS](docs/FUND_READINESS.md) · [FAQ](docs/FAQ.md) · [ONE_PAGER_RU](docs/ONE_PAGER_RU.md) · pin [VISION](https://github.com/Gruver87/dup-protocol/blob/master/docs/VISION.md) · [EVIDENCE_MATRIX](docs/EVIDENCE_MATRIX.md) (Phases 1–5 STRICT packs; Phase 6 org) |
 | **Operators** | [Start in 60 seconds](#start-in-60-seconds) · `python scripts/verify_experimental_rd.py` · optional `python scripts/verify_parallel_rd_batch.py` · thin SDK [`sdk/README.md`](sdk/README.md) |
 | **Auditors (this tree)** | R&D sandbox · Phase 6 **prep** [`phase6prep1`](docs/evidence/runs/phase6prep1/) / [FIRM_KICKOFF_CHECKLIST](docs/FIRM_KICKOFF_CHECKLIST.md) — firm PDF lives with the [industrial pin](https://github.com/Gruver87/dup-protocol/blob/master/docs/AUDIT_ENGAGEMENT_BRIEF.md) |
 
@@ -218,6 +218,8 @@ Default Hybrid CI / prod mesh builds **without** the `libp2p` feature.
 
 | Need | Open |
 |------|------|
+| **Showcase front door (funds / ПВТ / demo)** | [SHOWCASE](docs/SHOWCASE.md) |
+| FAQ / one-pager EN+RU / elevator | [FAQ](docs/FAQ.md) · [ONE_PAGER](docs/ONE_PAGER.md) · [ONE_PAGER_RU](docs/ONE_PAGER_RU.md) · [ELEVATOR_PITCH](docs/ELEVATOR_PITCH.md) |
 | Vision (industrial pin) | [VISION](https://github.com/Gruver87/dup-protocol/blob/master/docs/VISION.md) |
 | One-screen card | [AT_A_GLANCE](docs/AT_A_GLANCE.md) |
 | Brand (DUP Labs / DUP Protocol) | [BRAND](docs/BRAND.md) |
@@ -261,4 +263,4 @@ Open source allows viewing, testing, and forking. It does **not** mean the work 
 ---
 
 *Author: ULADZIMIR DABRANSKI (D.U.P.) · Owner: [Gruver87](https://github.com/Gruver87) · Default branch: `main`*  
-*Last surface update: **2026-10-03** — mid-soak AI+NFT honesty wave **closed** on disk (`6fb5640`) · Phases 1–5 + STRICT packs · Phase 6 **prep**. Live EVM STRICT soak not claimed here. Not BLS / not public mainnet / not firm PASS / not industrial pin freeze.*
+*Last surface update: **2026-10-03** — showcase pack (SHOWCASE / FAQ / ONE_PAGER EN+RU) · mid-soak AI+NFT honesty closed · Phases 1–5 + STRICT packs · Phase 6 **prep**. Live EVM STRICT soak not claimed here. Not BLS / not public mainnet / not firm PASS / not industrial pin freeze.*

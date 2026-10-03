@@ -1,9 +1,20 @@
-# Threat model — Absolute Blockchain Ultimate Hybrid (industrial L1)
+# Threat model — DUP Protocol (industrial L1 mesh)
 
 **Audience:** external auditors / operators  
+**Brand:** DUP Labs · DUP Protocol (formerly Absolute Blockchain)  
 **Scope:** single-tip prod-profile chain `778888` (Profile A)  
 **Out of scope:** shard lab, L2 sandbox, ZK/PQ, bridge ON  
-**Updated:** 2026-08-07
+**Updated:** 2026-10-03 (header honesty)
+
+**Transport honesty (showcase):**
+
+| Tree | Default P2P in prod-profile mesh | Notes |
+|------|----------------------------------|-------|
+| Industrial pin ([`dup-protocol`](https://github.com/Gruver87/dup-protocol)) | **TCP+TLS / mTLS** | Diagram below matches pin |
+| Experimental (this repo) | **libp2p Noise/Yamux (ADR 0020)** on Exp mesh JSON | Also has historical TCP+TLS soak [`0a7932c4`](evidence/runs/0a7932c4/) — do not relabel as libp2p |
+| Live demo docs | Exp [DEMO_RUNBOOK.md](DEMO_RUNBOOK.md) · pin `DEMO_RUNBOOK_PIN.md` | Demo ≠ soak PASS |
+
+Threat controls below apply to the industrial mesh trust boundaries; Experimental libp2p adds Noise/gossip admit paths (ADR 0019–0020) without changing tip-safety / satoshi money invariants.
 
 ## Assets
 
