@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Boundary ADRs for Absolute Blockchain Ultimate Hybrid.  
+Boundary ADRs for **DUP Protocol** (DUP Labs). Formerly Absolute Blockchain Ultimate Hybrid.  
 **Industrial stack:** **0001–0016** · **0013 unused**.  
 **Experimental (this sandbox):** **0017–0020** (not on audit pin).
 
