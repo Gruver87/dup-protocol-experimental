@@ -15,6 +15,7 @@ Canonical language for this repository is **English**. Older inherited entries b
 
 ### Experimental R&D
 
+- **P1 bridge/shard/pool satoshi thread (2026-10-03):** bridge lock/credit/debit accept `amount_satoshi` (storage + adapter + HTTP); `resolve_amount_satoshi`; StateEngine supply via `get_total_supply_satoshi`; cross-shard twin; `is_outgoing_allowed_sat`. Follow-up to [Scan money float residuals](195a116e-487b-4690-954e-14c0ff205246). **Not** soak / bridge stays OFF on live mesh / **not** mainnet.
 - **P1 StateEngine/BlockBuilder/TxBuilder/Wallet satoshi (2026-10-03):** `StateEngine._apply_transaction` prefers `amount_satoshi`/`value_satoshi` + mismatch refuse; `BlockBuilder` afford+pack satoshi (no float gasPrice×gas); `TransactionBuilder` + `Wallet.sign_transaction` emit `amount_satoshi`. Units `test_state_engine_block_builder_satoshi`. **Not** soak / BlockBuilder still unwired forge / **not** mainnet.
 - **P1 dual-write mismatch refuse (2026-10-03):** `Transaction.__init__` / `tx_validator` / `block_validator` refuse `value_satoshi_mismatch`; HTTP deploy/call use `resolve_wire_amount_sat` (prod float-only refuse); `immutable_state` prefers `value_satoshi`. **Not** soak / **not** mainnet.
 - **P1 EVM host amount_satoshi (2026-10-03):** `call_contract` / `deploy_contract` accept `amount_satoshi`; wei via `WEI_PER_SATOSHI`; `state_service` host + apply paths bind it; `block_validator` prefers satoshi twin. **Not** soak / **not** mainnet.

@@ -103,6 +103,22 @@ class RustBridgeAdapter:
     def lock_and_bridge(
         self, from_addr, to_chain, to_addr, amount, **kwargs
     ) -> BridgeOpResult:
+        from runtime.amount import resolve_amount_satoshi
+
+        try:
+            sat, amount = resolve_amount_satoshi(
+                amount, kwargs.get("amount_satoshi")
+            )
+        except ValueError as exc:
+            return BridgeOpResult(
+                ok=False,
+                status="failed",
+                detail={
+                    "error": str(exc) or "amount_satoshi_required",
+                    "reason": str(exc) or "amount_satoshi_required",
+                },
+            )
+        kwargs["amount_satoshi"] = sat
         raw = self._inner.lock_and_bridge(
             from_addr, to_chain, to_addr, amount, **kwargs
         )
@@ -188,6 +204,7 @@ class RustBridgeAdapter:
             envelope.from_chain,
             l1_tx_hash=l1_tx,
             log_index=int(envelope.log_index or 0),
+            amount_satoshi=int(envelope.amount_satoshi),
         )
         return self._wrap_inbound(raw)
 

@@ -109,9 +109,14 @@ class TxPipeline:
 
         locks = self.pool_locks
         if locks:
-            allowed, reason = locks.is_outgoing_allowed(
-                tx.from_addr, total_cost, balance
-            )
+            if hasattr(locks, "is_outgoing_allowed_sat"):
+                allowed, reason = locks.is_outgoing_allowed_sat(
+                    tx.from_addr, total_cost_sat, balance_sat
+                )
+            else:
+                allowed, reason = locks.is_outgoing_allowed(
+                    tx.from_addr, total_cost, balance
+                )
             if not allowed:
                 return TxValidationResult(valid=False, error=str(reason))
 

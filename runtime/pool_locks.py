@@ -110,18 +110,22 @@ class PoolLockManager:
             db_sat = 0
         return from_satoshi_float(self.spendable_balance_sat(address, db_sat))
 
-    def is_outgoing_allowed(self, from_addr: str, amount: float, db_balance: float) -> Tuple[bool, str]:
-        """Проверка перед включением транзакции в блок / мемпул."""
+    def is_outgoing_allowed_sat(
+        self, from_addr: str, amount_sat: int, db_balance_sat: int
+    ) -> Tuple[bool, str]:
+        """Satoshi admit gate before mempool/block include (ADR 0021)."""
         pools = self.get_locked_addresses()
         if from_addr not in pools:
             return True, "ok"
         try:
-            amount_sat = int(to_satoshi(amount))
-            db_sat = int(to_satoshi(db_balance))
+            need = int(amount_sat)
+            db_sat = int(db_balance_sat)
         except (TypeError, ValueError):
             return False, "pool_amount_unparseable"
+        if need < 0 or db_sat < 0:
+            return False, "pool_amount_unparseable"
         spendable_sat = self.spendable_balance_sat(from_addr, db_sat)
-        if amount_sat > spendable_sat:
+        if need > spendable_sat:
             info = pools[from_addr]
             spendable = from_satoshi_float(spendable_sat)
             if info["id"] in ("ecosystem", "treasury") and not info.get("dao_unlocked"):
@@ -134,16 +138,31 @@ class PoolLockManager:
             return False, f"pool_locked: spendable={spendable:,.2f}"
         return True, "ok"
 
-    def record_outgoing(self, from_addr: str, amount: float) -> None:
+    def is_outgoing_allowed(self, from_addr: str, amount: float, db_balance: float) -> Tuple[bool, str]:
+        """Display-float wrapper — prefer ``is_outgoing_allowed_sat`` on hot paths."""
+        try:
+            amount_sat = int(to_satoshi(amount))
+            db_sat = int(to_satoshi(db_balance))
+        except (TypeError, ValueError):
+            return False, "pool_amount_unparseable"
+        return self.is_outgoing_allowed_sat(from_addr, amount_sat, db_sat)
+
+    def record_outgoing_sat(self, from_addr: str, amount_sat: int) -> None:
         state = self._state()
         pools = state.get("pools", {})
         if from_addr not in pools:
             return
         info = pools[from_addr]
-        add_sat = int(to_satoshi(money_abs(amount, field="amount")))
+        add_sat = int(amount_sat)
+        if add_sat < 0:
+            raise ValueError("value_negative")
         spent_sat = _sat_field(info, "spent_satoshi", "spent") + add_sat
         _set_sat_pair(info, "spent_satoshi", "spent", spent_sat)
         self._save(state)
+
+    def record_outgoing(self, from_addr: str, amount: float) -> None:
+        add_sat = int(to_satoshi(money_abs(amount, field="amount")))
+        self.record_outgoing_sat(from_addr, add_sat)
 
     def catch_up_epochs(self, current_epoch: int) -> Dict[str, Any]:
         """Догоняет пропущенные эпохи при старте узла (миграция / рестарт)."""

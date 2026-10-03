@@ -1942,19 +1942,21 @@ class RocksChainStore:
         amount: float,
         from_chain: str,
         log_index: int = 0,
+        *,
+        amount_satoshi: int | None = None,
     ) -> str:
         key = self.bridge_credit_key(from_chain, event_tx_hash, log_index)
         if self.has_bridge_credit(key):
             return key
-        from runtime.amount import money_abs, to_satoshi
+        from runtime.amount import resolve_amount_satoshi
 
-        amt = money_abs(amount)
+        amt_sat, amt = resolve_amount_satoshi(amount, amount_satoshi)
         row = {
             "credit_key": key,
             "l1_tx_hash": event_tx_hash,
             "recipient": recipient,
             "amount": amt,
-            "amount_satoshi": int(to_satoshi(amt)),
+            "amount_satoshi": amt_sat,
             "from_chain": from_chain,
             "log_index": int(log_index),
             "credited_at": int(time.time()),
@@ -1971,16 +1973,17 @@ class RocksChainStore:
         amount: float,
         log_index: int = 0,
         abs_tx_hash: str = "",
+        *,
+        amount_satoshi: int | None = None,
     ) -> Dict:
         """Insert-if-absent replay claim then credit recipient in one Rocks batch."""
         key = self.bridge_credit_key(from_chain, event_tx_hash, log_index)
         with self.atomic():
             if self.has_bridge_credit(key):
                 return {"credited": False, "duplicate": True, "credit_key": key}
-            from runtime.amount import money_abs, to_satoshi
+            from runtime.amount import resolve_amount_satoshi
 
-            amt = money_abs(amount)
-            amt_sat = int(to_satoshi(amt))
+            amt_sat, amt = resolve_amount_satoshi(amount, amount_satoshi)
             row = {
                 "credit_key": key,
                 "l1_tx_hash": event_tx_hash,
@@ -2018,36 +2021,42 @@ class RocksChainStore:
         to_addr: str,
         net_amount: float,
         tx_hash: str,
+        *,
+        amount_satoshi: int | None = None,
+        burn_satoshi: int | None = None,
+        net_amount_satoshi: int | None = None,
     ) -> None:
         """Debit sender (fail on underflow), burn fee share, persist lock — one Rocks batch."""
         from runtime.amount import (
             dual_write_balance,
             from_satoshi_float,
-            money_abs,
-            to_satoshi,
+            resolve_amount_satoshi,
             try_debit_satoshi,
         )
 
+        amt_sat, _amt = resolve_amount_satoshi(amount, amount_satoshi)
+        burn_sat, _burn = resolve_amount_satoshi(
+            burn_amount, burn_satoshi, field="burn_amount"
+        )
+        net_sat, net_abs = resolve_amount_satoshi(
+            net_amount, net_amount_satoshi, field="net_amount"
+        )
         with self.atomic():
             row = self._load_account(from_addr)
             cur = int(row.get("balance_satoshi", 0) or 0)
-            new_sat = try_debit_satoshi(cur, money_abs(amount))
+            new_sat = try_debit_satoshi(cur, debit_satoshi=amt_sat)
             dual_write_balance(row, from_satoshi_float(new_sat))
             row["balance_satoshi"] = new_sat
             self._save_account_row(row)
-            if burn_amount and burn_address:
-                self.balance_delta_satoshi(
-                    burn_address,
-                    int(to_satoshi(money_abs(burn_amount, field="burn_amount"))),
-                )
-            net_abs = money_abs(net_amount, field="net_amount")
+            if burn_sat > 0 and burn_address:
+                self.balance_delta_satoshi(burn_address, burn_sat)
             lock_row = {
                 "tx_hash": tx_hash,
                 "from_addr": from_addr,
                 "to_chain": to_chain,
                 "to_addr": to_addr,
                 "amount": net_abs,
-                "amount_satoshi": int(to_satoshi(net_abs)),
+                "amount_satoshi": net_sat,
                 "status": "pending",
                 "created_at": int(time.time()),
             }

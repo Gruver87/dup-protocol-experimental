@@ -11,7 +11,7 @@ import logging
 import math
 import os
 from decimal import Decimal, ROUND_DOWN, InvalidOperation
-from typing import Any, Dict, Mapping, MutableMapping, Optional, Union
+from typing import Any, Dict, Mapping, MutableMapping, Optional, Tuple, Union
 
 # 1 ABS = 1_000_000 satoshi (same as USDC-style micro units)
 ABS_DECIMALS = 6
@@ -346,17 +346,54 @@ def apply_delta_satoshi(current_sat: int, delta_abs: NumberLike) -> int:
     return max(0, int(current_sat) + to_satoshi(delta_abs))
 
 
-def try_debit_satoshi(current_sat: int, debit_abs: NumberLike) -> int:
-    """Debit ABS amount from satoshi; raise on underflow (v1.3.68 — no silent clamp)."""
-    if isinstance(debit_abs, bool):
-        raise TypeError("bool is not a valid amount")
-    debit = to_satoshi(debit_abs)
+def try_debit_satoshi(
+    current_sat: int,
+    debit_abs: NumberLike = 0,
+    *,
+    debit_satoshi: Optional[int] = None,
+) -> int:
+    """Debit from satoshi balance; raise on underflow (v1.3.68 — no silent clamp).
+
+    Prefer ``debit_satoshi`` int authority; else convert display ``debit_abs``.
+    """
+    if debit_satoshi is not None:
+        debit = int(debit_satoshi)
+    else:
+        if isinstance(debit_abs, bool):
+            raise TypeError("bool is not a valid amount")
+        debit = to_satoshi(debit_abs)
     if debit < 0:
         raise ValueError("debit must be non-negative")
     cur = int(current_sat)
     if cur < debit:
         raise ValueError(f"insufficient_balance: have={cur} need={debit}")
     return cur - debit
+
+
+def resolve_amount_satoshi(
+    amount_abs: Optional[NumberLike] = None,
+    amount_satoshi: Optional[int] = None,
+    *,
+    field: str = "amount",
+) -> Tuple[int, float]:
+    """Prefer ``amount_satoshi``; refuse mismatch with ABS float when both set.
+
+    Returns ``(amount_satoshi, amount_abs_display)``.
+    When only satoshi is provided, ``amount_abs`` may be ``None``.
+    """
+    if amount_satoshi is not None:
+        sat = int(amount_satoshi)
+        if sat < 0:
+            raise ValueError("value_negative")
+        if amount_abs is not None and amount_abs != "":
+            abs_sat = int(to_satoshi(money_abs(amount_abs, field=field)))
+            if abs_sat != sat:
+                raise ValueError("amount_satoshi_mismatch")
+        return sat, float(from_satoshi_float(sat))
+    if amount_abs is None or amount_abs == "":
+        raise ValueError(f"{field}_required")
+    sat = int(to_satoshi(money_abs(amount_abs, field=field)))
+    return sat, float(from_satoshi_float(sat))
 
 
 def resolve_tx_value_satoshi(tx: Any) -> int:

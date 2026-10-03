@@ -2273,12 +2273,13 @@ class Database:
         amount: float,
         from_chain: str,
         log_index: int = 0,
+        *,
+        amount_satoshi: int | None = None,
     ) -> str:
         key = self.bridge_credit_key(from_chain, event_tx_hash, log_index)
-        from runtime.amount import money_abs, to_satoshi
+        from runtime.amount import resolve_amount_satoshi
 
-        amt = money_abs(amount)
-        amt_sat = int(to_satoshi(amt))
+        amt_sat, amt = resolve_amount_satoshi(amount, amount_satoshi)
         with self.lock:
             self.conn.execute(
                 """INSERT OR IGNORE INTO bridge_credits
@@ -2306,15 +2307,16 @@ class Database:
         amount: float,
         log_index: int = 0,
         abs_tx_hash: str = "",
+        *,
+        amount_satoshi: int | None = None,
     ) -> Dict:
         """
         Insert-if-absent replay claim then credit recipient in one transaction.
         Returns {credited, duplicate, credit_key}.
         """
-        from runtime.amount import money_abs, to_satoshi
+        from runtime.amount import resolve_amount_satoshi
 
-        amt = money_abs(amount)
-        amt_sat = int(to_satoshi(amt))
+        amt_sat, amt = resolve_amount_satoshi(amount, amount_satoshi)
         key = self.bridge_credit_key(from_chain, event_tx_hash, log_index)
         with self.atomic():
             row = self.conn.execute(
@@ -2356,6 +2358,10 @@ class Database:
         to_addr: str,
         net_amount: float,
         tx_hash: str,
+        *,
+        amount_satoshi: int | None = None,
+        burn_satoshi: int | None = None,
+        net_amount_satoshi: int | None = None,
     ) -> None:
         """Debit sender (fail on underflow), burn fee share, persist lock atomically."""
         from runtime.amount import (
@@ -2363,11 +2369,17 @@ class Database:
             account_satoshi,
             dual_write_balance,
             from_satoshi_float,
-            money_abs,
-            to_satoshi,
+            resolve_amount_satoshi,
             try_debit_satoshi,
         )
 
+        amt_sat, _amt = resolve_amount_satoshi(amount, amount_satoshi)
+        burn_sat, _burn = resolve_amount_satoshi(
+            burn_amount, burn_satoshi, field="burn_amount"
+        )
+        net_sat, net_abs = resolve_amount_satoshi(
+            net_amount, net_amount_satoshi, field="net_amount"
+        )
         with self.atomic():
             row = self.get_account(from_addr) or {
                 "address": from_addr,
@@ -2376,7 +2388,7 @@ class Database:
                 "nonce": 0,
             }
             cur = int(account_satoshi(row))
-            new_sat = try_debit_satoshi(cur, money_abs(amount))
+            new_sat = try_debit_satoshi(cur, debit_satoshi=amt_sat)
             dual_write_balance(row, from_satoshi_float(new_sat))
             self.conn.execute(
                 """INSERT INTO accounts (address, balance, balance_satoshi, nonce)
@@ -2390,12 +2402,8 @@ class Database:
                     int(row.get("nonce") or 0),
                 ),
             )
-            if burn_amount and burn_address:
-                self.balance_delta_satoshi(
-                    burn_address, int(to_satoshi(money_abs(burn_amount, field="burn_amount")))
-                )
-            net_abs = money_abs(net_amount, field="net_amount")
-            net_sat = int(to_satoshi(net_abs))
+            if burn_sat > 0 and burn_address:
+                self.balance_delta_satoshi(burn_address, burn_sat)
             self.conn.execute(
                 """INSERT OR REPLACE INTO bridge_locks
                    (tx_hash, from_addr, to_chain, to_addr, amount, amount_satoshi,

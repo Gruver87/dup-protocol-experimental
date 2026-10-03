@@ -50,6 +50,25 @@ def test_coerce_legacy_positional_binds_satoshi():
     assert res.ok
     assert inner.calls
     assert inner.calls[0]["amount"] == 3.0
+    assert inner.calls[0]["amount_satoshi"] == int(to_satoshi(3.0))
+
+
+def test_lock_and_bridge_passes_amount_satoshi():
+    inner = _Inner()
+
+    def _lock(from_addr, to_chain, to_addr, amount, **kw):
+        inner.calls.append(
+            {"from": from_addr, "amount": amount, **kw}
+        )
+        return {"tx_hash": "0xlock", "status": "pending"}
+
+    inner.lock_and_bridge = _lock
+    br = _adapter(inner)
+    res = br.lock_and_bridge(
+        "0xa", "ethereum", "0xb", 1.0, amount_satoshi=1_000_000
+    )
+    assert res.ok or res.detail.get("tx_hash") == "0xlock" or inner.calls
+    assert inner.calls[-1]["amount_satoshi"] == 1_000_000
 
 
 def test_coerce_envelope_object_without_satoshi_backfills():

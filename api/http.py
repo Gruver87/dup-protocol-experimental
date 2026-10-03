@@ -5169,17 +5169,41 @@ class RESTHandler(BaseHTTPRequestHandler):
                 self._json(stats)
 
             elif path == "/bridge2/fee":
-                from runtime.amount import from_satoshi_float, money_abs, to_satoshi
+                from runtime.amount import from_satoshi_float, money_abs, resolve_amount_satoshi, to_satoshi
 
                 cb = self.__class__.cross_bridge
                 chain = qs.get("chain", ["ethereum"])[0]
+                raw_sat = qs.get("amount_satoshi", qs.get("value_satoshi", [None]))[0]
                 try:
-                    amount = money_abs(qs.get("amount", ["100"])[0], field="amount")
+                    if raw_sat is not None and str(raw_sat).strip() != "":
+                        abs_for = qs["amount"][0] if "amount" in qs else None
+                        amount_sat, amount = resolve_amount_satoshi(
+                            abs_for, int(raw_sat)
+                        )
+                    else:
+                        amount = money_abs(
+                            qs.get("amount", ["100"])[0], field="amount"
+                        )
+                        amount_sat = int(to_satoshi(amount))
                 except (TypeError, ValueError) as exc:
                     self._error(400, f"invalid amount: {exc}")
                     return
-                amount_sat = int(to_satoshi(amount))
-                fee = cb.estimate_fee(chain, amount) if cb else 0
+                if cb and hasattr(cb, "estimate_fee"):
+                    est = cb.estimate_fee(
+                        chain, amount, amount_satoshi=int(amount_sat)
+                    )
+                    if isinstance(est, dict):
+                        self._json({
+                            "chain": chain,
+                            "amount": est.get("amount", from_satoshi_float(amount_sat)),
+                            "amount_satoshi": int(est.get("amount_satoshi", amount_sat)),
+                            "fee": est.get("fee", 0),
+                            "fee_satoshi": int(est.get("fee_satoshi", 0)),
+                        })
+                        return
+                    fee = est
+                else:
+                    fee = 0
                 try:
                     fee_abs = money_abs(fee, field="fee") if fee else 0.0
                     fee_sat = int(to_satoshi(fee_abs)) if fee else 0
@@ -7745,7 +7769,7 @@ class RESTHandler(BaseHTTPRequestHandler):
                 if not from_addr or not to_addr:
                     self._error(400, "from_address, to_address, amount required"); return
                 try:
-                    amount, _amount_sat = _http_amount_abs(
+                    amount, amount_sat = _http_amount_abs(
                         body, cfg, field="amount"
                     )
                 except ValueError as exc:
@@ -7767,6 +7791,7 @@ class RESTHandler(BaseHTTPRequestHandler):
                             "tx_id": tx_id,
                             "recipient": to_addr,
                             "amount": amount,
+                            "amount_satoshi": int(amount_sat),
                             "from_chain": from_chain,
                             "l1_tx_hash": l1_tx,
                         }
@@ -7778,7 +7803,12 @@ class RESTHandler(BaseHTTPRequestHandler):
                         })
                     else:
                         result = rust_br.lock_and_bridge(
-                            from_addr, to_chain, to_addr, amount, l1_tx_hash=l1_tx
+                            from_addr,
+                            to_chain,
+                            to_addr,
+                            amount,
+                            l1_tx_hash=l1_tx,
+                            amount_satoshi=int(amount_sat),
                         )
                         self._json({
                             **_bridge_http_result(result),
@@ -8099,7 +8129,7 @@ class RESTHandler(BaseHTTPRequestHandler):
                 target_chain = body.get("target_chain", body.get("to_chain", "ethereum"))
                 l1_tx = (body.get("l1_tx_hash") or "").strip()
                 try:
-                    amount, _amount_sat = _http_amount_abs(
+                    amount, amount_sat = _http_amount_abs(
                         body, cfg, field="amount"
                     )
                 except ValueError as exc:
@@ -8107,7 +8137,12 @@ class RESTHandler(BaseHTTPRequestHandler):
                     return
                 if hasattr(br, "lock_and_bridge"):
                     result = br.lock_and_bridge(
-                        from_addr, target_chain, to_addr, amount, l1_tx_hash=l1_tx
+                        from_addr,
+                        target_chain,
+                        to_addr,
+                        amount,
+                        l1_tx_hash=l1_tx,
+                        amount_satoshi=int(amount_sat),
                     )
                     self._json(_bridge_http_result(result))
                 elif hasattr(br, "transfer"):

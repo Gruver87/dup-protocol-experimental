@@ -147,6 +147,18 @@ def test_immutable_state_uses_shared_multiplier():
     assert ims_mult == amt_mult
 
 
+def test_resolve_amount_satoshi_prefers_and_mismatch():
+    from runtime.amount import resolve_amount_satoshi
+    import pytest
+
+    sat, abs_v = resolve_amount_satoshi(1.0, 1_000_000)
+    assert sat == 1_000_000
+    assert abs_v == 1.0
+    assert resolve_amount_satoshi(None, 500_000)[0] == 500_000
+    with pytest.raises(ValueError, match="amount_satoshi_mismatch"):
+        resolve_amount_satoshi(2.0, 1_000_000)
+
+
 def test_plan_transfer_fees_sat_is_integer_only():
     from runtime.amount import can_afford_transfer_sat, plan_transfer_fees_sat
 

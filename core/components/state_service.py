@@ -211,6 +211,19 @@ class StateService:
         return addrs
 
 
+    def _total_supply_satoshi(self, snap: Dict | None = None) -> int:
+        """Prefer storage satoshi total; float ABS only as fallback."""
+        from runtime.amount import to_satoshi
+
+        if hasattr(self.storage, "get_total_supply_satoshi"):
+            return int(self.storage.get_total_supply_satoshi() or 0)
+        if hasattr(self.storage, "get_total_supply"):
+            return int(to_satoshi(self.storage.get_total_supply()))
+        if snap:
+            return sum(int(v.get("balance", 0) or 0) for v in snap.values())
+        return 0
+
+
     def _accounts_sat_snapshot(self, addresses) -> Dict[str, Dict[str, int]]:
         out: Dict[str, Dict[str, int]] = {}
         for addr in addresses:
@@ -280,11 +293,7 @@ class StateService:
                     "data": getattr(tx, "data", "") or "",
                 }
             )
-        supply_sat = 0
-        if hasattr(self.storage, "get_total_supply"):
-            supply_sat = int(to_satoshi(self.storage.get_total_supply()))
-        else:
-            supply_sat = sum(int(v["balance"]) for v in snap.values())
+        supply_sat = self._total_supply_satoshi(snap)
         max_supply_sat = int(to_satoshi(float(getattr(self.config, "max_supply", MAX_SUPPLY_ABS))))
         raw = native.blockchain_apply_simple_block(
             json.dumps(snap, separators=(",", ":"), ensure_ascii=False),
@@ -416,11 +425,7 @@ class StateService:
             tx.status = 1
 
         snap = self._accounts_sat_snapshot(addrs)
-        supply_sat = 0
-        if hasattr(self.storage, "get_total_supply"):
-            supply_sat = int(to_satoshi(self.storage.get_total_supply()))
-        else:
-            supply_sat = sum(int(v["balance"]) for v in snap.values())
+        supply_sat = self._total_supply_satoshi(snap)
         max_supply_sat = int(to_satoshi(float(getattr(self.config, "max_supply", MAX_SUPPLY_ABS))))
         raw = native.blockchain_apply_host_effects(
             json.dumps(snap, separators=(",", ":"), ensure_ascii=False),
@@ -470,10 +475,7 @@ class StateService:
             if tx.to_addr:
                 session_addrs.add(tx.to_addr)
         session = self._accounts_sat_snapshot(session_addrs)
-        if hasattr(self.storage, "get_total_supply"):
-            supply_sat = int(to_satoshi(self.storage.get_total_supply()))
-        else:
-            supply_sat = sum(int(v["balance"]) for v in session.values())
+        supply_sat = self._total_supply_satoshi(session)
 
         for tx in block.transactions:
             addrs = {miner, burn_addr, tx.from_addr or "", tx.to_addr or ""}
@@ -695,9 +697,14 @@ class StateService:
         sender_balance = from_satoshi_float(sender_sat)
 
         if self.pool_locks:
-            allowed, reason = self.pool_locks.is_outgoing_allowed(
-                tx.from_addr, total_cost, sender_balance
-            )
+            if hasattr(self.pool_locks, "is_outgoing_allowed_sat"):
+                allowed, reason = self.pool_locks.is_outgoing_allowed_sat(
+                    tx.from_addr, total_cost_sat, sender_sat
+                )
+            else:
+                allowed, reason = self.pool_locks.is_outgoing_allowed(
+                    tx.from_addr, total_cost, sender_balance
+                )
             if not allowed:
                 return {"success": False, "error": reason}
 
@@ -750,7 +757,10 @@ class StateService:
                 else:
                     self.storage.increment_nonce(tx.from_addr)
                 if self.pool_locks:
-                    self.pool_locks.record_outgoing(tx.from_addr, fee + tx.value)
+                    if hasattr(self.pool_locks, "record_outgoing_sat"):
+                        self.pool_locks.record_outgoing_sat(tx.from_addr, fee_sat)
+                    else:
+                        self.pool_locks.record_outgoing(tx.from_addr, fee + tx.value)
                 tx.fee = fee
                 tx.burned = burn_amount
                 tx.gas_used = evm_res.gas_used or tx.gas
@@ -810,7 +820,10 @@ class StateService:
                 else:
                     self.storage.increment_nonce(tx.from_addr)
                 if self.pool_locks:
-                    self.pool_locks.record_outgoing(tx.from_addr, deploy_cost)
+                    if hasattr(self.pool_locks, "record_outgoing_sat"):
+                        self.pool_locks.record_outgoing_sat(tx.from_addr, deploy_cost_sat)
+                    else:
+                        self.pool_locks.record_outgoing(tx.from_addr, deploy_cost)
                 tx.fee = fee
                 tx.burned = burn_amount
                 tx.gas_used = evm_res.gas_used or tx.gas
@@ -840,7 +853,10 @@ class StateService:
             self.storage.increment_nonce(tx.from_addr)
 
         if self.pool_locks:
-            self.pool_locks.record_outgoing(tx.from_addr, total_cost)
+            if hasattr(self.pool_locks, "record_outgoing_sat"):
+                self.pool_locks.record_outgoing_sat(tx.from_addr, total_cost_sat)
+            else:
+                self.pool_locks.record_outgoing(tx.from_addr, total_cost)
 
         tx.fee = fee
         tx.burned = burn_amount
@@ -865,11 +881,7 @@ class StateService:
     def apply_block_reward(self, proposer: str, in_atomic: bool = False) -> float:
         from runtime.amount import from_satoshi_float, to_satoshi
 
-        current_supply_sat = 0
-        if hasattr(self.storage, "get_total_supply_satoshi"):
-            current_supply_sat = int(self.storage.get_total_supply_satoshi())
-        else:
-            current_supply_sat = to_satoshi(self.storage.get_total_supply())
+        current_supply_sat = self._total_supply_satoshi()
         max_supply_sat = to_satoshi(getattr(self.config, "max_supply", MAX_SUPPLY_ABS))
         reward_sat = to_satoshi(self.config.block_reward)
         if current_supply_sat + reward_sat > max_supply_sat:

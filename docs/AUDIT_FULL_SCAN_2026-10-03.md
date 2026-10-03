@@ -59,6 +59,9 @@
 | P1 (fixed) | EVM host `call`/`deploy` float `value` → satoshi / wei | `amount_satoshi=` kwarg; wei via `WEI_PER_SATOSHI`; block_validator prefers twin |
 | P1 (fixed) | Dual-write mismatch silent satoshi-win (`Transaction.__init__`, HTTP deploy/call, `tx_validator`) | Refuse `value_satoshi_mismatch`; HTTP deploy/call via `resolve_wire_amount_sat` |
 | P1 (fixed) | `StateEngine` / unwired `BlockBuilder` float money + dropped satoshi twin | Apply+afford satoshi; pack `amount_satoshi`; TxBuilder/Wallet emit twin |
+| P1 (fixed) | Bridge lock/credit/debit re-converted float after HTTP sat resolve | Thread `amount_satoshi` through abs_bridge + storage; adapter passes twin |
+| P1 (fixed) | Cross-shard L1 debit/credit float-only; supply gate float ABS | Twin on `CrossShardTransaction`; `_total_supply_satoshi` |
+| P1 (fixed) | Pool-lock admit re-to_satoshi(display) | `is_outgoing_allowed_sat` on tx_pipeline / state_service |
 | Residual MED | Full type erase of `Transaction.value: float` | Later ADR — satoshi twin is authority when present |
 | Residual HIGH (known) | Experimental mesh `feature_libp2p=true` + `p2p_tls_enabled=false` | ADR 0020 Noise; pin stays TCP+TLS — do not sell as pin parity |
 | Residual org **P0 for mainnet** | Pen-test scheduled + third-party L1/EVM audit PDF | **Not code** — Phase 6 firm kickoff |
