@@ -15,6 +15,7 @@ Canonical language for this repository is **English**. Older inherited entries b
 
 ### Experimental R&D
 
+- **P1 EVM host amount_satoshi (2026-10-03):** `call_contract` / `deploy_contract` accept `amount_satoshi`; wei via `WEI_PER_SATOSHI`; `state_service` host + apply paths bind it; `block_validator` prefers satoshi twin. **Not** soak / **not** mainnet.
 - **P1 native apply amount_satoshi (2026-10-03):** `blockchain_apply_simple_block` / host_effects prefer `amount_satoshi` over float `value`; `state_service` JSON + remaining `plan_transfer_fees_sat` / `tx_pipeline` bind `value_satoshi=resolve_tx_value_satoshi`. Units `test_tx_amount_satoshi_apply`. **Not** soak / **not** mainnet / native rebuild required for mesh.
 - **Diligence re-scan (2026-10-03):** fund-prep total audit — gates/mesh/90d A–H PASS; pack [`AUDIT_FULL_SCAN_2026-10-03.md`](docs/AUDIT_FULL_SCAN_2026-10-03.md). Fix: `pre_mainnet_audit` checklist honesty; wallet plaintext refuse; execution/bridge satoshi-bind; FileSecretAdapter no `allow_prod`. **P0:** `storage/types` satoshi scale 1e8→protocol 1e6. Signing gas required; BFT lockdown re-raise; prod JSON feature flags explicit. **P1:** `Transaction.amount_satoshi` + apply path; wire→mempool→mine/HTTP/P2P no longer drop satoshi twin. **Not** firm PASS / **not** new soak / **not** mainnet.
 - **P0 CI Hybrid 3.12 prod-mesh3 EVM (2026-10-03):** `prod_evm_smoke` mempool deploy now sends `amount_satoshi=0` (prod refuse float-only). Follows gas-honesty CI fix `9edcc5a`.

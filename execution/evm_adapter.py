@@ -375,6 +375,26 @@ class EVMAdapter:
         have = int(self.db.get_balance_satoshi(self._normalize_addr(addr)) or 0)
         return have >= need
 
+    def _resolve_call_value_sat(
+        self, value: float = 0.0, amount_satoshi: int | None = None
+    ) -> int:
+        """Prefer amount_satoshi; else ABS display → satoshi (ADR 0021)."""
+        from runtime.amount import to_satoshi
+
+        if amount_satoshi is not None:
+            vs = int(amount_satoshi)
+            if vs < 0:
+                raise ValueError("value_negative")
+            return vs
+        return int(to_satoshi(value or 0))
+
+    def _sat_covers(self, addr: str, need_sat: int) -> bool:
+        need = int(need_sat or 0)
+        if need <= 0:
+            return True
+        have = int(self.db.get_balance_satoshi(self._normalize_addr(addr)) or 0)
+        return have >= need
+
     def _transfer_abs_fail_closed(
         self, from_addr: str, to_addr: str, amount_abs: float
     ) -> Optional[str]:
@@ -1065,11 +1085,13 @@ class EVMAdapter:
 
     def deploy_contract(self, deployer: str, bytecode_hex: str,
                         value: float = 0.0, gas_limit: int = 0,
-                        salt: str = None, block_number: int = 0) -> EVMResult:
+                        salt: str = None, block_number: int = 0,
+                        amount_satoshi: int | None = None) -> EVMResult:
         """
         Деплоит смарт-контракт.
         Сохраняет байткод и начальное состояние в БД.
         Возвращает адрес контракта.
+        ``amount_satoshi`` is money authority when set (ADR 0021).
         """
         gas_limit = gas_limit or self.config.evm_gas_limit
 
@@ -1097,16 +1119,21 @@ class EVMAdapter:
         if addr_err:
             return EVMResult(success=False, error=addr_err)
 
-        if float(value or 0) > 0 and not self._abs_covers(deployer, value):
+        from runtime.amount import WEI_PER_SATOSHI, from_satoshi_float
+
+        try:
+            endowment_sat = self._resolve_call_value_sat(value, amount_satoshi)
+        except (TypeError, ValueError) as exc:
+            return EVMResult(success=False, error=str(exc) or "value_invalid")
+        if endowment_sat > 0 and not self._sat_covers(deployer, endowment_sat):
             return EVMResult(success=False, error="insufficient_deploy_value")
 
-        from runtime.amount import from_satoshi_float, to_satoshi
-
-        endowment_sat = int(to_satoshi(value or 0))
         if endowment_sat > 0:
             err = self._transfer_sat_fail_closed(deployer, contract_addr, endowment_sat)
             if err:
                 return EVMResult(success=False, error="insufficient_deploy_value")
+
+        value_wei = int(endowment_sat) * int(WEI_PER_SATOSHI)
 
         # Constructor sees the endowment (BALANCE / value-CALL). Journal rolls nested ops.
         self.begin_writeback_journal()
@@ -1115,7 +1142,7 @@ class EVMAdapter:
                 bytecode, {}, gas_limit,
                 caller=deployer,
                 contract_addr=contract_addr,
-                value=int(value * 10**18) if value else 0,
+                value=value_wei,
             )
         except Exception as e:
             self.discard_writeback_journal()
@@ -1153,14 +1180,22 @@ class EVMAdapter:
 
     def call_contract(self, caller: str, contract_addr: str,
                       calldata_hex: str = "", value: float = 0.0,
-                      gas_limit: int = 0) -> EVMResult:
+                      gas_limit: int = 0,
+                      amount_satoshi: int | None = None) -> EVMResult:
         """
         Вызывает метод смарт-контракта (изменяет состояние).
         Загружает bytecode и storage из БД, после выполнения сохраняет изменения.
+        ``amount_satoshi`` is money authority when set (ADR 0021).
         """
         gas_limit = gas_limit or self.config.evm_gas_limit
 
-        if float(value or 0) > 0 and not self._abs_covers(caller, value):
+        from runtime.amount import WEI_PER_SATOSHI
+
+        try:
+            value_sat = self._resolve_call_value_sat(value, amount_satoshi)
+        except (TypeError, ValueError) as exc:
+            return EVMResult(success=False, error=str(exc) or "value_invalid")
+        if value_sat > 0 and not self._sat_covers(caller, value_sat):
             return EVMResult(success=False, error="insufficient_call_value")
 
         from execution.evm_precompiles import try_precompile
@@ -1175,8 +1210,8 @@ class EVMAdapter:
                     gas_used=used,
                     return_value=pre.return_value if err != "precompile_out_of_gas" else None,
                 )
-            if float(value or 0) > 0:
-                xfer_err = self._transfer_abs_fail_closed(caller, contract_addr, value)
+            if value_sat > 0:
+                xfer_err = self._transfer_sat_fail_closed(caller, contract_addr, value_sat)
                 if xfer_err:
                     return EVMResult(success=False, error=xfer_err, gas_used=used)
             pre.gas_used = used
@@ -1200,13 +1235,12 @@ class EVMAdapter:
         except ValueError:
             return EVMResult(success=False, error="invalid_calldata")
 
-        from runtime.amount import to_satoshi
-
-        value_sat = int(to_satoshi(value or 0))
         if value_sat > 0:
             err = self._transfer_sat_fail_closed(caller, contract_addr, value_sat)
             if err:
                 return EVMResult(success=False, error=err)
+
+        value_wei = int(value_sat) * int(WEI_PER_SATOSHI)
 
         self.begin_writeback_journal()
         try:
@@ -1215,7 +1249,7 @@ class EVMAdapter:
                 caller=caller,
                 contract_addr=contract_addr,
                 calldata=calldata,
-                value=int(value * 10**18) if value else 0,
+                value=value_wei,
             )
         except Exception as e:
             self.discard_writeback_journal()

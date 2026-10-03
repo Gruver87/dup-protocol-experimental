@@ -325,6 +325,9 @@ class StateService:
         if not getattr(self, "evm", None):
             return {"success": False, "error": "evm_unavailable"}
         target_acct = self.storage.get_account(tx.to_addr) if tx.to_addr else None
+        from runtime.amount import resolve_tx_value_satoshi
+
+        value_sat = int(resolve_tx_value_satoshi(tx))
         if is_evm_call_target(
             tx.to_addr or "", (target_acct or {}).get("code") if target_acct else None
         ):
@@ -334,6 +337,7 @@ class StateService:
                 tx.data,
                 tx.value,
                 gas_limit=tx.gas or self.config.evm_gas_limit,
+                amount_satoshi=value_sat,
             )
             if not evm_res.success:
                 return {"success": False, "error": evm_res.error or "evm_call_failed"}
@@ -353,6 +357,7 @@ class StateService:
                 gas_limit=tx.gas or self.config.evm_gas_limit,
                 salt=deploy_salt,
                 block_number=block_height,
+                amount_satoshi=value_sat,
             )
             if not evm_res.success:
                 return {"success": False, "error": evm_res.error or "evm_deploy_failed"}
@@ -715,6 +720,7 @@ class StateService:
                     tx.data,
                     tx.value,
                     gas_limit=tx.gas or self.config.evm_gas_limit,
+                    amount_satoshi=resolve_tx_value_satoshi(tx),
                 )
                 if not evm_res.success:
                     return {"success": False, "error": evm_res.error or "evm_call_failed"}
@@ -773,6 +779,7 @@ class StateService:
                     gas_limit=tx.gas or self.config.evm_gas_limit,
                     salt=deploy_salt,
                     block_number=block_height,
+                    amount_satoshi=resolve_tx_value_satoshi(tx),
                 )
                 if not evm_res.success:
                     return {"success": False, "error": evm_res.error or "evm_deploy_failed"}

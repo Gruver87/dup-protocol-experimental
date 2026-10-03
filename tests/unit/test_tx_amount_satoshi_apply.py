@@ -80,3 +80,34 @@ def test_state_service_native_json_binds_amount_satoshi():
     native_fn = src.split("def _apply_simple_block_native")[1].split("def ")[0]
     assert "amount_satoshi" in native_fn
     assert "resolve_tx_value_satoshi" in native_fn
+
+
+def test_evm_adapter_resolves_amount_satoshi_over_float():
+    from execution.evm_adapter import EVMAdapter
+
+    class _DB:
+        def get_balance_satoshi(self, _addr):
+            return 10_000_000
+
+    class _Cfg:
+        evm_gas_limit = 100_000
+
+    evm = EVMAdapter(_DB(), _Cfg())
+    assert evm._resolve_call_value_sat(99.0, amount_satoshi=500_000) == 500_000
+    assert evm._resolve_call_value_sat(1.0, amount_satoshi=None) == int(to_satoshi(1.0))
+
+
+def test_block_validator_prefers_amount_satoshi():
+    from execution.block_validator import BlockValidator
+
+    ok, _ = BlockValidator(None, None)._validate_transaction_shape(
+        {
+            "hash": "0x1",
+            "from": "0xa",
+            "to": "0xb",
+            "nonce": 0,
+            "value": 99.0,
+            "amount_satoshi": 500_000,
+        }
+    )
+    assert ok is True
