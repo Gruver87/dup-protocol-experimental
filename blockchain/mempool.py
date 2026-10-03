@@ -438,6 +438,7 @@ class Mempool:
                 if gas_chain <= 0:
                     self._rejected_count += 1
                     return False
+                amt_sat = int(getattr(tx, "amount_satoshi", -1))
                 chain_tx = Transaction(
                     from_addr=tx.from_addr,
                     to_addr=tx.to_addr,
@@ -449,6 +450,7 @@ class Mempool:
                     signature=tx.signature,
                     public_key=tx.public_key,
                     timestamp=int(tx.timestamp or 0),
+                    amount_satoshi=amt_sat if amt_sat >= 0 else None,
                 )
                 tx._chain_id = self.chain_id
                 check = self.blockchain.validate_transaction(chain_tx)
@@ -634,6 +636,7 @@ class Mempool:
                             "data": str(r.get("data") or ""),
                             "timestamp": float(r.get("timestamp") or 0.0),
                             "fee_satoshi": int(r.get("fee_satoshi") or 0),
+                            "amount_satoshi": int(r.get("amount_satoshi") or -1),
                         }
                         for r in rows
                     ]
@@ -656,6 +659,7 @@ class Mempool:
                     "data": tx.data or "",
                     "timestamp": tx.timestamp,
                     "fee_satoshi": int(getattr(tx, "fee_satoshi", 0) or 0),
+                    "amount_satoshi": int(getattr(tx, "amount_satoshi", -1)),
                 }
                 for tx in sorted_txs
             ]

@@ -10305,6 +10305,13 @@ def _handle_deploy_tx(body: Dict, bc, mp, cfg, wallet=None, evm=None) -> str:
         raise ValueError("from address required (or auto_sign with wallet)")
 
     nonce = int(tx_body.get("nonce", bc.db.get_nonce(from_addr)))
+    from runtime.amount import to_satoshi
+
+    amount_sat = int(to_satoshi(value))
+    if body.get("amount_satoshi") is not None:
+        amount_sat = int(body.get("amount_satoshi"))
+    elif body.get("value_satoshi") is not None:
+        amount_sat = int(body.get("value_satoshi"))
     tx = Transaction(
         from_addr=from_addr,
         to_addr=zero_addr,
@@ -10314,11 +10321,13 @@ def _handle_deploy_tx(body: Dict, bc, mp, cfg, wallet=None, evm=None) -> str:
         data=bytecode,
         signature=tx_body.get("signature", ""),
         public_key=tx_body.get("public_key", ""),
+        amount_satoshi=amount_sat,
     )
     tx_body = {
         "from": from_addr,
         "to": zero_addr,
         "value": value,
+        "amount_satoshi": amount_sat,
         "nonce": nonce,
         "gas": gas,
         "data": tx.data,
@@ -10370,10 +10379,18 @@ def _handle_call_tx(body: Dict, bc, mp, cfg, wallet=None) -> str:
         raise ValueError("from address required (or auto_sign with wallet)")
 
     nonce = int(tx_body.get("nonce", bc.db.get_nonce(from_addr)))
+    from runtime.amount import to_satoshi
+
+    amount_sat = int(to_satoshi(value))
+    if body.get("amount_satoshi") is not None:
+        amount_sat = int(body.get("amount_satoshi"))
+    elif body.get("value_satoshi") is not None:
+        amount_sat = int(body.get("value_satoshi"))
     tx_body = {
         "from": from_addr,
         "to": to_addr,
         "value": value,
+        "amount_satoshi": amount_sat,
         "nonce": nonce,
         "gas": gas,
         "data": data,
@@ -10586,6 +10603,7 @@ def _handle_send_tx_obj(tx_obj: Dict, bc, mp, cfg) -> str:
         public_key=tx_obj.get("public_key", ""),
         tx_hash=identity,
         timestamp=ts,
+        amount_satoshi=int(amount_sat),
     )
     if tx_obj.get("blob_hashes"):
         tx.blob_hashes = list(tx_obj.get("blob_hashes") or [])
@@ -10622,7 +10640,9 @@ def _handle_send_tx_obj(tx_obj: Dict, bc, mp, cfg) -> str:
         raise ValueError("fee_burn_rate_unparseable") from exc
     if (not math.isfinite(_br)) or _br < 0:
         raise ValueError("fee_burn_rate_invalid")
-    fee_plan = plan_transfer_fees_sat(int(gas), _gp, _br, value)
+    fee_plan = plan_transfer_fees_sat(
+        int(gas), _gp, _br, value, value_satoshi=int(amount_sat)
+    )
     fee_satoshi = int(fee_plan["fee_sat"])
     fee = from_satoshi_float(fee_satoshi)
     tx_dict = {

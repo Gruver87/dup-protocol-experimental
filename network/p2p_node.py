@@ -5120,6 +5120,7 @@ class P2PNode:
             signature=signature,
             public_key=public_key,
             tx_hash=tx_hash,
+            amount_satoshi=int(amount_sat),
         )
         validation = self.blockchain.validate_transaction(tx)
         if not validation["valid"]:

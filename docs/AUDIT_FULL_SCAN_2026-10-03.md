@@ -54,6 +54,7 @@
 | P2 (fixed) | Prod example/k8s JSON omitted explicit `feature_libp2p` / `feature_long_range` / `feature_nft` | Set `false` (pin/TCP examples; Experimental mesh JSON unchanged ADR 0020) |
 | P2 (docs) | `FUND_READINESS.md` CI tip still said `719deb4` while `main` moved | Clarified: current CI tip `9944c55`; soak pack tip stays `719deb4` |
 | P1 (fixed) | `Transaction.value: float` apply authority residual | `amount_satoshi` twin on Transaction; `resolve_tx_value_satoshi` + `plan_transfer_fees_sat(value_satoshi=…)`; from_dict mismatch refuse. Display float retained (Wave C dual-write) |
+| P1 (fixed) | Mining/P2P/HTTP dropped `amount_satoshi` on Mempool→Transaction | Bound on `main` forge, mempool validate, P2P ingest, `/tx/send`+deploy/call; `get_sorted_transactions` emits satoshi |
 | Residual MED | Full type erase of `Transaction.value: float` | Later ADR — satoshi twin is authority when present |
 | Residual HIGH (known) | Experimental mesh `feature_libp2p=true` + `p2p_tls_enabled=false` | ADR 0020 Noise; pin stays TCP+TLS — do not sell as pin parity |
 | Residual org **P0 for mainnet** | Pen-test scheduled + third-party L1/EVM audit PDF | **Not code** — Phase 6 firm kickoff |
