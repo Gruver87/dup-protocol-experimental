@@ -82,18 +82,35 @@ class Wallet:
         chain_id: int = 1,
         data: str = "",
         gas_limit: int | None = None,
+        *,
+        amount_satoshi: int | None = None,
     ) -> dict:
-        """Create and sign a transaction (optional calldata + explicit gas)."""
+        """Create and sign a transaction (optional calldata + explicit gas).
+
+        ``amount_satoshi`` is dual-write metadata (not in ECDSA digest); when set
+        it must match ``to_satoshi(value)`` (ADR 0021 mismatch refuse).
+        """
         # Refuse invent gas_limit=21000 — callers must pass a positive limit.
         if gas_limit is None:
             raise ValueError("gas_limit_required")
         gas_i = int(gas_limit)
         if gas_i <= 0:
             raise ValueError("gas_limit_required")
+        from runtime.amount import to_satoshi
+
+        if amount_satoshi is not None:
+            amt_sat = int(amount_satoshi)
+            if amt_sat < 0:
+                raise ValueError("value_negative")
+            if int(to_satoshi(value)) != amt_sat:
+                raise ValueError("value_satoshi_mismatch")
+        else:
+            amt_sat = int(to_satoshi(value))
         tx = {
             "from": self.address,
             "to": to,
             "value": value,
+            "amount_satoshi": amt_sat,
             "nonce": nonce,
             "chain_id": chain_id,
             "gas_limit": gas_i,

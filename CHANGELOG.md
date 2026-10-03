@@ -15,6 +15,7 @@ Canonical language for this repository is **English**. Older inherited entries b
 
 ### Experimental R&D
 
+- **P1 StateEngine/BlockBuilder/TxBuilder/Wallet satoshi (2026-10-03):** `StateEngine._apply_transaction` prefers `amount_satoshi`/`value_satoshi` + mismatch refuse; `BlockBuilder` afford+pack satoshi (no float gasPrice×gas); `TransactionBuilder` + `Wallet.sign_transaction` emit `amount_satoshi`. Units `test_state_engine_block_builder_satoshi`. **Not** soak / BlockBuilder still unwired forge / **not** mainnet.
 - **P1 dual-write mismatch refuse (2026-10-03):** `Transaction.__init__` / `tx_validator` / `block_validator` refuse `value_satoshi_mismatch`; HTTP deploy/call use `resolve_wire_amount_sat` (prod float-only refuse); `immutable_state` prefers `value_satoshi`. **Not** soak / **not** mainnet.
 - **P1 EVM host amount_satoshi (2026-10-03):** `call_contract` / `deploy_contract` accept `amount_satoshi`; wei via `WEI_PER_SATOSHI`; `state_service` host + apply paths bind it; `block_validator` prefers satoshi twin. **Not** soak / **not** mainnet.
 - **P1 native apply amount_satoshi (2026-10-03):** `blockchain_apply_simple_block` / host_effects prefer `amount_satoshi` over float `value`; `state_service` JSON + remaining `plan_transfer_fees_sat` / `tx_pipeline` bind `value_satoshi=resolve_tx_value_satoshi`. Units `test_tx_amount_satoshi_apply`. **Not** soak / **not** mainnet / native rebuild required for mesh.

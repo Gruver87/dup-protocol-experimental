@@ -5351,6 +5351,30 @@ def _check_fail_loud_surfaces() -> tuple[list[str], list[str]]:
             errors.append(
                 "Transaction.__init__ must refuse value_satoshi_mismatch (ADR 0021)"
             )
+        se_py = (ROOT / "execution" / "state_engine.py").read_text(
+            encoding="utf-8", errors="replace"
+        )
+        if "value_satoshi_mismatch" not in se_py or "value_satoshi" not in se_py:
+            errors.append(
+                "StateEngine._apply_transaction must prefer value_satoshi + mismatch refuse"
+            )
+        bb_py = (ROOT / "execution" / "block_builder.py").read_text(
+            encoding="utf-8", errors="replace"
+        )
+        if "_tx_affordable_sat" not in bb_py or "amount_satoshi" not in bb_py:
+            errors.append(
+                "BlockBuilder must afford/pack via amount_satoshi (not float gasPrice*gas)"
+            )
+        txb_py = (ROOT / "core" / "tx_builder.py").read_text(
+            encoding="utf-8", errors="replace"
+        )
+        if "amount_satoshi" not in txb_py:
+            errors.append("TransactionBuilder must emit amount_satoshi")
+        wal_py = (ROOT / "crypto" / "wallet.py").read_text(
+            encoding="utf-8", errors="replace"
+        )
+        if '"amount_satoshi"' not in wal_py or "value_satoshi_mismatch" not in wal_py:
+            errors.append("Wallet.sign_transaction must emit/refuse amount_satoshi twin")
         tx_val_py = (ROOT / "blockchain" / "tx_validator.py").read_text(
             encoding="utf-8", errors="replace"
         )
