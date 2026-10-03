@@ -53,7 +53,8 @@
 | P1 (fixed) | BFT round SM swallowed lockdown failure after slash | Re-raise — fail-closed |
 | P2 (fixed) | Prod example/k8s JSON omitted explicit `feature_libp2p` / `feature_long_range` / `feature_nft` | Set `false` (pin/TCP examples; Experimental mesh JSON unchanged ADR 0020) |
 | P2 (docs) | `FUND_READINESS.md` CI tip still said `719deb4` while `main` moved | Clarified: current CI tip `9944c55`; soak pack tip stays `719deb4` |
-| Residual HIGH (known) | `Transaction.value: float` + display dual-write on apply | Wave C satoshi ledger authority; full type cutover = later ADR, not this pass |
+| P1 (fixed) | `Transaction.value: float` apply authority residual | `amount_satoshi` twin on Transaction; `resolve_tx_value_satoshi` + `plan_transfer_fees_sat(value_satoshi=…)`; from_dict mismatch refuse. Display float retained (Wave C dual-write) |
+| Residual MED | Full type erase of `Transaction.value: float` | Later ADR — satoshi twin is authority when present |
 | Residual HIGH (known) | Experimental mesh `feature_libp2p=true` + `p2p_tls_enabled=false` | ADR 0020 Noise; pin stays TCP+TLS — do not sell as pin parity |
 | Residual org **P0 for mainnet** | Pen-test scheduled + third-party L1/EVM audit PDF | **Not code** — Phase 6 firm kickoff |
 | Residual org | Bridge L1 contracts / cutover env placeholders | Keep bridge OFF on live mesh |

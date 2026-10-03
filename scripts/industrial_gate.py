@@ -5929,6 +5929,15 @@ def _check_balance_precision() -> tuple[list[str], list[str]]:
         errors.append(f"SATOSHI_MULTIPLIER unexpected: {SATOSHI_MULTIPLIER}")
     if to_satoshi(1) != 1_000_000:
         errors.append("to_satoshi(1) != 1_000_000")
+    try:
+        from storage.types import SATOSHI_PER_COIN
+
+        if int(SATOSHI_PER_COIN) != 1_000_000:
+            errors.append(
+                f"storage.types.SATOSHI_PER_COIN must be 1_000_000 (got {SATOSHI_PER_COIN})"
+            )
+    except ImportError as exc:
+        errors.append(f"storage.types SATOSHI_PER_COIN import failed: {exc}")
     row: dict = {}
     dual_write_balance(row, "1.5")
     if row.get("balance_satoshi") != 1_500_000:

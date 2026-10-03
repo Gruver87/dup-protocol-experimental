@@ -254,7 +254,12 @@ class StateService:
 
     def _apply_simple_block_native(self, block: "Block") -> int:
         """Apply simple transfers via abs_native; returns burned satoshi."""
-        from runtime.amount import from_satoshi_float, plan_transfer_fees_sat, to_satoshi
+        from runtime.amount import (
+            from_satoshi_float,
+            plan_transfer_fees_sat,
+            resolve_tx_value_satoshi,
+            to_satoshi,
+        )
 
         addrs = self._collect_addrs_for_simple_block(block)
         snap = self._accounts_sat_snapshot(addrs)
@@ -301,6 +306,7 @@ class StateService:
                 self.config.gas_price_wei,
                 self.config.burn_rate,
                 tx.value,
+                value_satoshi=resolve_tx_value_satoshi(tx),
             )
             tx.fee = from_satoshi_float(plan["fee_sat"])
             tx.burned = from_satoshi_float(plan["burned_sat"])
@@ -636,6 +642,7 @@ class StateService:
             can_afford_transfer_sat,
             from_satoshi_float,
             plan_transfer_fees_sat,
+            resolve_tx_value_satoshi,
             to_satoshi,
         )
 
@@ -644,6 +651,7 @@ class StateService:
             self.config.gas_price_wei,
             self.config.burn_rate,
             tx.value,
+            value_satoshi=resolve_tx_value_satoshi(tx),
         )
         fee_sat = plan["fee_sat"]
         burn_sat = plan["burned_sat"]

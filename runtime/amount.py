@@ -359,18 +359,46 @@ def try_debit_satoshi(current_sat: int, debit_abs: NumberLike) -> int:
     return cur - debit
 
 
+def resolve_tx_value_satoshi(tx: Any) -> int:
+    """Prefer ``tx.amount_satoshi``; else convert display ``tx.value`` via to_satoshi."""
+    sat = getattr(tx, "amount_satoshi", None)
+    if sat is not None:
+        try:
+            out = int(sat)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("amount_satoshi_invalid") from exc
+        if out < 0:
+            raise ValueError("value_negative")
+        return out
+    return int(to_satoshi(getattr(tx, "value", 0)))
+
+
 def plan_transfer_fees_sat(
     gas: int,
     gas_price_wei: NumberLike,
     burn_rate: NumberLike,
     value: NumberLike = 0,
     gas_used: Optional[int] = None,
+    *,
+    value_satoshi: Optional[int] = None,
 ) -> Dict[str, int]:
-    """Split L1 transfer fee into satoshi ints (Wave C tip+apply hot path)."""
+    """Split L1 transfer fee into satoshi ints (Wave C tip+apply hot path).
+
+    When ``value_satoshi`` is set it is the money authority (not ``to_satoshi(value)``).
+    """
+    def _value_sat() -> int:
+        if value_satoshi is not None:
+            vs = int(value_satoshi)
+            if vs < 0:
+                raise ValueError("value_negative")
+            return vs
+        return int(to_satoshi(value))
+
     try:
         from crypto import native
 
         if native.native_available() and hasattr(native, "plan_transfer_fees_satoshi"):
+            # Native fee split still takes ABS display value; value_sat may override.
             fee_s, burned_s, miner_s, total_s = native.plan_transfer_fees_satoshi(
                 int(gas),
                 str(gas_price_wei),
@@ -378,13 +406,14 @@ def plan_transfer_fees_sat(
                 str(value),
                 int(gas_used) if gas_used is not None else None,
             )
-            value_s = to_satoshi(value)
+            value_s = _value_sat()
+            fee_i = int(fee_s)
             return {
-                "fee_sat": int(fee_s),
+                "fee_sat": fee_i,
                 "burned_sat": int(burned_s),
                 "miner_fee_sat": int(miner_s),
                 "value_sat": value_s,
-                "total_cost_sat": int(total_s),
+                "total_cost_sat": int(value_s + fee_i),
             }
     except Exception as exc:
         _native_fallback("plan_transfer_fees_satoshi", exc)
@@ -402,7 +431,7 @@ def plan_transfer_fees_sat(
         rate = Decimal("1")
     burned_sat = int((Decimal(fee_sat) * rate).to_integral_value(rounding=ROUND_DOWN))
     miner_fee_sat = fee_sat - burned_sat
-    value_sat = to_satoshi(value)
+    value_sat = _value_sat()
     return {
         "fee_sat": fee_sat,
         "burned_sat": burned_sat,

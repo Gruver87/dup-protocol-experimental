@@ -78,6 +78,8 @@ class Transaction:
         signature: str = "",
         public_key: str = "",
         timestamp: int = 0,
+        *,
+        amount_satoshi: int | None = None,
     ):
         # Refuse invent gas=21000 — callers must pass a positive gas limit.
         if gas is None:
@@ -97,6 +99,16 @@ class Transaction:
         self.signature = signature
         self.public_key = public_key
         self.timestamp = timestamp or int(time.time())
+        # Canonical money twin when known (apply prefers this over float value).
+        if amount_satoshi is not None:
+            try:
+                self.amount_satoshi = int(amount_satoshi)
+            except (TypeError, ValueError) as exc:
+                raise ValueError("amount_satoshi_invalid") from exc
+            if self.amount_satoshi < 0:
+                raise ValueError("value_negative")
+        else:
+            self.amount_satoshi = None
         self.hash = tx_hash or self._compute_hash()
 
         # Заполняется при включении в блок
@@ -136,13 +148,16 @@ class Transaction:
             "timestamp": self.timestamp,
             "block_height": self.block_height,
         }
+        if getattr(self, "amount_satoshi", None) is not None:
+            out["amount_satoshi"] = int(self.amount_satoshi)
+            out["value_satoshi"] = int(self.amount_satoshi)
         if self.status is not None:
             out["status"] = int(self.status)
         return out
 
     @classmethod
     def from_dict(cls, d: Dict) -> "Transaction":
-        from runtime.amount import parse_rpc_value_abs
+        from runtime.amount import from_satoshi_float, parse_rpc_value_abs, to_satoshi
 
         # Refuse invent gas=21000 on deserialize — wire/storage must carry gas.
         raw_gas = d.get("gas", d.get("gas_limit", d.get("gasLimit")))
@@ -155,10 +170,32 @@ class Transaction:
         if gas <= 0:
             raise ValueError("gas_required")
 
+        amount_satoshi = None
+        raw_sat = d.get("amount_satoshi", d.get("value_satoshi"))
+        if raw_sat is not None and raw_sat != "":
+            try:
+                amount_satoshi = int(raw_sat)
+            except (TypeError, ValueError) as exc:
+                raise ValueError("amount_satoshi_invalid") from exc
+            if amount_satoshi < 0:
+                raise ValueError("value_negative")
+            value = float(from_satoshi_float(amount_satoshi))
+            # Dual-write mismatch refuse when ABS float also present.
+            if "value" in d and d.get("value") is not None and d.get("value") != "":
+                abs_sat = int(to_satoshi(parse_rpc_value_abs(d.get("value"), field="value")))
+                if abs_sat != amount_satoshi:
+                    raise ValueError("value_satoshi_mismatch")
+            elif "amount" in d and d.get("amount") is not None and d.get("amount") != "":
+                abs_sat = int(to_satoshi(parse_rpc_value_abs(d.get("amount"), field="value")))
+                if abs_sat != amount_satoshi:
+                    raise ValueError("value_satoshi_mismatch")
+        else:
+            value = parse_rpc_value_abs(d.get("value", d.get("amount", 0)), field="value")
+
         tx = cls(
             from_addr=d.get("from_addr", d.get("from", "")),
             to_addr=d.get("to_addr", d.get("to", "")),
-            value=parse_rpc_value_abs(d.get("value", d.get("amount", 0)), field="value"),
+            value=value,
             nonce=int(d.get("nonce", 0)),
             gas=gas,
             data=d.get("data", d.get("tx_data", "")),
@@ -166,6 +203,7 @@ class Transaction:
             signature=d.get("signature", ""),
             public_key=d.get("public_key", ""),
             timestamp=int(d.get("timestamp", 0)),
+            amount_satoshi=amount_satoshi,
         )
         if d.get("gas_used") is not None and d.get("gas_used") != "":
             try:
