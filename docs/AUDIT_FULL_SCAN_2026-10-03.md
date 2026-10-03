@@ -62,6 +62,7 @@
 | P1 (fixed) | Bridge lock/credit/debit re-converted float after HTTP sat resolve | Thread `amount_satoshi` through abs_bridge + storage; adapter passes twin |
 | P1 (fixed) | Cross-shard L1 debit/credit float-only; supply gate float ABS | Twin on `CrossShardTransaction`; `_total_supply_satoshi` |
 | P1 (fixed) | Pool-lock admit re-to_satoshi(display) | `is_outgoing_allowed_sat` on tx_pipeline / state_service |
+| P1 (fixed) | Multisig HTTP discarded `value_sat`; validator register re-to_satoshi(stake) | Pass `amount_satoshi` / `stake_satoshi` into create/add/save/register |
 | Residual MED | Full type erase of `Transaction.value: float` | Later ADR — satoshi twin is authority when present |
 | Residual HIGH (known) | Experimental mesh `feature_libp2p=true` + `p2p_tls_enabled=false` | ADR 0020 Noise; pin stays TCP+TLS — do not sell as pin parity |
 | Residual org **P0 for mainnet** | Pen-test scheduled + third-party L1/EVM audit PDF | **Not code** — Phase 6 firm kickoff |

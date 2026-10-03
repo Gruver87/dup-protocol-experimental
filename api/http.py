@@ -6290,7 +6290,9 @@ class RESTHandler(BaseHTTPRequestHandler):
                     return
                 ca = self.__class__.consensus_adapter
                 if ca and hasattr(ca, "add_validator"):
-                    ok = ca.add_validator(address, stake)
+                    ok = ca.add_validator(
+                        address, stake, stake_satoshi=int(stake_sat)
+                    )
                     self._json({
                         "registered": ok is True,
                         "address": address,
@@ -6298,7 +6300,9 @@ class RESTHandler(BaseHTTPRequestHandler):
                         "stake_satoshi": stake_sat,
                     })
                 else:
-                    bc.db.save_validator(address, stake)
+                    bc.db.save_validator(
+                        address, stake, stake_satoshi=int(stake_sat)
+                    )
                     self._json({
                         "registered": True,
                         "address": address,
@@ -6543,7 +6547,9 @@ class RESTHandler(BaseHTTPRequestHandler):
                 try:
                     from features.multisig import MultiSigWallet
                     ms = MultiSigWallet(owners, required)
-                    result = ms.create_transaction(to, value)
+                    result = ms.create_transaction(
+                        to, value, amount_satoshi=int(value_sat)
+                    )
                     if isinstance(result, dict) and result.get("success") is False:
                         self._error(400, result.get("error", "multisig transaction failed"))
                         return
@@ -6552,6 +6558,7 @@ class RESTHandler(BaseHTTPRequestHandler):
                         "owners": owners,
                         "required": required,
                         "value_satoshi": int(value_sat),
+                        "amount_satoshi": int(value_sat),
                     })
                 except ValueError as e:
                     self._error(400, str(e))
@@ -8331,20 +8338,34 @@ class RESTHandler(BaseHTTPRequestHandler):
                 except ValueError as exc:
                     self._error(400, str(exc))
                     return
-                if hasattr(vr, "register"):
-                    vr.register(address, stake)
+                if hasattr(vr, "register_validator"):
+                    vr.register_validator(address, int(stake_sat))
                     self._json({
                         "success": True,
                         "address": address,
                         "stake": stake,
-                        "stake_satoshi": stake_sat,
+                        "stake_satoshi": int(stake_sat),
                     })
-                elif hasattr(vr, "add"):
-                    vr.add(address, stake)
+                elif hasattr(vr, "register"):
+                    try:
+                        vr.register(address, int(stake_sat))
+                    except TypeError:
+                        vr.register(address, stake, stake_satoshi=int(stake_sat))
                     self._json({
                         "success": True,
                         "address": address,
-                        "stake_satoshi": stake_sat,
+                        "stake": stake,
+                        "stake_satoshi": int(stake_sat),
+                    })
+                elif hasattr(vr, "add"):
+                    try:
+                        vr.add(address, int(stake_sat))
+                    except TypeError:
+                        vr.add(address, stake)
+                    self._json({
+                        "success": True,
+                        "address": address,
+                        "stake_satoshi": int(stake_sat),
                     })
                 else:
                     self._json({"success": False, "error": "register not available"})

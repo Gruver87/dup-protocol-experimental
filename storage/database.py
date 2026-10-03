@@ -2070,11 +2070,14 @@ class Database:
 
     # ── Валидаторы ───────────────────────────────────────────────────────────
 
-    def save_validator(self, address: str, stake: float) -> None:
-        from runtime.amount import money_abs, to_satoshi
+    def save_validator(
+        self, address: str, stake: float, *, stake_satoshi: int | None = None
+    ) -> None:
+        from runtime.amount import resolve_amount_satoshi
 
-        stake_abs = money_abs(stake, field="stake")
-        stake_sat = int(to_satoshi(stake_abs))
+        stake_sat, stake_abs = resolve_amount_satoshi(
+            stake, stake_satoshi, field="stake"
+        )
         with self.lock:
             self.conn.execute(
                 """INSERT INTO validators (address, stake, stake_satoshi, joined_at)
@@ -2207,12 +2210,19 @@ class Database:
 
     # ── Мост (Cross-chain) ───────────────────────────────────────────────────
 
-    def save_bridge_lock(self, from_addr: str, to_chain: str, to_addr: str,
-                         amount: float, tx_hash: str) -> None:
-        from runtime.amount import money_abs, to_satoshi
+    def save_bridge_lock(
+        self,
+        from_addr: str,
+        to_chain: str,
+        to_addr: str,
+        amount: float,
+        tx_hash: str,
+        *,
+        amount_satoshi: int | None = None,
+    ) -> None:
+        from runtime.amount import resolve_amount_satoshi
 
-        amt = money_abs(amount)
-        amt_sat = int(to_satoshi(amt))
+        amt_sat, amt = resolve_amount_satoshi(amount, amount_satoshi)
         with self.lock:
             self.conn.execute(
                 """INSERT OR REPLACE INTO bridge_locks

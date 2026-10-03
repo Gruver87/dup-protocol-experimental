@@ -435,8 +435,10 @@ class HybridDatabase:
             )
         )
 
-    def save_validator(self, address: str, stake: float) -> None:
-        self._core.save_validator(address, stake)
+    def save_validator(
+        self, address: str, stake: float, *, stake_satoshi: int | None = None
+    ) -> None:
+        self._core.save_validator(address, stake, stake_satoshi=stake_satoshi)
 
     def get_validators(self, active_only: bool = True) -> List[Dict]:
         return self._core.get_validators(active_only)
@@ -599,8 +601,17 @@ class HybridDatabase:
         to_addr: str,
         amount: float,
         tx_hash: str,
+        *,
+        amount_satoshi: int | None = None,
     ) -> None:
-        self._core.save_bridge_lock(from_addr, to_chain, to_addr, amount, tx_hash)
+        self._core.save_bridge_lock(
+            from_addr,
+            to_chain,
+            to_addr,
+            amount,
+            tx_hash,
+            amount_satoshi=amount_satoshi,
+        )
 
     def confirm_bridge_lock(self, tx_hash: str) -> None:
         self._core.confirm_bridge_lock(tx_hash)

@@ -288,7 +288,14 @@ class RustBridge:
                 )
             ):
                 return {"error": "satoshi_store_required"}
-            self.db.save_bridge_lock(from_addr, to_chain, to_addr, net_amount, tx_hash)
+            self.db.save_bridge_lock(
+                from_addr,
+                to_chain,
+                to_addr,
+                net_amount,
+                tx_hash,
+                amount_satoshi=net_sats,
+            )
 
         if l1_tx_hash:
             self._enqueue_l1_outbound(tx_hash, l1_tx_hash, to_chain)

@@ -230,10 +230,15 @@ class ConsensusAdapter:
                 f"slash persist failed for {address}: {persist_err}"
             ) from persist_err
 
-    def _register_validator_all(self, address: str, stake: float) -> None:
+    def _register_validator_all(
+        self, address: str, stake: float, *, stake_satoshi: int | None = None
+    ) -> None:
         # DB keeps quantized ABS float; live engines use integer satoshi.
-        stake_abs = money_abs(stake, field="stake")
-        stake_sat = int(to_satoshi(stake_abs))
+        from runtime.amount import resolve_amount_satoshi
+
+        stake_sat, stake_abs = resolve_amount_satoshi(
+            stake, stake_satoshi, field="stake"
+        )
         self.engine.add_validator(address, stake_abs)
         if self.slashing_engine:
             self.slashing_engine.add_validator(address, stake_sat)
@@ -264,12 +269,17 @@ class ConsensusAdapter:
 
     # ── ValidatorRegistryPort-backed management ────────────────────────────
 
-    def add_validator(self, address: str, stake: float) -> bool:
-        stake_abs = money_abs(stake, field="stake")
-        stake_sat = int(to_satoshi(stake_abs))
+    def add_validator(
+        self, address: str, stake: float, *, stake_satoshi: int | None = None
+    ) -> bool:
+        from runtime.amount import resolve_amount_satoshi
+
+        stake_sat, stake_abs = resolve_amount_satoshi(
+            stake, stake_satoshi, field="stake"
+        )
         ok = self.engine.add_validator(address, stake_abs)
         if ok:
-            self.db.save_validator(address, stake_abs)
+            self.db.save_validator(address, stake_abs, stake_satoshi=stake_sat)
             if self.slashing_engine:
                 self.slashing_engine.add_validator(address, stake_sat)
             if self.validator_registry:

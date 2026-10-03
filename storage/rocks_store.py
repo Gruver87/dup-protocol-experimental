@@ -1192,16 +1192,20 @@ class RocksChainStore:
 
     # ── validators ────────────────────────────────────────────────────────
 
-    def save_validator(self, address: str, stake: float) -> None:
-        from runtime.amount import money_abs, to_satoshi
+    def save_validator(
+        self, address: str, stake: float, *, stake_satoshi: int | None = None
+    ) -> None:
+        from runtime.amount import resolve_amount_satoshi
 
         with self._write_lock:
             addr = SqliteDatabase._normalize_address(address)
-            stake_abs = money_abs(stake, field="stake")
+            stake_sat, stake_abs = resolve_amount_satoshi(
+                stake, stake_satoshi, field="stake"
+            )
             row = {
                 "address": addr,
                 "stake": stake_abs,
-                "stake_satoshi": int(to_satoshi(stake_abs)),
+                "stake_satoshi": stake_sat,
                 "active": 1,
                 "slashed": 0,
                 "joined_at": int(time.time()),
@@ -1872,17 +1876,19 @@ class RocksChainStore:
         to_addr: str,
         amount: float,
         tx_hash: str,
+        *,
+        amount_satoshi: int | None = None,
     ) -> None:
-        from runtime.amount import money_abs, to_satoshi
+        from runtime.amount import resolve_amount_satoshi
 
-        amt = money_abs(amount)
+        amt_sat, amt = resolve_amount_satoshi(amount, amount_satoshi)
         row = {
             "tx_hash": tx_hash,
             "from_addr": from_addr,
             "to_chain": to_chain,
             "to_addr": to_addr,
             "amount": amt,
-            "amount_satoshi": int(to_satoshi(amt)),
+            "amount_satoshi": amt_sat,
             "status": "pending",
             "created_at": int(time.time()),
         }
