@@ -86,8 +86,8 @@ ADRs: 0001 tip-safety · 0009 hybrid · 0016 profiles · 0017 Long-Range (lab) �
 | Host pytest + waves green | Done 2026-09-21 |
 | Mesh probe + pre-soak | Done 2026-09-21 → led to soak |
 | Ceremony dry-run status | `ceremony_status` ready=True (≠ mainnet) |
-| CI badges green (Security / Tests / Experimental R&D) | Tip `719deb4` — all four workflows green |
-| Tip 48h soak after industrial polish (`719deb4`) | **PASS** [`ind48pass1`](evidence/runs/ind48pass1/) |
+| CI badges green (Security / Tests / Experimental R&D / Docker) | Tip `9944c55` (2026-10-03) — workflows green on `main`; historical soak tip `719deb4` remains pack-bound |
+| Tip 48h soak after industrial polish (`719deb4`) | **PASS** [`ind48pass1`](evidence/runs/ind48pass1/) — soak tip ≠ current `main` HEAD |
 | Libp2p STRICT 48h (`start_soak_prod_mesh_48h_strict.ps1`) | **PASS** [`lp2pstrict1`](evidence/runs/lp2pstrict1/) |
 | Long-Range STRICT 48h (`start_soak_long_range_lab.ps1 -Hours 48 -Strict`) | **PASS** [`lrstrict1`](evidence/runs/lrstrict1/) |
 | EVM STRICT 48h (`start_soak_evm_mesh_48h_strict.ps1`) | **PASS** [`evmstrict1`](evidence/runs/evmstrict1/) 2026-09-28→30 — fail=0 mesh_warn=0 tip ~85200→~96089 |

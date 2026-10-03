@@ -72,7 +72,7 @@ Full map: [ARCHITECTURE § R&D execution chain](ARCHITECTURE.md#rd-execution-cha
 - **Thin operator SDK v0** → [`sdk/README.md`](../sdk/README.md) (`sdk/dup_sdk`) — status/health/balance_satoshi/tx submit; `python scripts/dup_sdk_lab.py`. **Not** mainnet / **not** pin / **not** wallet custody
 - **AI/MEV lab sprouts** → [`sprouts/AI_LAB_PROFILE.md`](sprouts/AI_LAB_PROFILE.md) — mid-soak honesty **CLOSED** 2026-10-03 · `python scripts/ai_lab.py`. Prod flags **false**. **Not** consensus / **not** soak PASS
 - **NFT marketplace lab** → [`sprouts/NFT_LAB_PROFILE.md`](sprouts/NFT_LAB_PROFILE.md) — mid-soak honesty **CLOSED** 2026-10-03 · soft escrow · `python scripts/nft_lab.py`. Prod `feature_nft=false`. **Not** ERC-721 / **not** soak PASS
-- **Critical-path audit scan** → [`AUDIT_FULL_SCAN_2026-10-01.md`](AUDIT_FULL_SCAN_2026-10-01.md) · `python scripts/audit_critical_paths.py` (**not** soak / **not** mesh PASS)
+- **Critical-path audit scan** → [`AUDIT_FULL_SCAN_2026-10-01.md`](AUDIT_FULL_SCAN_2026-10-01.md) · re-scan [`AUDIT_FULL_SCAN_2026-10-03.md`](AUDIT_FULL_SCAN_2026-10-03.md) · `python scripts/audit_critical_paths.py` (**not** firm PASS / **not** new soak)
 - **Pre-fund diligence snapshot** → [`DILIGENCE_SNAPSHOT_2026-10-01.md`](DILIGENCE_SNAPSHOT_2026-10-01.md) · NDA outline · firm calendar stub (**not** firm PASS)
 - Hybrid pin (do not break): [`dup-protocol`](https://github.com/Gruver87/dup-protocol)
 - Contribute: [CONTRIBUTING](../CONTRIBUTING.md)
