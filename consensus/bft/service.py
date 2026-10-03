@@ -454,7 +454,9 @@ class RoundStateMachine:
             try:
                 self._lockdown.request_lockdown(lock_reason)
             except Exception:
+                # Fail-closed: malicious slash without lockdown is not acceptable.
                 logger.exception("[RoundSM] lockdown failed")
+                raise
         self._phase = RoundPhase.LOCKED
         outcome = RoundOutcome.locked(
             reason_code,

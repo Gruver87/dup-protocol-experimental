@@ -9,6 +9,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Mapping, MutableMapping
 
+from runtime.amount import SATOSHI_MULTIPLIER, to_satoshi
+
 __all__ = [
     "StorageError",
     "StorageCorruptionError",
@@ -22,7 +24,8 @@ __all__ = [
     "SATOSHI_PER_COIN",
 ]
 
-SATOSHI_PER_COIN: int = 100_000_000
+# Alias of protocol micro-ABS (1 ABS = 1_000_000). Never Bitcoin 1e8.
+SATOSHI_PER_COIN: int = int(SATOSHI_MULTIPLIER)
 
 
 # ── Errors ───────────────────────────────────────────────────────────────────
@@ -128,8 +131,8 @@ class AccountRecord:
         sat = d.get("balance_satoshi")
         if sat is None and d.get("balance") is not None:
             try:
-                # Soft float→satoshi for domain port; adapter owns canonical dual-write.
-                sat = int(round(float(d.get("balance") or 0) * float(SATOSHI_PER_COIN)))
+                # Prefer runtime.to_satoshi (1e6) — never invent via Bitcoin 1e8 scale.
+                sat = int(to_satoshi(d.get("balance")))
             except (TypeError, ValueError):
                 sat = 0
         try:

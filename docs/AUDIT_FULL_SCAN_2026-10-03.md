@@ -48,6 +48,10 @@
 | P1 (fixed) | `execution/mempool` + `secure_mempool` float-only add (legacy layer HIGH) | `resolve_wire_amount_sat`; prod/staging (`DEPLOYMENT_MODE`) refuse float-only; bind `amount_satoshi` |
 | P1 (fixed) | `bridge/adapter` credit from float when satoshi absent | Coerce always binds satoshi twin; confirm refuses if still missing |
 | P2 (fixed) | `FileSecretAdapter(allow_prod=…)` latent bypass | Knob removed — prod always refused (ADR 0015) |
+| P0 (fixed) | `storage/types.SATOSHI_PER_COIN=1e8` (Bitcoin scale) while protocol is **1e6** — float→satoshi mis-scale on `AccountRecord.from_mapping` | Alias `SATOSHI_MULTIPLIER`; convert via `to_satoshi` |
+| P1 (fixed) | `crypto.signing.create_signed_transaction` invented gas 21000/1 | Require explicit `gas_limit` / `gas_price` |
+| P1 (fixed) | BFT round SM swallowed lockdown failure after slash | Re-raise — fail-closed |
+| P2 (fixed) | Prod example/k8s JSON omitted explicit `feature_libp2p` / `feature_long_range` / `feature_nft` | Set `false` (pin/TCP examples; Experimental mesh JSON unchanged ADR 0020) |
 | P2 (docs) | `FUND_READINESS.md` CI tip still said `719deb4` while `main` moved | Clarified: current CI tip `9944c55`; soak pack tip stays `719deb4` |
 | Residual HIGH (known) | `Transaction.value: float` + display dual-write on apply | Wave C satoshi ledger authority; full type cutover = later ADR, not this pass |
 | Residual HIGH (known) | Experimental mesh `feature_libp2p=true` + `p2p_tls_enabled=false` | ADR 0020 Noise; pin stays TCP+TLS — do not sell as pin parity |
