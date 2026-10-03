@@ -461,42 +461,21 @@ fn apply_simple_transfer_with_fees(
         return Err(pyo3::exceptions::PyValueError::new_err("missing_address"));
     }
 
-    let value_abs = obj
-        .get("value")
-        .or_else(|| obj.get("amount"))
-        .cloned()
-        .unwrap_or(Value::Number(0.into()));
-    let value_str = match &value_abs {
-        Value::Number(n) => {
-            if let Some(i) = n.as_i64() {
-                i.to_string()
-            } else if let Some(u) = n.as_u64() {
-                u.to_string()
-            } else if let Some(f) = n.as_f64() {
-                if !f.is_finite() {
-                    return Err(pyo3::exceptions::PyValueError::new_err("non_finite_value"));
-                }
-                format!("{f}")
-            } else {
-                "0".to_string()
-            }
-        }
-        Value::String(s) => s.clone(),
-        _ => "0".to_string(),
-    };
+    // amount_satoshi is money authority when present (ADR 0021); float value is display-only.
+    let value_sat = tx_amount_sat(tx)?;
     let gas = obj
         .get("gas")
         .and_then(|v| v.as_u64().or_else(|| v.as_i64().map(|i| i as u64)))
         .unwrap_or(21_000);
 
-    let (fee_sat, burned_sat, miner_fee_sat, total_sat) = plan_transfer_fees_satoshi_inner(
+    let (fee_sat, burned_sat, miner_fee_sat, _) = plan_transfer_fees_satoshi_inner(
         gas,
         &gas_price_wei.to_string(),
         &burn_rate.to_string(),
-        &value_str,
+        "0",
         None,
     )?;
-    let value_sat = to_satoshi_inner(&value_str)?;
+    let total_sat = value_sat.saturating_add(fee_sat);
 
     if !accounts.contains_key(&from_addr) {
         accounts.insert(from_addr.clone(), empty_account());
@@ -595,32 +574,10 @@ fn apply_host_fee_effect(
         .and_then(|v| v.as_str())
         .unwrap_or("")
         .to_string();
-    let value_str = if apply_value {
-        let value_abs = obj
-            .get("value")
-            .or_else(|| obj.get("amount"))
-            .cloned()
-            .unwrap_or(Value::Number(0.into()));
-        match &value_abs {
-            Value::Number(n) => {
-                if let Some(i) = n.as_i64() {
-                    i.to_string()
-                } else if let Some(u) = n.as_u64() {
-                    u.to_string()
-                } else if let Some(f) = n.as_f64() {
-                    if !f.is_finite() {
-                        return Err(pyo3::exceptions::PyValueError::new_err("non_finite_value"));
-                    }
-                    format!("{f}")
-                } else {
-                    "0".to_string()
-                }
-            }
-            Value::String(s) => s.clone(),
-            _ => "0".to_string(),
-        }
+    let value_sat = if apply_value {
+        tx_amount_sat(effect)?
     } else {
-        "0".to_string()
+        0
     };
     let gas = obj
         .get("gas")
@@ -630,18 +587,14 @@ fn apply_host_fee_effect(
         .get("gas_used")
         .and_then(|v| v.as_u64().or_else(|| v.as_i64().map(|i| i as u64)));
 
-    let (_fee_sat, burned_sat, miner_fee_sat, total_sat) = plan_transfer_fees_satoshi_inner(
+    let (fee_sat, burned_sat, miner_fee_sat, _) = plan_transfer_fees_satoshi_inner(
         gas,
         &gas_price_wei.to_string(),
         &burn_rate.to_string(),
-        &value_str,
+        "0",
         gas_used,
     )?;
-    let value_sat = if apply_value {
-        to_satoshi_inner(&value_str)?
-    } else {
-        0
-    };
+    let total_sat = value_sat.saturating_add(fee_sat);
 
     if !accounts.contains_key(&from_addr) {
         accounts.insert(from_addr.clone(), empty_account());
@@ -1064,5 +1017,18 @@ mod tests {
             "nonce": 0
         });
         assert!(tx_amount_sat(&tx).is_err());
+    }
+
+    #[test]
+    fn tx_amount_sat_prefers_amount_satoshi_over_float_value() {
+        let tx = serde_json::json!({
+            "from": "a",
+            "to": "b",
+            "value": 99.0,
+            "amount_satoshi": 500_000,
+            "fee": 0,
+            "nonce": 0
+        });
+        assert_eq!(tx_amount_sat(&tx).unwrap(), 500_000);
     }
 }

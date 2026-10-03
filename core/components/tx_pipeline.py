@@ -67,6 +67,7 @@ class TxPipeline:
             can_afford_transfer_sat,
             from_satoshi_float,
             plan_transfer_fees_sat,
+            resolve_tx_value_satoshi,
         )
 
         fee_plan = plan_transfer_fees_sat(
@@ -74,6 +75,7 @@ class TxPipeline:
             self.config.gas_price_wei,
             self.config.burn_rate,
             tx.value,
+            value_satoshi=resolve_tx_value_satoshi(tx),
         )
         value_sat = int(fee_plan["value_sat"])
         fee_sat = int(fee_plan["fee_sat"])

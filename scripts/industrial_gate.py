@@ -1816,6 +1816,21 @@ def _check_fail_loud_surfaces() -> tuple[list[str], list[str]]:
         if "_replay_simple_range_native" not in bc_py and "_replay_simple_range_native" not in state_svc_py:
             errors.append("blockchain must expose native simple apply/replay helpers")
         if (
+            '"amount_satoshi"' not in state_svc_py
+            or "resolve_tx_value_satoshi" not in state_svc_py
+            or "value_satoshi=" not in state_svc_py
+        ):
+            errors.append(
+                "state_service native apply must bind amount_satoshi / value_satoshi (ADR 0021)"
+            )
+        amount_rs = (ROOT / "native" / "abs_native" / "src" / "amount.rs").read_text(
+            encoding="utf-8"
+        )
+        if "tx_amount_sat(tx)" not in amount_rs or "tx_amount_sat(effect)" not in amount_rs:
+            errors.append(
+                "amount.rs apply_simple/host_effects must prefer tx_amount_sat (amount_satoshi)"
+            )
+        if (
             "blockchain_replay_simple_blocks" not in bc_py
             and "blockchain_replay_simple_blocks" not in state_svc_py
         ):

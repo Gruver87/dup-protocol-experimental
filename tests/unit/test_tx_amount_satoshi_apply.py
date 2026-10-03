@@ -67,3 +67,16 @@ def test_to_dict_emits_amount_satoshi():
     d = tx.to_dict()
     assert d["amount_satoshi"] == 1_000_000
     assert d["value_satoshi"] == 1_000_000
+
+
+def test_state_service_native_json_binds_amount_satoshi():
+    """Native simple-block / host_effects JSON must carry amount_satoshi authority."""
+    src = (ROOT / "core" / "components" / "state_service.py").read_text(encoding="utf-8")
+    assert '"amount_satoshi": value_sat' in src or '"amount_satoshi": int(resolve_tx_value_satoshi(tx))' in src
+    assert "value_satoshi=resolve_tx_value_satoshi(tx)" in src
+    assert "value_satoshi=value_sat" in src
+    # Must not leave native apply path as float-only authority.
+    assert 'txs.append(' in src
+    native_fn = src.split("def _apply_simple_block_native")[1].split("def ")[0]
+    assert "amount_satoshi" in native_fn
+    assert "resolve_tx_value_satoshi" in native_fn
