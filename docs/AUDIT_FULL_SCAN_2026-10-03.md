@@ -66,7 +66,11 @@
 | P1 (fixed) | Lightning/Plasma HTTP discarded sat after resolve; bridge L1 queue float-only | Pass twin into open/pay/htlc/route/deposit/submit; exit finalize credits sat; enqueue carries `amount_satoshi` |
 | P1 (fixed) | P2P/`main` proposer used float stake weights | `add_validator(stake_satoshi=)`; weighted select prefers `stake_satoshi` |
 | P1 (fixed) | MEV status/`mev_enabled` green-paint without simulation_only | `/status` + `/mev/*` paint `simulation_only` / `consensus_wired=false`; multisig `execution_bound=false` |
+| P1 (fixed) | CryptoWill HTTP discarded sat; feature `save_*` re-`to_satoshi(float)` | Will debit/credit twin; `_resolve_abs_sat` on lightning/plasma/will/NFT save; Rocks NFT prefer twin |
+| P1 (fixed) | Plasma L2 balance ignored `amount_satoshi`; manifest/boot stake ABS vs satoshi | `_l2_balance_sat` prefers twin; loader/registry/boot pass `stake_satoshi` |
+| P1 (fixed) | `/bridge/lock` transfer fallback dropped sat | Pass twin / refuse fallback in prod |
 | Residual MED | Full type erase of `Transaction.value: float` | Later ADR — satoshi twin is authority when present |
+| Residual MED | Lightning in-channel balances still float fields (twins on persist) | Deeper channel-state sat authority later |
 | Residual HIGH (known) | Experimental mesh `feature_libp2p=true` + `p2p_tls_enabled=false` | ADR 0020 Noise; pin stays TCP+TLS — do not sell as pin parity |
 | Residual org **P0 for mainnet** | Pen-test scheduled + third-party L1/EVM audit PDF | **Not code** — Phase 6 firm kickoff |
 | Residual org | Bridge L1 contracts / cutover env placeholders | Keep bridge OFF on live mesh |

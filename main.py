@@ -680,8 +680,18 @@ class NodeOrchestrator:
                 print(f"[Node] Devnet5 manifest note: {_d5m}")
 
         # Если нет валидаторов в БД — регистрируем текущий узел как валидатор
+        from runtime.amount import to_satoshi as _to_satoshi_boot
+
+        _min_stake_sat = int(_to_satoshi_boot(config.min_stake))
         if not self.db.get_validators():
-            self.consensus.add_validator(config.miner_address, config.min_stake)
+            try:
+                self.consensus.add_validator(
+                    config.miner_address,
+                    config.min_stake,
+                    stake_satoshi=_min_stake_sat,
+                )
+            except TypeError:
+                self.consensus.add_validator(config.miner_address, config.min_stake)
             print(f"[Node] Registered self as validator: {config.miner_address}")
 
         # Operational wallet (WALLET_PRIVATE_KEY) must mine + sign on solo devnet
@@ -697,7 +707,12 @@ class NodeOrchestrator:
         ):
             _vals = self.db.get_validators(active_only=True) or []
             if not any(v["address"].lower() == _op.lower() for v in _vals):
-                self.consensus.add_validator(_op, config.min_stake)
+                try:
+                    self.consensus.add_validator(
+                        _op, config.min_stake, stake_satoshi=_min_stake_sat
+                    )
+                except TypeError:
+                    self.consensus.add_validator(_op, config.min_stake)
             config.miner_address = _op
             print(f"[Node] Mining proposer locked to operational wallet: {_op}")
 
@@ -1166,7 +1181,12 @@ class NodeOrchestrator:
             from consensus.slashing import SlashingEngine as _SlashingEng
             self.slashing_engine = _SlashingEng()
             if config.miner_address:
-                self.slashing_engine.register_validator(config.miner_address, config.min_stake)
+                from runtime.amount import to_satoshi as _to_sat_slash
+
+                self.slashing_engine.register_validator(
+                    config.miner_address,
+                    int(_to_sat_slash(config.min_stake)),
+                )
             if self.db and hasattr(self.db, "save_slash_event"):
                 self.slashing_engine.register_slash_callback(
                     lambda v, r, e, p: self.db.save_slash_event(v, r, e, p)
@@ -1180,8 +1200,10 @@ class NodeOrchestrator:
             from consensus.validator_registry import ValidatorRegistry as _ValReg
             self.validator_registry = _ValReg()
             if config.miner_address:
+                from runtime.amount import to_satoshi as _to_sat_reg
+
                 self.validator_registry.register_validator(
-                    config.miner_address, int(config.min_stake)
+                    config.miner_address, int(_to_sat_reg(config.min_stake))
                 )
             print("[Node] ValidatorRegistry: ready")
         except Exception as _e:
@@ -1235,10 +1257,13 @@ class NodeOrchestrator:
                 from consensus.lmd import LMDTable as _LMD
                 self.lmd_table = _LMD()
                 if config.miner_address:
-                    # Explicit min_stake — do not invent stake=100 via LMD default.
-                    self.lmd_table.add_validator(
-                        config.miner_address, int(getattr(config, "min_stake", 0) or 0)
+                    # Explicit min_stake satoshi — do not invent stake=100 via LMD default.
+                    from runtime.amount import to_satoshi as _to_sat_lmd
+
+                    _lmd_stake = int(
+                        _to_sat_lmd(getattr(config, "min_stake", 0) or 0)
                     )
+                    self.lmd_table.add_validator(config.miner_address, _lmd_stake)
                 print("[Node] LMDTable: LMD-GHOST fork choice ready")
             except Exception as _e:
                 self.lmd_table = None

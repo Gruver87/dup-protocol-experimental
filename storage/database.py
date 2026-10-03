@@ -86,6 +86,19 @@ class Database:
         return abs_v, int(to_satoshi(abs_v))
 
     @staticmethod
+    def _resolve_abs_sat(
+        abs_value: Any,
+        sat_value: Any = None,
+        *,
+        field: str = "amount",
+    ) -> tuple:
+        """Prefer inbound ``*_satoshi`` twin; refuse mismatch with ABS float."""
+        from runtime.amount import resolve_amount_satoshi
+
+        sat, abs_v = resolve_amount_satoshi(abs_value, sat_value, field=field)
+        return abs_v, int(sat)
+
+    @staticmethod
     def _overlay_sat(row: Dict, abs_key: str, sat_key: str) -> Dict:
         """Normalize display ABS and ensure satoshi twin is present on a row."""
         from runtime.amount import money_abs, to_satoshi
@@ -2723,9 +2736,15 @@ class Database:
     # ── Lightning Network (Wave 40 persistence) ─────────────────────────────
 
     def save_lightning_channel(self, ch: Dict) -> None:
-        cap, cap_sat = self._abs_sat(ch["capacity"], field="capacity")
-        b1, b1_sat = self._abs_sat(ch["balance1"], field="balance1")
-        b2, b2_sat = self._abs_sat(ch["balance2"], field="balance2")
+        cap, cap_sat = self._resolve_abs_sat(
+            ch.get("capacity"), ch.get("capacity_satoshi"), field="capacity"
+        )
+        b1, b1_sat = self._resolve_abs_sat(
+            ch.get("balance1"), ch.get("balance1_satoshi"), field="balance1"
+        )
+        b2, b2_sat = self._resolve_abs_sat(
+            ch.get("balance2"), ch.get("balance2_satoshi"), field="balance2"
+        )
         with self.lock:
             self.conn.execute(
                 """INSERT OR REPLACE INTO lightning_channels
@@ -2772,8 +2791,12 @@ class Database:
         return row
 
     def save_lightning_payment(self, p: Dict) -> None:
-        amt, amt_sat = self._abs_sat(p["amount"], field="amount")
-        fee, fee_sat = self._abs_sat(p.get("fee", 0), field="fee")
+        amt, amt_sat = self._resolve_abs_sat(
+            p.get("amount"), p.get("amount_satoshi"), field="amount"
+        )
+        fee, fee_sat = self._resolve_abs_sat(
+            p.get("fee", 0), p.get("fee_satoshi"), field="fee"
+        )
         with self.lock:
             self.conn.execute(
                 """INSERT OR REPLACE INTO lightning_payments
@@ -2811,7 +2834,9 @@ class Database:
         return row
 
     def save_lightning_htlc(self, h: Dict) -> None:
-        amt, amt_sat = self._abs_sat(h["amount"], field="amount")
+        amt, amt_sat = self._resolve_abs_sat(
+            h.get("amount"), h.get("amount_satoshi"), field="amount"
+        )
         with self.lock:
             self.conn.execute(
                 """INSERT OR REPLACE INTO lightning_htlcs
@@ -2854,8 +2879,12 @@ class Database:
         return row
 
     def save_lightning_channel_state(self, st: Dict) -> None:
-        b1, b1_sat = self._abs_sat(st["balance1"], field="balance1")
-        b2, b2_sat = self._abs_sat(st["balance2"], field="balance2")
+        b1, b1_sat = self._resolve_abs_sat(
+            st.get("balance1"), st.get("balance1_satoshi"), field="balance1"
+        )
+        b2, b2_sat = self._resolve_abs_sat(
+            st.get("balance2"), st.get("balance2_satoshi"), field="balance2"
+        )
         with self.lock:
             self.conn.execute(
                 """INSERT OR REPLACE INTO lightning_channel_states
@@ -2895,7 +2924,9 @@ class Database:
     # ── Plasma L2 (Wave 40 persistence) ─────────────────────────────────────
 
     def save_plasma_deposit(self, dep: Dict) -> None:
-        amt, amt_sat = self._abs_sat(dep["amount"], field="amount")
+        amt, amt_sat = self._resolve_abs_sat(
+            dep.get("amount"), dep.get("amount_satoshi"), field="amount"
+        )
         with self.lock:
             self.conn.execute(
                 """INSERT OR REPLACE INTO plasma_deposits
@@ -2936,8 +2967,10 @@ class Database:
             return out
 
     def save_plasma_block(self, block: Dict) -> None:
-        total, total_sat = self._abs_sat(
-            block.get("total_amount", 0), field="total_amount"
+        total, total_sat = self._resolve_abs_sat(
+            block.get("total_amount", 0),
+            block.get("total_amount_satoshi"),
+            field="total_amount",
         )
         with self.lock:
             self.conn.execute(
@@ -2987,7 +3020,9 @@ class Database:
             return sorted(out, key=lambda b: b["block_id"])
 
     def save_plasma_exit(self, ex: Dict) -> None:
-        amt, amt_sat = self._abs_sat(ex["amount"], field="amount")
+        amt, amt_sat = self._resolve_abs_sat(
+            ex.get("amount"), ex.get("amount_satoshi"), field="amount"
+        )
         with self.lock:
             self.conn.execute(
                 """INSERT OR REPLACE INTO plasma_exits
@@ -3030,7 +3065,9 @@ class Database:
     # ── Crypto Will (Wave 41 persistence) ───────────────────────────────────
 
     def save_crypto_will(self, will: Dict) -> None:
-        amt, amt_sat = self._abs_sat(will["amount"], field="amount")
+        amt, amt_sat = self._resolve_abs_sat(
+            will.get("amount"), will.get("amount_satoshi"), field="amount"
+        )
         with self.lock:
             self.conn.execute(
                 """INSERT OR REPLACE INTO crypto_wills
@@ -3407,7 +3444,9 @@ class Database:
             return out
 
     def save_nft_offer(self, offer: Dict) -> None:
-        price, price_sat = self._abs_sat(offer.get("price", 0), field="price")
+        price, price_sat = self._resolve_abs_sat(
+            offer.get("price", 0), offer.get("price_satoshi"), field="price"
+        )
         with self.lock:
             payload = {k: v for k, v in offer.items() if k != "offer_id"}
             self.conn.execute(
@@ -3481,7 +3520,9 @@ class Database:
             return out
 
     def save_nft_sale(self, sale: Dict) -> None:
-        price, price_sat = self._abs_sat(sale.get("price", 0), field="price")
+        price, price_sat = self._resolve_abs_sat(
+            sale.get("price", 0), sale.get("price_satoshi"), field="price"
+        )
         with self.lock:
             self.conn.execute(
                 """INSERT INTO nft_sales

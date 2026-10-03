@@ -61,13 +61,18 @@ class LightningChannel:
         }
 
     def to_db(self) -> Dict:
+        from runtime.amount import to_satoshi
+
         return {
             "channel_id": self.channel_id,
             "node1": self.node1,
             "node2": self.node2,
             "capacity": self.capacity,
+            "capacity_satoshi": int(to_satoshi(self.capacity)),
             "balance1": self.balance1,
+            "balance1_satoshi": int(to_satoshi(self.balance1)),
             "balance2": self.balance2,
+            "balance2_satoshi": int(to_satoshi(self.balance2)),
             "status": self.status,
             "created_at": self.created_at,
             "fee_rate": self.fee_rate,
@@ -113,11 +118,14 @@ class LightningHTLC:
         }
 
     def to_db(self) -> Dict:
+        from runtime.amount import to_satoshi
+
         return {
             "htlc_id": self.htlc_id,
             "channel_id": self.channel_id,
             "payment_hash": self.payment_hash,
             "amount": self.amount,
+            "amount_satoshi": int(to_satoshi(self.amount)),
             "expiry": self.expiry,
             "sender": self.sender,
             "receiver": self.receiver,
@@ -165,13 +173,17 @@ class LightningPayment:
         }
 
     def to_db(self) -> Dict:
+        from runtime.amount import to_satoshi
+
         return {
             "payment_id": self.payment_id,
             "channel_id": self.channel_id,
             "from_node": self.from_node,
             "to_node": self.to_node,
             "amount": self.amount,
+            "amount_satoshi": int(to_satoshi(self.amount)),
             "fee": self.fee,
+            "fee_satoshi": int(to_satoshi(self.fee)),
             "status": self.status,
             "payment_hash": self.payment_hash,
             "timestamp": self.timestamp,

@@ -193,22 +193,30 @@ class PlasmaChain:
             self.db.set_meta("plasma_pending_txs", self.pending_txs[-200:])
 
     def _l2_balance_sat(self, addr: str) -> int:
-        from runtime.amount import to_satoshi
+        from runtime.amount import resolve_amount_satoshi
+
+        def _row_sat(row: Dict) -> int | None:
+            try:
+                sat, _ = resolve_amount_satoshi(
+                    row.get("amount"), row.get("amount_satoshi")
+                )
+                return int(sat)
+            except (TypeError, ValueError):
+                return None
 
         balance = 0
         for dep in self.deposits.values():
             if dep.get("from") == addr and dep.get("status") == "confirmed":
-                try:
-                    balance += int(to_satoshi(dep.get("amount", 0) or 0))
-                except (TypeError, ValueError):
+                amt = _row_sat(dep)
+                if amt is None:
                     continue
+                balance += amt
         for block in self.blocks:
             for tx in block.transactions:
                 if tx.get("type") == "deposit":
                     continue
-                try:
-                    amount = int(to_satoshi(tx.get("amount", 0) or 0))
-                except (TypeError, ValueError):
+                amount = _row_sat(tx)
+                if amount is None:
                     continue
                 if tx.get("from") == addr:
                     balance -= amount
@@ -217,9 +225,8 @@ class PlasmaChain:
         for tx in self.pending_txs:
             if tx.get("type") == "deposit":
                 continue
-            try:
-                amount = int(to_satoshi(tx.get("amount", 0) or 0))
-            except (TypeError, ValueError):
+            amount = _row_sat(tx)
+            if amount is None:
                 continue
             if tx.get("from") == addr:
                 balance -= amount

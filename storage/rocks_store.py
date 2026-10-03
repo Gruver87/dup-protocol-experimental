@@ -2734,12 +2734,14 @@ class RocksChainStore:
         return row
 
     def save_nft_token(self, token: Dict) -> None:
-        from runtime.amount import money_abs, to_satoshi
+        from runtime.amount import resolve_amount_satoshi
 
         tid = str(token.get("token_id", "") or "")
         if not tid:
             return
-        price = money_abs(token.get("price", 0), field="price")
+        price_sat, price = resolve_amount_satoshi(
+            token.get("price", 0), token.get("price_satoshi"), field="price"
+        )
         row = {
             "token_id": tid,
             "name": token.get("name", ""),
@@ -2748,7 +2750,7 @@ class RocksChainStore:
             "owner": token.get("owner", ""),
             "creator": token.get("creator", ""),
             "price": price,
-            "price_satoshi": int(to_satoshi(price)),
+            "price_satoshi": int(price_sat),
             "for_sale": bool(token.get("for_sale")),
             "created_at": int(token.get("created_at", 0) or 0),
             "metadata": token.get("metadata") or {},
@@ -2783,16 +2785,18 @@ class RocksChainStore:
         return row
 
     def save_nft_offer(self, offer: Dict) -> None:
-        from runtime.amount import money_abs, to_satoshi
+        from runtime.amount import resolve_amount_satoshi
 
         oid = str(offer.get("offer_id", "") or "")
         if not oid:
             return
         row = dict(offer)
         row["offer_id"] = oid
-        price = money_abs(row.get("price", 0), field="price")
+        price_sat, price = resolve_amount_satoshi(
+            row.get("price", 0), row.get("price_satoshi"), field="price"
+        )
         row["price"] = price
-        row["price_satoshi"] = int(to_satoshi(price))
+        row["price_satoshi"] = int(price_sat)
         row["expires_at"] = int(row.get("expires_at", 0) or 0)
         row["created_at"] = int(row.get("created_at", 0) or 0)
         self._raw_put(
@@ -2828,7 +2832,7 @@ class RocksChainStore:
         return row
 
     def save_nft_auction(self, auction: Dict) -> None:
-        from runtime.amount import money_abs, to_satoshi
+        from runtime.amount import resolve_amount_satoshi
 
         aid = str(auction.get("auction_id", "") or "")
         if not aid:
@@ -2839,9 +2843,12 @@ class RocksChainStore:
         row["created_at"] = int(row.get("created_at", 0) or 0)
         for field in ("start_price", "reserve_price", "current_bid"):
             if field in row and row[field] is not None:
-                abs_v = money_abs(row[field], field=field)
+                sat_key = f"{field}_satoshi"
+                sat_v, abs_v = resolve_amount_satoshi(
+                    row[field], row.get(sat_key), field=field
+                )
                 row[field] = abs_v
-                row[f"{field}_satoshi"] = int(to_satoshi(abs_v))
+                row[sat_key] = int(sat_v)
         self._raw_put(
             kc.key_nft_auction(aid),
             json.dumps(row, ensure_ascii=False).encode("utf-8"),
@@ -2880,21 +2887,23 @@ class RocksChainStore:
         }
 
     def save_nft_sale(self, sale: Dict) -> None:
-        from runtime.amount import money_abs, to_satoshi
+        from runtime.amount import resolve_amount_satoshi
 
         created_at = int(sale.get("timestamp", sale.get("created_at", 0)) or time.time())
         seq = int(sale.get("id", 0) or 0)
         if seq <= 0:
             seq = int(self.get_meta("nft_sale_seq", 0) or 0) + 1
             self.set_meta("nft_sale_seq", seq)
-        price = money_abs(sale.get("price", 0), field="price")
+        price_sat, price = resolve_amount_satoshi(
+            sale.get("price", 0), sale.get("price_satoshi"), field="price"
+        )
         row = {
             "id": seq,
             "token_id": sale.get("token_id", ""),
             "from": sale.get("from", sale.get("from_addr", "")),
             "to": sale.get("to", sale.get("to_addr", "")),
             "price": price,
-            "price_satoshi": int(to_satoshi(price)),
+            "price_satoshi": int(price_sat),
             "type": sale.get("type", sale.get("sale_type", "buy")),
             "timestamp": created_at,
             "created_at": created_at,

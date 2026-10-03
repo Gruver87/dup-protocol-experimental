@@ -7522,7 +7522,15 @@ class RESTHandler(BaseHTTPRequestHandler):
                     )
                 except ValueError as exc:
                     self._error(400, str(exc)); return
-                wid = cw.create_will(owner, heir, amount, assets, delay, witnesses)
+                wid = cw.create_will(
+                    owner,
+                    heir,
+                    amount,
+                    assets,
+                    delay,
+                    witnesses,
+                    amount_satoshi=int(amount_sat),
+                )
                 if wid:
                     self._json({
                         "success": True,
@@ -8220,7 +8228,25 @@ class RESTHandler(BaseHTTPRequestHandler):
                     )
                     self._json(_bridge_http_result(result))
                 elif hasattr(br, "transfer"):
-                    result = br.transfer(from_addr, body.get("to_address",""), amount, target_chain)
+                    if _is_production_cfg(cfg):
+                        self._error(
+                            503,
+                            "bridge transfer fallback refused in prod — use lock_and_bridge",
+                        )
+                        return
+                    to_addr_fb = body.get("to_address", "") or to_addr
+                    try:
+                        result = br.transfer(
+                            from_addr,
+                            to_addr_fb,
+                            amount,
+                            target_chain,
+                            amount_satoshi=int(amount_sat),
+                        )
+                    except TypeError:
+                        result = br.transfer(
+                            from_addr, to_addr_fb, amount, target_chain
+                        )
                     self._json(_bridge_http_result(result))
                 else:
                     self._json({"success": False, "error": "lock not available"})
