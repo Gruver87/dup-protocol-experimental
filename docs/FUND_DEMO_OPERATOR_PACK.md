@@ -71,13 +71,26 @@ Pin demo (firm narrative): follow pin `DEMO_RUNBOOK_PIN.md` / pin SHOWCASE — *
 
 ---
 
+## Next soak (HEAD re-verify)
+
+**EVM STRICT on current tip — not passed yet.** Historical [`evmstrict1`](evidence/runs/evmstrict1/) ≠ HEAD; 2026-10-03 attempt interrupted ~33.8h (**FAIL**).
+
+Prep + start: [SOAK_HEAD_REVERIFY.md](SOAK_HEAD_REVERIFY.md)
+
+```powershell
+.\scripts\prepare_head_soak_evm_strict.ps1          # preflight only
+.\scripts\start_soak_evm_mesh_48h_strict.ps1 -SkipRebuild   # 48h — operator
+```
+
+---
+
 ## Still open (do not green-paint)
 
 | Item | Owner | Notes |
 |------|-------|-------|
 | External pen-test scheduled + L1 audit PDF | **Org / Phase 6** | Tracker 6/8 until firm evidence |
 | Bridge L1 contracts live | Org + cutover | Keep bridge OFF on live mesh |
-| Fresh 48h soak on current `main` HEAD | Operator (optional) | Last industrial tip pack ≠ HEAD after money waves |
+| Fresh 48h soak on current `main` HEAD | Operator | See [SOAK_HEAD_REVERIFY.md](SOAK_HEAD_REVERIFY.md) — EVM STRICT recommended |
 | `Transaction.value: float` type erase | Later ADR | Twin is authority when present |
 | Lightning in-channel float fields | MED residual | Twins on persist; deeper sat state later |
 | ADR 0020 Exp libp2p vs pin TCP+TLS | Intentional | Do not sell as pin parity |

@@ -1350,8 +1350,13 @@ def _check_fail_loud_surfaces() -> tuple[list[str], list[str]]:
         adapter_py = (ROOT / "consensus" / "adapter.py").read_text(encoding="utf-8")
         if "total_active_stake failed; engine fallback" not in adapter_py:
             errors.append("ConsensusAdapter.get_total_stake must log registry failures")
-        if "stake_abs = money_abs(stake, field=\"stake\")" not in adapter_py:
-            errors.append("ConsensusAdapter.add_validator must parse stake via money_abs")
+        # Satoshi-first (money waves): resolve_amount_satoshi wraps money_abs for ABS path.
+        if "stake_sat, stake_abs = resolve_amount_satoshi(" not in adapter_py:
+            errors.append(
+                "ConsensusAdapter.add_validator must parse stake via resolve_amount_satoshi"
+            )
+        if 'field="stake"' not in adapter_py and "field='stake'" not in adapter_py:
+            errors.append("ConsensusAdapter stake resolve must use field=stake")
         reg_ad = (ROOT / "consensus" / "registry_adapter.py").read_text(encoding="utf-8")
         if "security.consensus_refuse emit failed" not in reg_ad:
             errors.append("AdapterConsensusEvidence must log bus emit failures")
