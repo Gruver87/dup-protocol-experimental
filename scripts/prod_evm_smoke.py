@@ -95,10 +95,19 @@ def _deploy_via_mempool(http_url: str, wallet_path: str, gas: int = 500_000) -> 
         gas_limit=gas,
     )
     _admin_token(http_url)
+    # Prod refuse float-only money — explicit satoshi (0 ABS deploy).
     resp = _post_json(
         http_url,
         "/tx/send",
-        {**signed, "from": deployer, "gas": gas, "value": 0},
+        {
+            **signed,
+            "from": deployer,
+            "gas": gas,
+            "gas_limit": gas,
+            "value": 0,
+            "amount_satoshi": 0,
+            "value_satoshi": 0,
+        },
         timeout=30,
     )
     tx_hash = str(resp.get("tx_hash") or signed.get("hash") or "").strip()
