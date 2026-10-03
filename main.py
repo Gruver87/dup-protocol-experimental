@@ -2124,6 +2124,7 @@ class NodeOrchestrator:
             if not proposer and self.validator_selection and self.db:
                 try:
                     # Prefer stake_satoshi ints for weighted selection (ADR 0021).
+                    # Refuse invent stake=100 — skip validators with missing/non-positive stake.
                     validators_dict = {}
                     for v in (self.db.get_validators() or []):
                         addr = v.get("address")

@@ -11,6 +11,7 @@ def test_main_proposer_source_no_invent_stake_100():
     text = (ROOT / "main.py").read_text(encoding="utf-8")
     assert 'v.get("stake", 100)' not in text
     assert "Refuse invent stake=100" in text
+    assert 'v.get("stake_satoshi")' in text
 
 
 def test_mev_frontrun_no_invent_gas_42000():

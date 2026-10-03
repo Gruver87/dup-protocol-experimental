@@ -79,4 +79,8 @@ def test_pbs_and_builder_no_invent():
     chunk = main_src.split("pending_for_pbs")[1].split("run_pbs_auction")[0]
     assert "or 21000" not in chunk
     assert 'gas", 21000)' not in bb_src
-    assert "int(tx.get(\"gas\") or 0)" in bb_src
+    # Prefer gas then gas_limit; never invent 21000.
+    assert (
+        'int(tx.get("gas") or tx.get("gas_limit") or 0)' in bb_src
+        or 'int(tx.get("gas") or 0)' in bb_src
+    )
