@@ -47,6 +47,13 @@ def test_verify_full_blockchain_scripts_exist_and_do_not_start_soak():
     assert "refuses skip flags" in src
     assert "verify_hard_all.ps1" in src
     assert "verify_experimental_rd.py" in src
+    assert "cargo_test_rust_bridge_smoke.py" in src
+    assert "CLI smoke-only" in src
+    smoke = (ROOT / "scripts" / "cargo_test_rust_bridge_smoke.py").read_text(encoding="utf-8")
+    assert "running 0 tests" in smoke
+    assert "behavioral verification" in smoke
+    assert "0 crate unit tests" in hard_src
+    assert "verify_experimental_rd.py" in src
     assert "_bind_prod_smoke_wallet" in src
     assert "PROD_SMOKE_WALLET_PATH" in src
     wrap.encode("ascii")

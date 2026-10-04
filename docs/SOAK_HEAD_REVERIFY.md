@@ -22,12 +22,17 @@ So: **новый EVM soak мы не прошли.** Старый `evmstrict1` о
 
 | Step | Result |
 |------|--------|
+| tip | `c3fb596` clean; CI Blockchain Tests + Security + Docker + Experimental R&D **success** |
 | midsoak honesty Quick | PASS |
-| industrial_gate (stake needle → `resolve_amount_satoshi`) | PASS (3 org warnings) |
-| `prepare_head_soak_evm_strict.ps1 -SkipRebuild` | **PASS** — mesh READY, EVM harness OK |
-| 48h STRICT started | **No** |
+| industrial_gate | PASS (3 org warnings) |
+| `prepare_head_soak_evm_strict.ps1 -SkipRebuild` | **PASS** — mesh READY (~h105802), EVM harness OK, miner harness 5/5 |
+| 48h STRICT started | **Yes** — 2026-10-03 operator start, PID see `check_soak`; log `logs/soak_48h_evm_strict.log` |
+| PASS claim | **Not yet** — only after ~48h `passed=true` `hard_fails=0` |
 
-Commit soak-prep files before tip claim (dirty tree was warned at preflight). Then start 48h.
+```powershell
+.\scripts\check_soak.ps1
+# stop only if needed: .\scripts\stop_soak_monitors.ps1 -Force
+```
 
 ---
 

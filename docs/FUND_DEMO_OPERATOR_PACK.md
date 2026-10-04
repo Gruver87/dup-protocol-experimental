@@ -43,7 +43,8 @@ python -m pytest `
 ```
 
 **Pass bar for deck:** midsoak Quick PASS · engagement prep PASS · CI green on `main`.  
-**Do not say:** “48h soak on this tip” unless a new pack exists for current HEAD.
+**Do not say:** “48h soak on this tip” unless a new pack exists for current HEAD.  
+Local **5h STRICT** (`hard_fails=177`) is an honest **FAIL** and is **not** the 48h pipeline.
 
 ---
 

@@ -321,13 +321,8 @@ def main() -> int:
             )
             if args.hard:
                 step(
-                    "cargo test rust_bridge",
-                    [
-                        cargo,
-                        "test",
-                        "--manifest-path",
-                        str(ROOT / "bridge" / "rust_bridge" / "Cargo.toml"),
-                    ],
+                    "cargo test rust_bridge (CLI smoke-only; 0 crate unit tests)",
+                    [py, "scripts/cargo_test_rust_bridge_smoke.py"],
                     timeout=600,
                     required=True,
                 )
@@ -496,6 +491,7 @@ def main() -> int:
             "that PASS is not libp2p cutover, not Long-Range, not public mainnet",
             "--hard does not require a 48h soak PASS (read-only honesty only)",
             "ADR 0019 rust-libp2p hard gate is a separate command (needs Cargo feature libp2p)",
+            "cargo test rust_bridge is CLI crate smoke (0 #[test] modules) — not lock/L1 verification",
         ],
         "hard": bool(args.hard),
         "run": [

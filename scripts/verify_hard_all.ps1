@@ -13,7 +13,8 @@
 # Covers:
 #   native crypto self-test
 #   cargo test abs_native
-#   cargo test rust_bridge
+#   cargo test rust_bridge via cargo_test_rust_bridge_smoke.py
+#     (CLI compile/harness only - 0 crate unit tests; not verification)
 #   secrets scan
 #   prod_gate, k8s_prod_gate, verify_prod_stack, industrial_gate
 #   industrial waves needles

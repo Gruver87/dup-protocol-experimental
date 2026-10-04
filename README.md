@@ -64,16 +64,17 @@ Explorer (solo): http://localhost:8080
 | Add/remove/expire match canonical charge key | **Lab PASS** | Slice DA |
 | Persist JSON load collapses `/p2p/<peer>` suffix | **Lab PASS** | Slice DB |
 | Experimental mesh transport | **ADR 0020 libp2p** | `feature_libp2p=true` on Experimental prod mesh JSON; Hybrid pin stays TCP+TLS |
-| Prod libp2p 48h soak (B1) | **PASS** | 2026-09-01→03 [`3c801b87`](docs/evidence/runs/3c801b87/) · `hard_fails=0` · `mesh_warn=0` · prior FAIL ×2 (`35104db0`, `87f51b3e`) |
-| 48h soak on this tree (TCP+TLS) | **PASS** | 2026-08-20→22 [`0a7932c4`](docs/evidence/runs/0a7932c4/) — not libp2p; not Hybrid `375d14f` |
+| Prod libp2p 48h soak (B1) | **PASS** | 2026-09-01→03 [`3c801b87`](docs/evidence/runs/3c801b87/) · host `00b1bf86` · `hard_fails=0` · `mesh_warn=0` · prior FAIL ×2 (`35104db0`, `87f51b3e`) |
+| 48h soak on this tree (TCP+TLS) | **PASS** | 2026-08-20→22 [`0a7932c4`](docs/evidence/runs/0a7932c4/) · host `a8756d14` — not libp2p; not Hybrid `375d14f` |
 | ADR 0017 Long-Range lab mesh 2h | **PASS** | [`lr2hmesh`](docs/evidence/runs/lr2hmesh/) · Ed25519 committee · tip growth · solo prior [`lr2h9f3a`](docs/evidence/runs/lr2h9f3a/) |
-| Long-Range lab 48h (B2) | **PASS** | 2026-09-09→11 [`lr48pass1`](docs/evidence/runs/lr48pass1/) · `hard_fails=0` · `mesh_warn=0` · prior FAIL [`lr48fail1`](docs/evidence/runs/lr48fail1/) · intensify [`lr2hintensify`](docs/evidence/runs/lr2hintensify/) |
-| Long-Range lab STRICT 48h | **PASS** | 2026-09-26→28 [`lrstrict1`](docs/evidence/runs/lrstrict1/) · `strict=true` · fail=0 · mesh_warn=0 · tip ~18646→~30096 · autonomous WS roll-forward |
+| Long-Range lab 48h (B2) | **PASS** | 2026-09-09→11 [`lr48pass1`](docs/evidence/runs/lr48pass1/) · git `18c85dbb` · `hard_fails=0` · `mesh_warn=0` · prior FAIL [`lr48fail1`](docs/evidence/runs/lr48fail1/) · intensify [`lr2hintensify`](docs/evidence/runs/lr2hintensify/) |
+| Long-Range lab STRICT 48h | **PASS** | 2026-09-26→28 [`lrstrict1`](docs/evidence/runs/lrstrict1/) · host `edbfbcd9` · `strict=true` · `hard_fails=0` · `mesh_warn=0` · tip ~18646→~30096 · autonomous WS roll-forward |
 | Long-Range prod arm / BLS | **Not claimed** | `feature_long_range=false` on prod `778888` (+ staging hard-off) |
-| Libp2p STRICT 48h | **PASS** | [`lp2pstrict1`](docs/evidence/runs/lp2pstrict1/) · IntervalSec=60 · warn_lines=0 |
-| Phase 3 post-EVM-prep mesh 48h | **PASS** | 2026-09-11→13 [`evm48pass1`](docs/evidence/runs/evm48pass1/) · tip ~10125→~19197 · **not** EVM-only 48h |
-| EVM STRICT 48h | **PASS** | 2026-09-28→30 [`evmstrict1`](docs/evidence/runs/evmstrict1/) · IntervalSec=60 · fail=0 · mesh_warn=0 · tip ~85200→~96089 · **not** EVM-only / not geth |
-| Mempool + validation STRICT 48h | **PASS** | [`mempool48pass1`](docs/evidence/runs/mempool48pass1/) · ADR 0021 path · **not** mainnet |
+| Libp2p STRICT 48h | **PASS** | [`lp2pstrict1`](docs/evidence/runs/lp2pstrict1/) · host `c458ff57` · IntervalSec=60 · `hard_fails=0` · `mesh_warn=0` · warn_lines=0 |
+| Phase 3 post-EVM-prep mesh 48h | **PASS** | 2026-09-11→13 [`evm48pass1`](docs/evidence/runs/evm48pass1/) · host `8b0657cc` · tip ~10125→~19197 · `hard_fails=0` · `mesh_warn=0` · **not** EVM-only 48h |
+| EVM STRICT 48h | **PASS** | 2026-09-28→30 [`evmstrict1`](docs/evidence/runs/evmstrict1/) · host `0c369045` · IntervalSec=60 · `hard_fails=0` · `mesh_warn=0` · tip ~85200→~96089 · **not** EVM-only / not geth |
+| Mempool + validation STRICT 48h | **PASS** | [`mempool48pass1`](docs/evidence/runs/mempool48pass1/) · host `42b56ee` · `hard_fails=0` · `mesh_warn=0` · sidecar refuse_fail=0 · ADR 0021 · **not** mainnet |
+| Local 5h STRICT (harsh, not pipeline) | **FAIL** | Operator `logs/soak_report_5h_strict.json` · `hard_fails=177` (honest; do not relabel) · **out of 48h pipeline** · see [AUDIT_FULL_SCAN_2026-10-03](docs/AUDIT_FULL_SCAN_2026-10-03.md) |
 | Wire fee/amount satoshi cutover | **Landed** | `verify_adr0021_wire_satoshi.ps1` · dual-write + mismatch refuse |
 | Float-only wire refuse (MED) | **Landed** | `p2p_mempool_require_wire_satoshi=true` · lab escape hatch |
 | Hot persist PersistError + native f64 refuse | **Landed** | `verify_persist_fail_closed.ps1` · `verify_native_f64_hygiene.ps1` |
@@ -81,11 +82,12 @@ Explorer (solo): http://localhost:8080
 | Industrial polish tip 48h (ADR 0021 wire on mesh) | **PASS** | 2026-09-21→23 [`ind48pass1`](docs/evidence/runs/ind48pass1/) · tip ~46099→~56972 · `hard_fails=0` · git `719deb4` |
 | Fund / diligence card | **Landed** | [DILIGENCE_BRIEF](docs/DILIGENCE_BRIEF.md) · [FUND_READINESS](docs/FUND_READINESS.md) |
 | Phase 6 firm kickoff **prep** | **PREP** (not firm PASS) | [`phase6prep1`](docs/evidence/runs/phase6prep1/) · [FIRM_KICKOFF_CHECKLIST](docs/FIRM_KICKOFF_CHECKLIST.md) · `.\scripts\verify_audit_engagement_prep.ps1` |
-| Thin operator SDK v0 (`dup_sdk`) | **Landed** (lab) | [`sdk/README.md`](sdk/README.md) · `python scripts/dup_sdk_lab.py` · TLS on · satoshi-honest · JWT/API key via env. **Not** pin SDK / **not** custody |
+| Thin operator SDK v0 (`dup_sdk`) | **Landed** (lab) | [`sdk/README.md`](sdk/README.md) · package `sdk/dup_sdk` **v0.1.2** · `python scripts/dup_sdk_lab.py` · TLS on · satoshi-honest · JWT/API key via env. **Not** pin SDK / **not** custody |
 | AI / MEV sprouts harden | **Lab closed** (mid-soak disk 2026-10-03) | [AI_LAB_PROFILE](docs/sprouts/AI_LAB_PROFILE.md) · `python scripts/ai_lab.py`. HTTP gated · forge unhooked · prod `feature_ai_*` / `feature_mev` **false**. **Not** consensus / **not** soak PASS |
 | NFT marketplace satoshi lab | **Lab closed** (mid-soak disk 2026-10-03) | [NFT_LAB_PROFILE](docs/sprouts/NFT_LAB_PROFILE.md) · `python scripts/nft_lab.py` · soft escrow + `_nft_sprout_enabled`. Prod `feature_nft=false`. **Not** ERC-721 / **not** soak PASS |
 | Critical-path audit scan (2026-10-01) | **Landed** (code+gate) | [AUDIT_FULL_SCAN_2026-10-01](docs/AUDIT_FULL_SCAN_2026-10-01.md) · `python scripts/audit_critical_paths.py`. **Not** soak / **not** mesh L1 claim |
-| EVM / oracle / shard labs | **Lab + mesh soak** | waves + `evm_pre_48h_harness.py` · prod sprout flags **off** |
+| EVM labs + post-prep mesh | **Lab + packaged 48h** | waves + `evm_pre_48h_harness.py` · packs [`evm48pass1`](docs/evidence/runs/evm48pass1/) · [`evmstrict1`](docs/evidence/runs/evmstrict1/) · prod `feature_*` sprouts **off** |
+| Oracle / shard labs | **Lab only** | sprout flags **off** on prod JSON · **no** dedicated 48h pack (not claimed as soak) |
 | Hybrid 48h soak / firm audit / public mainnet | **No — other repo** | [Industrial pin](https://github.com/Gruver87/dup-protocol) |
 
 **Jump:** [Pipeline](#rd-pipeline-honest-chain) · [Tracks](#what-is-active-here) · [Verify](#clone--verify) · [Docs](#docs-map) · [Contribute](CONTRIBUTING.md)
