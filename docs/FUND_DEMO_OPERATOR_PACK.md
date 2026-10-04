@@ -1,10 +1,10 @@
 # Fund / demo operator pack — maximum prep (honest)
 
-**Date:** 2026-10-03 · **Repo tip:** run `git rev-parse --short HEAD`  
+**Date:** 2026-10-05 · **Repo tip:** run `git rev-parse --short HEAD`  
 **Brand:** DUP Labs · DUP Protocol  
 **Not:** public audited mainnet · not firm pen-test PASS · not a new 48h soak claim.
 
-This page is the **operator checklist** after the 2026-10-03 diligence + money-honesty waves. Use with [SHOWCASE.md](SHOWCASE.md).
+This page is the **operator checklist** after diligence + money-honesty waves and the **Exp→pin honesty merge close** on the industrial pin. Use with [SHOWCASE.md](SHOWCASE.md).
 
 ---
 
@@ -12,12 +12,13 @@ This page is the **operator checklist** after the 2026-10-03 diligence + money-h
 
 | Layer | Status | Proof |
 |-------|--------|-------|
-| Industrial pin (TCP+TLS freeze) | Show for firm scope | [`dup-protocol`](https://github.com/Gruver87/dup-protocol) tag `v1.3.1339-tip-v2-industrial` |
+| Industrial pin (TCP+TLS freeze) | Show for firm scope | [`dup-protocol`](https://github.com/Gruver87/dup-protocol) tag `v1.3.1339-tip-v2-industrial` · honesty code tip `adc8547` · Phase 6 docs tip `cc5dfae` |
+| Exp→pin honesty merge | **CLOSED** on pin | Units + `industrial_gate` on pin (not a new 48h soak). Pin pack: [FUND_DEMO (pin)](https://github.com/Gruver87/dup-protocol/blob/master/docs/FUND_DEMO_OPERATOR_PACK.md) · [FIRM_KICKOFF (pin)](https://github.com/Gruver87/dup-protocol/blob/master/docs/FIRM_KICKOFF_CHECKLIST.md) |
 | Experimental R&D mesh (libp2p) | Show as sandbox | Phases 1–5 CLOSED with packs under [`evidence/runs/`](evidence/runs/) |
-| Fail-closed satoshi money | Code + units + midsoak honesty | Waves through CryptoWill / L2 / bridge queue / validator stake |
-| STRICT 48h scoreboard | Packaged | `lp2pstrict1` · `evmstrict1` · `lrstrict1` · `mempool48pass1` · `ind48pass1` |
+| Fail-closed satoshi money | Code + units + midsoak honesty | Waves through CryptoWill / L2 / bridge queue / validator stake + pin merge layers |
+| STRICT 48h scoreboard | Packaged (historical) | `lp2pstrict1` · `evmstrict1` · `lrstrict1` · `mempool48pass1` · `ind48pass1` — do not claim on current HEAD |
 | Showcase / diligence docs | On disk | [SHOWCASE](SHOWCASE.md) · [DILIGENCE_BRIEF](DILIGENCE_BRIEF.md) · [FUND_READINESS](FUND_READINESS.md) |
-| Phase 6 firm prep | Prep only | [FIRM_KICKOFF_CHECKLIST](FIRM_KICKOFF_CHECKLIST.md) · [`phase6prep1`](evidence/runs/phase6prep1/) |
+| Phase 6 firm prep | Prep only | [FIRM_KICKOFF_CHECKLIST](FIRM_KICKOFF_CHECKLIST.md) · [`phase6prep1`](evidence/runs/phase6prep1/) · pin tracker **6/8** |
 
 ---
 
@@ -60,7 +61,7 @@ Pin demo (firm narrative): follow pin `DEMO_RUNBOOK_PIN.md` / pin SHOWCASE — *
 
 ---
 
-## Closed in code (2026-10-03 money / honesty)
+## Closed in code (money / honesty through Exp→pin merge)
 
 - Native/EVM/StateEngine/bridge/shard/pool satoshi twins  
 - Lightning/Plasma/HTTP + CryptoWill `amount_satoshi`  
@@ -69,6 +70,7 @@ Pin demo (firm narrative): follow pin `DEMO_RUNBOOK_PIN.md` / pin SHOWCASE — *
 - MEV `simulation_only` · multisig `execution_bound=false`  
 - Pool-spend sat admit · no invent gas=21000 · bridge2/fee no invent amount=100  
 - WASM nonzero value refused (pseudo host) · AI trade satoshi kwargs  
+- **Pin merge close (`adc8547`):** ZK range refuse · committed state_root · height-bounded eth_getLogs · tip_skew/ready honesty · oracle/Lightning/AI finite refuse · Rocks obs counts · bridge debit+burn · Phase 6 kickoff stub (`cc5dfae`)  
 
 ---
 
