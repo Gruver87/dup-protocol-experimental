@@ -12,8 +12,8 @@ This page is the **operator checklist** after diligence + money-honesty waves an
 
 | Layer | Status | Proof |
 |-------|--------|-------|
-| Industrial pin (TCP+TLS freeze) | Show for firm scope | [`dup-protocol`](https://github.com/Gruver87/dup-protocol) tag `v1.3.1339-tip-v2-industrial` · honesty code tip `adc8547` · Phase 6 docs tip `cc5dfae` |
-| Exp→pin honesty merge | **CLOSED** on pin | Units + `industrial_gate` on pin (not a new 48h soak). Pin pack: [FUND_DEMO (pin)](https://github.com/Gruver87/dup-protocol/blob/master/docs/FUND_DEMO_OPERATOR_PACK.md) · [FIRM_KICKOFF (pin)](https://github.com/Gruver87/dup-protocol/blob/master/docs/FIRM_KICKOFF_CHECKLIST.md) |
+| Industrial pin (freeze + working tip) | Show for firm scope | [`dup-protocol`](https://github.com/Gruver87/dup-protocol) tag `v1.3.1339-tip-v2-industrial` (TCP+TLS soak) · working tip ADR 0020 libp2p (pin soak **deferred**) · diligence docs tip `a163852b` |
+| Exp→pin honesty merge | **CLOSED** on pin | Units + `industrial_gate` on pin (not a new 48h soak). Pin: [SHOWCASE](https://github.com/Gruver87/dup-protocol/blob/master/docs/SHOWCASE.md) · [FAQ](https://github.com/Gruver87/dup-protocol/blob/master/docs/FAQ.md) · [FUND_DEMO](https://github.com/Gruver87/dup-protocol/blob/master/docs/FUND_DEMO_OPERATOR_PACK.md) |
 | Experimental R&D mesh (libp2p) | Show as sandbox | Phases 1–5 CLOSED with packs under [`evidence/runs/`](evidence/runs/) |
 | Fail-closed satoshi money | Code + units + midsoak honesty | Waves through CryptoWill / L2 / bridge queue / validator stake + pin merge layers |
 | STRICT 48h scoreboard | Packaged (historical) | `lp2pstrict1` · `evmstrict1` · `lrstrict1` · `mempool48pass1` · `ind48pass1` — do not claim on current HEAD |
@@ -57,7 +57,7 @@ Local **5h STRICT** (`hard_fails=177`) is an honest **FAIL** and is **not** the 
 4. Honesty: `/status` shows `mev_simulation_only`, L2 `*_execution_bound`, bridge OFF  
 5. Gaps: [MAINNET_GAP_ANALYSIS.md](MAINNET_GAP_ANALYSIS.md) — say them first  
 
-Pin demo (firm narrative): follow pin `DEMO_RUNBOOK_PIN.md` / pin SHOWCASE — **TCP+TLS**, not Experimental libp2p as “audited”.
+Pin demo (firm narrative): pin [DEMO_RUNBOOK_PIN](https://github.com/Gruver87/dup-protocol/blob/master/docs/DEMO_RUNBOOK_PIN.md) / [SHOWCASE](https://github.com/Gruver87/dup-protocol/blob/master/docs/SHOWCASE.md) — freeze soak is **TCP+TLS**; working tip is ADR 0020 libp2p (Quick ≠ 48h). Do not sell Experimental libp2p as “audited pin.”
 
 ---
 

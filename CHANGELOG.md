@@ -15,6 +15,7 @@ Canonical language for this repository is **English**. Older inherited entries b
 
 ### Experimental R&D
 
+- **Pin diligence sync (2026-10-07):** `FUND_DEMO_OPERATOR_PACK` points at pin tip `a163852b` SHOWCASE/FAQ (local pin diligence) and ADR 0020 working-tip honesty (pin libp2p soak deferred). **Docs only.** **Not** soak PASS.
 - **Audit-list honesty (2026-10-04, soak-safe docs):** README Proven vs not — host git sha on 48h packs; local 5h STRICT FAIL (`hard_fails=177`) marked out-of-pipeline; mempool48pass1 counters; EVM vs oracle/shard split; SDK v0.1.2 path. `cargo_test_rust_bridge_smoke.py` labels rust_bridge `cargo test` as 0-test CLI smoke (not verification). Cutover example JSON first-key WARNING. **Does not touch live soak / not 48h PASS.**
 - **Ops soak prep (2026-10-03):** [`SOAK_HEAD_REVERIFY.md`](docs/SOAK_HEAD_REVERIFY.md) + `prepare_head_soak_evm_strict.ps1` — honesty: historical `evmstrict1` PASS ≠ HEAD; 2026-10-03 EVM STRICT interrupted ~33.8h is FAIL; fresh 48h **not** started by this prep. **Not** soak PASS.
 - **industrial_gate stake needle (2026-10-03):** `ConsensusAdapter.add_validator` gate accepts `resolve_amount_satoshi` (satoshi-first) instead of stale `money_abs` assign — unblocks EVM STRICT preflight after money waves. **Not** soak PASS.
