@@ -12,7 +12,7 @@ This page is the **operator checklist** after diligence + money-honesty waves an
 
 | Layer | Status | Proof |
 |-------|--------|-------|
-| Industrial pin (freeze + working tip) | Show for firm scope | [`dup-protocol`](https://github.com/Gruver87/dup-protocol) tag `v1.3.1339-tip-v2-industrial` (TCP+TLS soak) · working tip ADR 0020 libp2p (pin soak **deferred**) · diligence docs tip `a163852b` |
+| Industrial pin (freeze + working tip) | Show for firm scope | [`dup-protocol`](https://github.com/Gruver87/dup-protocol) tag `v1.3.1339-tip-v2-industrial` (TCP+TLS soak) · working tip ADR 0020 libp2p (pin soak **deferred**) · diligence tip `215ecf69` |
 | Exp→pin honesty merge | **CLOSED** on pin | Units + `industrial_gate` on pin (not a new 48h soak). Pin: [SHOWCASE](https://github.com/Gruver87/dup-protocol/blob/master/docs/SHOWCASE.md) · [FAQ](https://github.com/Gruver87/dup-protocol/blob/master/docs/FAQ.md) · [FUND_DEMO](https://github.com/Gruver87/dup-protocol/blob/master/docs/FUND_DEMO_OPERATOR_PACK.md) |
 | Experimental R&D mesh (libp2p) | Show as sandbox | Phases 1–5 CLOSED with packs under [`evidence/runs/`](evidence/runs/) |
 | Fail-closed satoshi money | Code + units + midsoak honesty | Waves through CryptoWill / L2 / bridge queue / validator stake + pin merge layers |
