@@ -1,14 +1,15 @@
-# Showcase pack — DUP Protocol (funds / ПВТ / demo)
+# Showcase pack — DUP Protocol Experimental (R&D / funds appendix)
 
 **Org:** DUP Labs · **Product:** DUP Protocol · **Author:** Uladzimir Dabranski (D.U.P.)  
-**Primary tree:** [`dup-protocol-experimental`](https://github.com/Gruver87/dup-protocol-experimental) (this repo)  
-**Industrial pin:** [`dup-protocol`](https://github.com/Gruver87/dup-protocol) · tag [`v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/dup-protocol/releases/tag/v1.3.1339-tip-v2-industrial)  
-**Language:** English canonical · RU one-pager: [ONE_PAGER_RU.md](ONE_PAGER_RU.md)  
-**Not:** public audited mainnet · not a finished pitch PDF · not a soak PASS without pack id.
+**This tree:** [`dup-protocol-experimental`](https://github.com/Gruver87/dup-protocol-experimental) — **R&D sandbox**  
+**Industrial pin (product / audit / ПВТ primary):** [`dup-protocol`](https://github.com/Gruver87/dup-protocol) · tag [`v1.3.1339-tip-v2-industrial`](https://github.com/Gruver87/dup-protocol/releases/tag/v1.3.1339-tip-v2-industrial)  
+**ПВТ / HTP residency–IP discussion pack (RU, pin):** [PVT_HTP_SHOW_PACK_RU.md on pin](https://github.com/Gruver87/dup-protocol/blob/master/docs/PVT_HTP_SHOW_PACK_RU.md)  
+**Language:** English canonical · RU one-pager (this tree): [ONE_PAGER_RU.md](ONE_PAGER_RU.md)  
+**Not:** public audited mainnet · not a finished pitch PDF · not a soak PASS without pack id · **not** a substitute for pin industrial evidence.
 
-This is the **single front door** for grant officers, HTP / ПВТ reviewers, and technical diligence.
+For **HTP / ПВТ** (ИП / future residency fit): start on the **pin** pack above. This Experimental SHOWCASE is the **R&D appendix** (depth packs, lab profiles) — do not present Exp STRICT as pin PASS.
 
-**Operator max-prep checklist (2026-10-03):** [FUND_DEMO_OPERATOR_PACK.md](FUND_DEMO_OPERATOR_PACK.md)
+**Operator max-prep checklist:** [FUND_DEMO_OPERATOR_PACK.md](FUND_DEMO_OPERATOR_PACK.md)
 
 ---
 

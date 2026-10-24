@@ -1,8 +1,10 @@
-# DUP Protocol — краткая карточка (RU) для ПВТ / HTP
+# DUP Protocol — краткая карточка (RU) · Experimental (R&D)
 
 **Организация:** DUP Labs · **Продукт:** DUP Protocol · **Автор:** Уладзимир Дабранский (D.U.P.)  
-**Дата:** 2026-10-03 · Полный вход (EN): [SHOWCASE.md](SHOWCASE.md) · EN one-pager: [ONE_PAGER.md](ONE_PAGER.md)  
-**Канонический язык репозитория:** English. Этот файл — краткое резюме для показа / ПВТ.
+**Дата:** 2026-10-24 · Полный вход (EN): [SHOWCASE.md](SHOWCASE.md) · EN one-pager: [ONE_PAGER.md](ONE_PAGER.md)  
+**Это дерево:** R&D sandbox. **Для ПВТ / ИП / резидентства** канон — pin-пакет:  
+[PVT_HTP_SHOW_PACK_RU.md (pin)](https://github.com/Gruver87/dup-protocol/blob/master/docs/PVT_HTP_SHOW_PACK_RU.md) · [ONE_PAGER_RU (pin)](https://github.com/Gruver87/dup-protocol/blob/master/docs/ONE_PAGER_RU.md)  
+**Канонический язык репозитория:** English. Этот файл — краткое резюме **Experimental**, не замена pin.
 
 ---
 
@@ -53,6 +55,7 @@
 
 ## Просьба (ask)
 
-Технический due diligence / грант / ПВТ: обзор **частной mesh + evidence packs**. Не «mainnet ready».
+Для **ПВТ / оценки ИП**: сначала pin [PVT_HTP_SHOW_PACK_RU](https://github.com/Gruver87/dup-protocol/blob/master/docs/PVT_HTP_SHOW_PACK_RU.md).  
+Experimental показывают как **ёмкость R&D** (STRICT packs ниже), не как industrial pin PASS.
 
-Демо: [DEMO_RUNBOOK.md](DEMO_RUNBOOK.md). FAQ (EN): [FAQ.md](FAQ.md). Контакт: GitHub [Gruver87](https://github.com/Gruver87).
+Демо Exp: [DEMO_RUNBOOK.md](DEMO_RUNBOOK.md). FAQ (EN): [FAQ.md](FAQ.md). Контакт: GitHub [Gruver87](https://github.com/Gruver87).
