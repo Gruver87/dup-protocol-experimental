@@ -8,11 +8,11 @@
 #
 # ДВА РЕПОЗИТОРИЯ (не путать):
 #   PIN (industrial) — audit-freeze, TCP+TLS mesh, tag v1.3.1339-tip-v2-industrial
-#             C:\Users\vovun\Desktop\Absolute_Blockchain_Ultimate_Hybrid
+#             <repo-root-pin>
 #             https://github.com/Gruver87/dup-protocol  (branch master)
 #
 #   EXPERIMENTAL — R&D sandbox: libp2p, Long-Range lab, council NFT, EVM depth, SDK, AI sprouts
-#             C:\Users\vovun\Desktop\Absolute_Blockchain_Experimental
+#             <repo-root-experimental>
 #             https://github.com/Gruver87/dup-protocol-experimental  (branch main)
 #
 # Репозиторная копия БЕЗ секретов: docs/ALL_COMMANDS.txt (в каждом репо)
@@ -131,7 +131,7 @@
 # =============================================================================
 
 # --- [EXP] Industrial mesh (основная R&D работа) ---
-cd C:\Users\vovun\Desktop\Absolute_Blockchain_Experimental
+cd <repo-root-experimental>
 pip install -r requirements.txt
 .\scripts\build_native.ps1
 .\scripts\init_env.ps1
@@ -143,7 +143,7 @@ pip install -r requirements.txt
 python scripts/industrial_gate.py
 
 # --- [HYBRID] Audit-pin mesh (TCP+TLS, без libp2p Experimental) ---
-cd C:\Users\vovun\Desktop\Absolute_Blockchain_Ultimate_Hybrid
+cd <repo-root-pin>
 .\scripts\build_native.ps1
 .\scripts\start_all.ps1 -SkipBuild -KeepVolumes
 # Explorer: :18180 :18181 :18182
@@ -292,12 +292,12 @@ python scripts/prod_signed_tx_smoke.py
 # =============================================================================
 
 # [EXP] libp2p Noise mesh (ADR 0020) — default в Experimental
-cd C:\Users\vovun\Desktop\Absolute_Blockchain_Experimental
+cd <repo-root-experimental>
 .\scripts\docker_prod_3node.ps1 -SkipBuild -KeepVolumes
 # ⚠️  -P2pTls НЕ использовать в Experimental (refuse в скрипте)
 
 # [HYBRID] TCP+TLS overlay
-cd C:\Users\vovun\Desktop\Absolute_Blockchain_Ultimate_Hybrid
+cd <repo-root-pin>
 .\scripts\docker_prod_3node.ps1 -CeremonyDir data\ceremony_keys -SkipBuild -KeepVolumes
 .\scripts\docker_prod_3node.ps1 -P2pTls -SkipBuild -KeepVolumes   # Hybrid only
 
@@ -327,7 +327,7 @@ pytest tests/unit/ -q
 pytest tests/ -q --ignore=tests/legacy
 
 # [EXP] Mid-soak honesty (disk units + needles; НЕ рестартит soak / Docker):
-cd C:\Users\vovun\Desktop\Absolute_Blockchain_Experimental
+cd <repo-root-experimental>
 .\scripts\verify_midsoak_honesty.ps1 -Quick
 .\scripts\verify_midsoak_honesty.ps1 -WithSoakStatus
 .\scripts\verify_midsoak_honesty.ps1 -All
@@ -494,13 +494,13 @@ CONTACT_EMAIL=gruverpetrov@gmail.com
 # =============================================================================
 
 # [EXP]
-cd C:\Users\vovun\Desktop\Absolute_Blockchain_Experimental
+cd <repo-root-experimental>
 git status
 git pull origin main
 git push origin main
 
 # [HYBRID]
-cd C:\Users\vovun\Desktop\Absolute_Blockchain_Ultimate_Hybrid
+cd <repo-root-pin>
 git pull origin master
 git push origin master
 
@@ -527,7 +527,7 @@ git push origin master
 # =============================================================================
 
 # A) [EXP] Утро — mesh + gate
-cd C:\Users\vovun\Desktop\Absolute_Blockchain_Experimental
+cd <repo-root-experimental>
 git pull
 .\scripts\build_native.ps1
 .\scripts\docker_prod_3node.ps1 -SkipBuild -KeepVolumes
@@ -616,7 +616,7 @@ python scripts/nft_lab.py
 # =============================================================================
 # После изменений core / EVM / P2P / sync / bridge / native — В ТАКОМ ПОРЯДКЕ:
 
-cd C:\Users\vovun\Desktop\Absolute_Blockchain_Experimental
+cd <repo-root-experimental>
 .\scripts\build_native.ps1
 .\scripts\docker_prod_3node.ps1 -SkipBuild -KeepVolumes
 .\scripts\probe_prod_mesh.ps1 -Quick
@@ -697,7 +697,7 @@ python -m pytest tests/unit/test_council_nft.py -q
 # Money honesty + engagement prep. NOT soak / NOT firm PASS / NOT mainnet.
 # Docs: docs/AUDIT_90D_FIX_PLAN.md · docs/EXTERNAL_AUDIT_ENGAGEMENT.md
 
-cd C:\Users\vovun\Desktop\Absolute_Blockchain_Experimental
+cd <repo-root-experimental>
 
 # Единый прогон A–H (+ industrial_gate внутри -Phase All):
 .\scripts\verify_audit_90d_all.ps1
@@ -727,7 +727,7 @@ cd C:\Users\vovun\Desktop\Absolute_Blockchain_Experimental
 # =============================================================================
 # Automated prep PASS ≠ firm audit PDF. Tracker expect 6/8; 2 human pending.
 
-cd C:\Users\vovun\Desktop\Absolute_Blockchain_Experimental
+cd <repo-root-experimental>
 
 .\scripts\verify_audit_engagement_prep.ps1
 .\scripts\print_firm_handoff.ps1
@@ -758,7 +758,7 @@ git rev-parse HEAD
 # =============================================================================
 # sdk/dup_sdk — status/health/balance_satoshi/tx submit. NOT pin SDK / NOT PyPI / NOT wallet.
 
-cd C:\Users\vovun\Desktop\Absolute_Blockchain_Experimental
+cd <repo-root-experimental>
 $env:PYTHONPATH = "$PWD;$env:PYTHONPATH"
 
 python -c "from sdk.dup_sdk import Client, HONESTY, __version__; print(__version__, HONESTY)"
@@ -782,7 +782,7 @@ python scripts/dup_sdk_lab.py --base-url http://127.0.0.1:18180
 # feature_ai_agents / feature_ai_validator / feature_mev MUST stay false on prod 778888 JSON.
 # NOT consensus-wired / NOT soak / NOT mainnet.
 
-cd C:\Users\vovun\Desktop\Absolute_Blockchain_Experimental
+cd <repo-root-experimental>
 
 python scripts/ai_lab.py
 python scripts/ai_ops_anomaly.py --offline-only
@@ -814,7 +814,7 @@ python -m pytest tests/unit/test_ai_sprout_harden.py tests/unit/test_wave43_ai_a
 # feature_nft MUST stay false on prod 778888. Profile C staging 778889 OK.
 # NOT ERC-721 / NOT consensus / NOT soak / NOT mainnet marketplace claim.
 
-cd C:\Users\vovun\Desktop\Absolute_Blockchain_Experimental
+cd <repo-root-experimental>
 python scripts/nft_lab.py
 python -m pytest tests/unit/test_nft_marketplace_harden.py tests/unit/test_nft_uow.py -q
 # SDK reads: Client("http://127.0.0.1:19080").get_nft_stats()

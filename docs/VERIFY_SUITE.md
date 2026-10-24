@@ -9,7 +9,7 @@
 ## Canonical dual-repo command (from Experimental root)
 
 ```powershell
-cd C:\Users\vovun\Desktop\Absolute_Blockchain_Experimental
+cd <repo-root-experimental>
 
 # Daily / after a disk wave (~minutes)
 .\scripts\verify_dup_suite.ps1 -Mode Quick
@@ -27,7 +27,7 @@ cd C:\Users\vovun\Desktop\Absolute_Blockchain_Experimental
 Custom pin path:
 
 ```powershell
-.\scripts\verify_dup_suite.ps1 -Mode Standard -PinRoot "C:\Users\vovun\Desktop\Absolute_Blockchain_Ultimate_Hybrid"
+.\scripts\verify_dup_suite.ps1 -Mode Standard -PinRoot "<repo-root-pin>"
 ```
 
 Report: `data/verify_dup_suite.json`  
@@ -51,7 +51,7 @@ Legacy alias: `.\scripts\verify_absolute_unified.ps1` → same suite.
 ### Industrial pin (Hybrid / `dup-protocol`)
 
 ```powershell
-cd C:\Users\vovun\Desktop\Absolute_Blockchain_Ultimate_Hybrid
+cd <repo-root-pin>
 .\scripts\verify_project.ps1 -Mode Quick
 .\scripts\verify_project.ps1 -Mode Standard
 .\scripts\verify_project.ps1 -Mode Industrial
@@ -63,7 +63,7 @@ Pin live TCP+TLS demo (not soak): [DEMO_RUNBOOK_PIN.md](DEMO_RUNBOOK_PIN.md)
 ### Experimental only
 
 ```powershell
-cd C:\Users\vovun\Desktop\Absolute_Blockchain_Experimental
+cd <repo-root-experimental>
 
 # Fail-closed deep check (needs live mesh for hard)
 .\scripts\verify_hard_all.ps1

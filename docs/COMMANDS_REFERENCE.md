@@ -35,7 +35,7 @@
 ## L1 Integration Gate [обязательно после core/P2P/sync]
 
 ```powershell
-cd C:\Users\vovun\Desktop\Absolute_Blockchain_Experimental
+cd <repo-root-experimental>
 .\scripts\build_native.ps1
 .\scripts\docker_prod_3node.ps1 -SkipBuild -KeepVolumes
 .\scripts\probe_prod_mesh.ps1 -Quick
@@ -49,7 +49,7 @@ python scripts/industrial_gate.py
 ### Experimental (R&D mesh, libp2p)
 
 ```powershell
-cd C:\Users\vovun\Desktop\Absolute_Blockchain_Experimental
+cd <repo-root-experimental>
 pip install -r requirements.txt
 .\scripts\build_native.ps1
 .\scripts\docker_prod_3node.ps1 -SkipBuild -KeepVolumes
@@ -59,7 +59,7 @@ pip install -r requirements.txt
 ### Hybrid (audit pin, TCP+TLS)
 
 ```powershell
-cd C:\Users\vovun\Desktop\Absolute_Blockchain_Ultimate_Hybrid
+cd <repo-root-pin>
 .\scripts\build_native.ps1
 .\scripts\start_all.ps1 -SkipBuild -KeepVolumes
 ```
